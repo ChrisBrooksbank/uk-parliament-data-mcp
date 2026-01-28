@@ -40,4 +40,7 @@ def create_server() -> FastMCP:
     treaties.register_tools(mcp)
     erskine_may.register_tools(mcp)
 
+    # Register prompts (agent skills)
+    core.register_prompts(mcp)
+
     return mcp

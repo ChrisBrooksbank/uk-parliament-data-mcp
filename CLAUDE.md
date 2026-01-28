@@ -142,9 +142,27 @@ new_api.register_tools(mcp)
 - Use `build_url(base, params)` for URL construction with parameter filtering
 - Use `await get_result(url)` for HTTP requests with retry logic
 
+## Agent Skill (MCP Prompt)
+
+The server provides a `/parliament` agent skill that appears in the "/" command menu in MCP clients like Claude Desktop:
+
+### `/parliament` (or `parliament` prompt)
+Initialize a UK Parliament research session. Invocable as a slash command in Claude Desktop.
+
+**Parameters:**
+- `topic` (optional) - Jump directly to detailed guidance for a specific domain
+
+**Example usage in Claude Desktop:**
+```
+/parliament              # Start session with quick reference
+/parliament members      # Start session + detailed members guidance
+```
+
+This prompt is separate from the guidance **tools** below - prompts appear in the "/" menu and provide session context, while tools are called explicitly during research.
+
 ## Agent Guidance Tools
 
-The server includes built-in guidance tools to help AI assistants navigate the 86 available tools:
+The server also includes guidance **tools** to help AI assistants navigate the 86 available tools:
 
 ### `hello_parliament()`
 Initialize a parliamentary research session. Returns:

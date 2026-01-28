@@ -348,3 +348,65 @@ class TestGuidanceContent:
                 assert "tool" in step, f"Step missing tool in {pattern['name']}"
                 assert "purpose" in step, f"Step missing purpose in {pattern['name']}"
                 assert "output" in step, f"Step missing output in {pattern['name']}"
+
+
+class TestParliamentPrompt:
+    """Tests for parliament MCP prompt (agent skill)."""
+
+    @pytest.fixture
+    def mcp(self):
+        """Create a FastMCP instance with core tools and prompts registered."""
+        server = FastMCP(name="test-server")
+        core.register_tools(server)
+        core.register_prompts(server)
+        return server
+
+    @pytest.mark.asyncio
+    async def test_prompt_registered(self, mcp: FastMCP):
+        """parliament prompt is registered."""
+        prompts = await mcp.list_prompts()
+        prompt_names = [p.name for p in prompts]
+        assert "parliament" in prompt_names
+
+    @pytest.mark.asyncio
+    async def test_prompt_has_description(self, mcp: FastMCP):
+        """parliament prompt has a description."""
+        prompts = await mcp.list_prompts()
+        parliament_prompt = next(p for p in prompts if p.name == "parliament")
+        assert parliament_prompt.description is not None
+        assert "UK Parliament" in parliament_prompt.description
+
+    @pytest.mark.asyncio
+    async def test_prompt_returns_guidance(self, mcp: FastMCP):
+        """parliament prompt returns system prompt and quick reference."""
+        result = await mcp.get_prompt("parliament", {})
+        assert len(result.messages) > 0
+        text = result.messages[0].content.text
+        assert "parliamentary data assistant" in text
+        assert "Quick Reference" in text
+        assert "parliament_guide" in text
+
+    @pytest.mark.asyncio
+    async def test_prompt_with_valid_topic(self, mcp: FastMCP):
+        """parliament prompt with topic returns detailed guidance."""
+        result = await mcp.get_prompt("parliament", {"topic": "members"})
+        text = result.messages[0].content.text
+        assert "Members Tools" in text
+        assert "get_member_by_name" in text
+
+    @pytest.mark.asyncio
+    async def test_prompt_with_invalid_topic_returns_base(self, mcp: FastMCP):
+        """parliament prompt with invalid topic returns base content only."""
+        result = await mcp.get_prompt("parliament", {"topic": "invalid_topic"})
+        text = result.messages[0].content.text
+        # Should still have base content
+        assert "Quick Reference" in text
+        # Should NOT have detailed topic content (since invalid)
+        assert "Members Tools" not in text
+
+    @pytest.mark.asyncio
+    async def test_prompt_topic_case_insensitive(self, mcp: FastMCP):
+        """parliament prompt topic is case insensitive."""
+        result = await mcp.get_prompt("parliament", {"topic": "BILLS"})
+        text = result.messages[0].content.text
+        assert "Bills Tools" in text

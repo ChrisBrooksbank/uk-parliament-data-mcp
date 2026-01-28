@@ -806,3 +806,31 @@ def register_tools(mcp: FastMCP) -> None:
 
         # No match - provide general guidance
         return _suggest_general_approach(query)
+
+
+def register_prompts(mcp: FastMCP) -> None:
+    """Register MCP prompts (agent skills) with the server."""
+
+    @mcp.prompt()
+    async def parliament(topic: str | None = None) -> str:
+        """Initialize UK Parliament research session with guidance on 86 available tools.
+
+        Provides system instructions for parliamentary data queries, quick reference
+        of tool categories, and guidance on common research workflows.
+
+        Use this prompt to start a parliamentary research session. Optionally specify
+        a topic to get detailed guidance for that domain.
+
+        Args:
+            topic: Optional topic for detailed guidance (members, bills, votes,
+                   committees, hansard, questions, interests, live, legislation,
+                   procedures, all, conventions, workflows)
+        """
+        base_content = f"{SYSTEM_PROMPT}\n\n---\n\n{QUICK_REFERENCE}"
+
+        if topic:
+            topic_lower = topic.lower().strip()
+            if topic_lower in GUIDANCE_CONTENT:
+                return f"{base_content}\n\n---\n\n{GUIDANCE_CONTENT[topic_lower]}"
+
+        return base_content
