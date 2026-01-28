@@ -87,7 +87,7 @@ AI Assistant ──(MCP/stdio)──> uk_parliament_mcp ──(HTTP)──> UK P
   | statutory_instruments.py | statutoryinstruments-api.parliament.uk | Acts, SIs |
   | treaties.py | treaties-api.parliament.uk | International treaties |
   | erskine_may.py | erskinemay-api.parliament.uk | Procedure rules |
-  | core.py | N/A | Session management prompts |
+  | core.py | N/A | Session management & agent guidance |
 
 - **`context/`**: OpenAPI spec JSON files for each Parliament API (reference documentation)
 
@@ -142,6 +142,56 @@ new_api.register_tools(mcp)
 - Use `build_url(base, params)` for URL construction with parameter filtering
 - Use `await get_result(url)` for HTTP requests with retry logic
 
+## Agent Guidance Tools
+
+The server includes built-in guidance tools to help AI assistants navigate the 86 available tools:
+
+### `hello_parliament()`
+Initialize a parliamentary research session. Returns:
+- System prompt with data source transparency requirements
+- Quick reference of all tool categories with entry points
+- Key conventions (house IDs, date formats, pagination)
+
+### `goodbye_parliament()`
+End the parliamentary session and restore normal assistant behavior.
+
+### `parliament_guide(topic)`
+Get detailed guidance for a specific domain. Available topics:
+- `members` - 25 tools for MPs, Lords, constituencies, parties
+- `bills` - 21 tools for legislation, amendments, stages
+- `votes` - 10 tools for Commons and Lords divisions
+- `committees` - 12 tools for committee info, meetings, evidence
+- `hansard` - Parliamentary record search
+- `questions` - EDMs, oral questions
+- `interests` - Register of Interests
+- `live` - Current activity, calendar (now + whatson)
+- `legislation` - SIs, treaties
+- `procedures` - Erskine May, bill types, stage definitions
+- `all` - Condensed reference of all 86 tools
+- `conventions` - Date formats, house IDs, pagination
+- `workflows` - Overview of common research patterns
+
+### `parliament_workflow(query)`
+Get step-by-step workflow for a research task. Matches queries to predefined patterns:
+- "How did my MP vote on X?" → MP voting workflow
+- "Track bill progress" → Bill tracking workflow
+- "What committee examined X?" → Committee research workflow
+- "Does MP have conflicts of interest?" → Interests workflow
+- "What's happening now?" → Live activity workflow
+- And more (backgrounds, Hansard, elections, EDMs, treaties)
+
+Example usage:
+```
+# Start session
+hello_parliament()
+
+# Get detailed guidance
+parliament_guide("members")
+
+# Plan a research task
+parliament_workflow("How did my MP vote on climate?")
+```
+
 ## Dependencies
 
 - mcp (>=1.0.0) - Anthropic's official MCP library
@@ -166,7 +216,7 @@ src/uk_parliament_mcp/
 ├── http_client.py      # HTTP client with retry
 └── tools/
     ├── __init__.py
-    ├── core.py         # Session management (2 tools)
+    ├── core.py         # Session management & guidance (4 tools)
     ├── members.py      # Member tools (25 tools)
     ├── bills.py        # Bills tools (21 tools)
     ├── committees.py   # Committees tools (12 tools)
