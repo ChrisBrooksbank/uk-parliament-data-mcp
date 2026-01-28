@@ -1,6 +1,6 @@
 [project]
 name = "uk-parliament-mcp"
-version = "1.0.0"
+dynamic = ["version"]
 description = "UK Parliament MCP Server - bridges AI assistants with UK Parliament APIs"
 readme = "README.md"
 license = { text = "MIT" }
@@ -38,6 +38,9 @@ uk-parliament-mcp = "uk_parliament_mcp.__main__:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/uk_parliament_mcp/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/uk_parliament_mcp"]

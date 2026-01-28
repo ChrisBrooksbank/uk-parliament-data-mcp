@@ -67,9 +67,23 @@ It enables AI tools (e.g. Microsoft Copilot) to answer questions about UK Parlia
 
 Since AI is involved, some responses may be inaccurate. See **Prompting Tips** below to improve reliability.
 
-### Installation & Setup
+### Quick Install (Recommended)
 
-This section explains how to configure Microsoft Copilot in Visual Studio Code to query UK Parliamentary data via the MCP server.
+Install directly from PyPI:
+
+```bash
+pip install uk-parliament-mcp
+```
+
+Or run without installing using uvx:
+
+```bash
+uvx uk-parliament-mcp
+```
+
+### Installation from Source
+
+For development or to get the latest unreleased changes:
 
 #### Prerequisites
 
@@ -100,32 +114,43 @@ source .venv/bin/activate  # Linux/Mac
 pip install -e .
 ```
 
-#### Add MCP Server in Claude Desktop Application  
+#### Add MCP Server in Claude Desktop Application
 
-* Open the claude desktop application  
-* Click settings   
-* Click Developer tag  
-* Click Edit Config  
-* Edit file and save with UTF-8 encoding  
-* Exit claude ( with TaskMon if needed ) and restart it  
-* Open developer tab again and check it is running  
-* Enter the system prompt and test its working ok  
+* Open the claude desktop application
+* Click settings
+* Click Developer tag
+* Click Edit Config
+* Edit file and save with UTF-8 encoding
+* Exit claude ( with TaskMon if needed ) and restart it
+* Open developer tab again and check it is running
+* Enter the system prompt and test its working ok
 
-Example claude_desktop_config.json file contents:
+**Using uvx (recommended - no installation needed):**
 
 ```json
 {
   "mcpServers": {
     "uk-parliament": {
-      "command": "python",
-      "args": ["-m", "uk_parliament_mcp"],
-      "cwd": "C:\\code\\uk-parliament-mcp-lab"
+      "command": "uvx",
+      "args": ["uk-parliament-mcp"]
     }
   }
 }
 ```
 
-Or using the virtual environment directly (recommended):
+**Using pip install:**
+
+```json
+{
+  "mcpServers": {
+    "uk-parliament": {
+      "command": "uk-parliament-mcp"
+    }
+  }
+}
+```
+
+**Using local development install:**
 
 ```json
 {
