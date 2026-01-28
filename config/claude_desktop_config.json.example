@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "uk-parliament": {
+      "command": "C:/code/uk-parliament-mcp-lab/.venv/Scripts/python.exe",
+      "args": ["-m", "uk_parliament_mcp"],
+      "cwd": "C:/code/uk-parliament-mcp-lab"
+    }
+  }
+}

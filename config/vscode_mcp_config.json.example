@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "uk-parliament": {
+      "command": "python",
+      "args": ["-m", "uk_parliament_mcp"],
+      "transport": "stdio"
+    }
+  }
+}

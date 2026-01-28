@@ -4,79 +4,110 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with C# .NET 9.0, it provides ~70 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
+UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 86 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
 
 ## Build Commands
 
 ```bash
-# Build the project
-dotnet build OpenDataMcpServer.sln
+# Create virtual environment and install dependencies
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
+
+pip install -e ".[dev]"
 
 # Run the MCP server (stdio transport)
-dotnet run --project OpenData.Mcp.Server
+python -m uk_parliament_mcp
 
-# Publish for distribution
-dotnet publish OpenData.Mcp.Server -c Release
+# Run tests
+pytest
+
+# Type checking
+mypy src/
+
+# Linting
+ruff check src/
+ruff format src/
 ```
 
 ## Architecture
 
 ```
-AI Assistant ──(MCP/stdio)──> OpenData.Mcp.Server ──(HTTP)──> UK Parliament APIs
+AI Assistant ──(MCP/stdio)──> uk_parliament_mcp ──(HTTP)──> UK Parliament APIs
 ```
 
 **Key Components:**
 
-- **Program.cs**: Entry point using .NET Host builder. Registers MCP server with stdio transport, configures DI (IHttpClientFactory, IMemoryCache, logging), uses attribute-based tool discovery via `WithToolsFromAssembly`.
+- **`__main__.py`**: Entry point. Configures logging to stderr (stdout reserved for MCP protocol), creates and runs the FastMCP server.
 
-- **Tools/BaseTools.cs**: Abstract base class all tools inherit from. Provides:
+- **`server.py`**: FastMCP server setup. Creates the MCP server and registers all tool modules.
+
+- **`http_client.py`**: HTTP client with retry logic. Provides:
   - HTTP request handling with 3-retry exponential backoff
   - 30-second timeout protection
-  - URL building with parameter escaping
+  - URL building with parameter filtering (`build_url`)
   - Consistent response format: `{url, data}` or `{url, error, statusCode}`
 
-- **Tools/*Tools.cs**: 15 tool classes (~70 total tools) each targeting a specific Parliament API:
-  | Class | API Domain | Purpose |
-  |-------|------------|---------|
-  | MembersTools | members-api.parliament.uk | MPs, Lords, constituencies, parties |
-  | BillsTools | bills-api.parliament.uk | Legislation, amendments, stages |
-  | CommonsVotesTools | commonsvotes-api.parliament.uk | Commons divisions |
-  | LordsVotesTools | lordsvotes-api.parliament.uk | Lords divisions |
-  | CommitteesTools | committees-api.parliament.uk | Committee info, evidence |
-  | HansardTools | hansard-api.parliament.uk | Parliamentary record |
-  | OralQuestionsTools | oralquestionsandmotions-api.parliament.uk | EDMs, questions |
-  | InterestsTools | interests-api.parliament.uk | Register of interests |
-  | NowTools | now-api.parliament.uk | Live chamber activity |
-  | WhatsOnTools | whatson-api.parliament.uk | Calendar, sessions |
-  | StatutoryInstrumentsTools | statutoryinstruments-api.parliament.uk | Acts, SIs |
-  | TreatiesTools | treaties-api.parliament.uk | International treaties |
-  | ErskineMayTools | erskinemay-api.parliament.uk | Procedure rules |
-  | CoreTools | N/A | Session management prompts |
+- **`tools/*.py`**: 14 tool modules (86 total tools) each targeting a specific Parliament API:
+  | Module | API Domain | Purpose |
+  |--------|------------|---------|
+  | members.py | members-api.parliament.uk | MPs, Lords, constituencies, parties |
+  | bills.py | bills-api.parliament.uk | Legislation, amendments, stages |
+  | commons_votes.py | commonsvotes-api.parliament.uk | Commons divisions |
+  | lords_votes.py | lordsvotes-api.parliament.uk | Lords divisions |
+  | committees.py | committees-api.parliament.uk | Committee info, evidence |
+  | hansard.py | hansard-api.parliament.uk | Parliamentary record |
+  | oral_questions.py | oralquestionsandmotions-api.parliament.uk | EDMs, questions |
+  | interests.py | interests-api.parliament.uk | Register of interests |
+  | now.py | now-api.parliament.uk | Live chamber activity |
+  | whatson.py | whatson-api.parliament.uk | Calendar, sessions |
+  | statutory_instruments.py | statutoryinstruments-api.parliament.uk | Acts, SIs |
+  | treaties.py | treaties-api.parliament.uk | International treaties |
+  | erskine_may.py | erskinemay-api.parliament.uk | Procedure rules |
+  | core.py | N/A | Session management prompts |
 
-- **Context/**: OpenAPI spec JSON files for each Parliament API (reference documentation)
+- **`context/`**: OpenAPI spec JSON files for each Parliament API (reference documentation)
 
 ## Adding New Tools
 
-Follow the established pattern:
+Follow the established pattern in any `tools/*.py` file:
 
-```csharp
-[McpServerToolType]
-public class NewApiTools(IHttpClientFactory httpClientFactory, ILogger<NewApiTools> logger)
-    : BaseTools(httpClientFactory, logger)
-{
-    protected const string NewApiBase = "https://api.parliament.uk";
+```python
+"""New API tools for [description]."""
+from urllib.parse import quote
 
-    [McpServerTool(ReadOnly = true, Idempotent = true),
-     Description("Action | keywords, synonyms | Use case | Returns format")]
-    public async Task<string> GetSomethingAsync(string param)
-    {
-        var url = $"{NewApiBase}/endpoint?param={Uri.EscapeDataString(param)}";
-        return await GetResult(url);
-    }
-}
+from mcp.server.fastmcp import FastMCP
+
+from uk_parliament_mcp.http_client import build_url, get_result
+
+NEW_API_BASE = "https://api.parliament.uk"
+
+
+def register_tools(mcp: FastMCP) -> None:
+    """Register new tools with the MCP server."""
+
+    @mcp.tool()
+    async def get_something(param: str) -> str:
+        """Action | keywords, synonyms | Use case | Returns format
+
+        Args:
+            param: Description of the parameter.
+
+        Returns:
+            Description of what is returned.
+        """
+        url = f"{NEW_API_BASE}/endpoint?param={quote(param)}"
+        return await get_result(url)
 ```
 
 Tool descriptions use a 4-part semantic format: `Action | Keywords | Use case | Returns`
+
+Then register in `server.py`:
+```python
+from uk_parliament_mcp.tools import new_api
+# ...
+new_api.register_tools(mcp)
+```
 
 ## Key Conventions
 
@@ -85,11 +116,45 @@ Tool descriptions use a 4-part semantic format: `Action | Keywords | Use case | 
 - **Pagination**: `skip`/`take` parameters where supported
 - All tools are read-only and idempotent
 - Raw JSON responses from Parliament APIs are passed through (not transformed)
-- Tool attributes enable automatic discovery - no manual registration needed
+- Use `build_url(base, params)` for URL construction with parameter filtering
+- Use `await get_result(url)` for HTTP requests with retry logic
 
 ## Dependencies
 
-- ModelContextProtocol (v0.3.0-preview.2)
-- Microsoft.Extensions.Hosting (v9.0.5)
-- Microsoft.Extensions.Http (v9.0.6)
-- Microsoft.Extensions.Caching.Memory (v9.0.5)
+- mcp (>=1.0.0) - Anthropic's official MCP library
+- httpx (>=0.27.0) - Async HTTP client
+- tenacity (>=8.2.0) - Retry logic (available but manual retry used)
+
+### Dev Dependencies
+
+- pytest (>=8.0.0) - Testing
+- pytest-asyncio (>=0.23.0) - Async test support
+- pytest-httpx (>=0.30.0) - HTTP mocking
+- ruff (>=0.3.0) - Linting and formatting
+- mypy (>=1.8.0) - Type checking
+
+## Project Structure
+
+```
+src/uk_parliament_mcp/
+├── __init__.py
+├── __main__.py         # Entry point
+├── server.py           # FastMCP server setup
+├── http_client.py      # HTTP client with retry
+└── tools/
+    ├── __init__.py
+    ├── core.py         # Session management (2 tools)
+    ├── members.py      # Member tools (25 tools)
+    ├── bills.py        # Bills tools (21 tools)
+    ├── committees.py   # Committees tools (12 tools)
+    ├── commons_votes.py    # Commons votes (5 tools)
+    ├── lords_votes.py      # Lords votes (5 tools)
+    ├── hansard.py          # Hansard (1 tool)
+    ├── oral_questions.py   # Questions (3 tools)
+    ├── interests.py        # Interests (3 tools)
+    ├── now.py              # Live activity (2 tools)
+    ├── whatson.py          # Calendar (3 tools)
+    ├── statutory_instruments.py  # SIs (2 tools)
+    ├── treaties.py         # Treaties (1 tool)
+    └── erskine_may.py      # Procedure (1 tool)
+```

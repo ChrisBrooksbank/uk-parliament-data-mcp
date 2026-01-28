@@ -75,7 +75,7 @@ This section explains how to configure Microsoft Copilot in Visual Studio Code t
 
 Make sure you have the following installed:
 
-- [.NET SDK](https://dotnet.microsoft.com/en-us/download) (v9 or later recommended)
+- [Python](https://www.python.org/downloads/) (v3.11 or later)
 - [Git](https://git-scm.com/downloads)
 - [Visual Studio Code](https://code.visualstudio.com/download)
 
@@ -88,6 +88,18 @@ cd opendata-mcp-lab
 
 Or download manually and open the folder in VS Code.
 
+#### Install Dependencies
+
+```bash
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
+
+# Install the package
+pip install -e .
+```
+
 #### Add MCP Server in Claude Desktop Application  
 
 * Open the claude desktop application  
@@ -99,18 +111,28 @@ Or download manually and open the folder in VS Code.
 * Open developer tab again and check it is running  
 * Enter the system prompt and test its working ok  
 
-Example claude_desktop_config.json file contents : 
+Example claude_desktop_config.json file contents:
 
 ```json
 {
   "mcpServers": {
-    "opendata-server": {
-      "command": "dotnet",
-      "args": [
-        "run",
-        "--project",
-        "C:\\code\\opendata-mcp-lab\\OpenData.Mcp.Server\\OpenData.Mcp.Server.csproj"
-      ]
+    "uk-parliament": {
+      "command": "python",
+      "args": ["-m", "uk_parliament_mcp"],
+      "cwd": "C:\\code\\opendata-mcp-lab"
+    }
+  }
+}
+```
+
+Or using the virtual environment directly:
+
+```json
+{
+  "mcpServers": {
+    "uk-parliament": {
+      "command": "C:\\code\\opendata-mcp-lab\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "uk_parliament_mcp"]
     }
   }
 }
@@ -128,7 +150,13 @@ Example claude_desktop_config.json file contents :
 4.  Enter the following command (adjust path if needed):
 
 ```bash
-dotnet run --project C:\code\opendata-mcp-lab\OpenData.Mcp.Server\OpenData.Mcp.Server.csproj
+python -m uk_parliament_mcp
+```
+
+Or use the full path to the virtual environment Python:
+
+```bash
+C:\code\opendata-mcp-lab\.venv\Scripts\python.exe -m uk_parliament_mcp
 ```
 
 5.  Press **Enter**.
