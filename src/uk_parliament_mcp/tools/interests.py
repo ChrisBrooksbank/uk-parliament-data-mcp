@@ -1,4 +1,5 @@
 """Interests API tools for Register of Interests."""
+
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.http_client import get_result

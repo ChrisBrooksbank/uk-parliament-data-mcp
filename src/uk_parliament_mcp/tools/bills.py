@@ -1,4 +1,5 @@
 """Bills API tools for legislation, amendments, and stages."""
+
 from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP

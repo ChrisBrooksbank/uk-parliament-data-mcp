@@ -1,4 +1,5 @@
 """Lords Votes API tools for House of Lords divisions and voting records."""
+
 from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP

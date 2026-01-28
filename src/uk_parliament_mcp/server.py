@@ -1,4 +1,5 @@
 """FastMCP server configuration and tool registration."""
+
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.tools import (

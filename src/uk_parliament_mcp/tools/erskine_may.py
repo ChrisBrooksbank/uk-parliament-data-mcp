@@ -1,4 +1,5 @@
 """Erskine May API tools for parliamentary procedure."""
+
 from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP

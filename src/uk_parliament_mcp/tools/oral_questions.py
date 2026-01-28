@@ -1,4 +1,5 @@
 """Oral Questions API tools for EDMs and question times."""
+
 from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP

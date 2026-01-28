@@ -1,4 +1,5 @@
 """Committees API tools for committee info, meetings, and evidence."""
+
 from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP

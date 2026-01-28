@@ -1,4 +1,5 @@
 """Hansard API tools for searching the official parliamentary record."""
+
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.http_client import build_url, get_result

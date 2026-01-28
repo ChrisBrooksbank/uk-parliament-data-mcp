@@ -1,4 +1,5 @@
 """Treaties API tools for international agreements."""
+
 from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP

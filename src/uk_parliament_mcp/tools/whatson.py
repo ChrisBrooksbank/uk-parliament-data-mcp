@@ -1,4 +1,5 @@
 """WhatsOn API tools for parliamentary calendar and sessions."""
+
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.http_client import build_url, get_result

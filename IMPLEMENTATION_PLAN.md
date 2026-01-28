@@ -183,7 +183,7 @@
 
 - [x] Delete `OpenData.Mcp.Server/` folder
 - [x] Delete `OpenDataMcpServer.sln`
-- [ ] Final commit with Python-only project
+- [x] Final commit with Python-only project (03ca315)
 
 ---
 

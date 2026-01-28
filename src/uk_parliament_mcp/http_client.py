@@ -1,4 +1,5 @@
 """HTTP client with retry logic for Parliament API requests."""
+
 from __future__ import annotations
 
 import asyncio

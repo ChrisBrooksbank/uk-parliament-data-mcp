@@ -1,4 +1,5 @@
 """Entry point for the UK Parliament MCP Server."""
+
 import logging
 import sys
 

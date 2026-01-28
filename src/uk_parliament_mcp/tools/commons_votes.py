@@ -1,4 +1,5 @@
 """Commons Votes API tools for House of Commons divisions and voting records."""
+
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.http_client import build_url, get_result

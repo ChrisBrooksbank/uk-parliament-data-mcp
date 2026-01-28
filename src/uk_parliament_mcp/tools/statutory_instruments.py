@@ -1,4 +1,5 @@
 """Statutory Instruments API tools for secondary legislation."""
+
 from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP
