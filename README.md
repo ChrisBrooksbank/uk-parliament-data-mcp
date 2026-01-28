@@ -82,8 +82,8 @@ Make sure you have the following installed:
 #### Clone and Open the Project
 
 ```bash
-git clone https://github.com/chrisbrooksbank-parliament/opendata-mcp-lab.git
-cd opendata-mcp-lab
+git clone https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab.git
+cd uk-parliament-mcp-lab
 ```
 
 Or download manually and open the folder in VS Code.
@@ -119,20 +119,21 @@ Example claude_desktop_config.json file contents:
     "uk-parliament": {
       "command": "python",
       "args": ["-m", "uk_parliament_mcp"],
-      "cwd": "C:\\code\\opendata-mcp-lab"
+      "cwd": "C:\\code\\uk-parliament-mcp-lab"
     }
   }
 }
 ```
 
-Or using the virtual environment directly:
+Or using the virtual environment directly (recommended):
 
 ```json
 {
   "mcpServers": {
     "uk-parliament": {
-      "command": "C:\\code\\opendata-mcp-lab\\.venv\\Scripts\\python.exe",
-      "args": ["-m", "uk_parliament_mcp"]
+      "command": "C:\\code\\uk-parliament-mcp-lab\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "uk_parliament_mcp"],
+      "cwd": "C:\\code\\uk-parliament-mcp-lab"
     }
   }
 }
@@ -156,7 +157,7 @@ python -m uk_parliament_mcp
 Or use the full path to the virtual environment Python:
 
 ```bash
-C:\code\opendata-mcp-lab\.venv\Scripts\python.exe -m uk_parliament_mcp
+C:\code\uk-parliament-mcp-lab\.venv\Scripts\python.exe -m uk_parliament_mcp
 ```
 
 5.  Press **Enter**.
