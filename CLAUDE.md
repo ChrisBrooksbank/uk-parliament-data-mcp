@@ -6,7 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 86 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
 
-## Build Commands
+## Installation
+
+```bash
+# From PyPI (recommended)
+pip install uk-parliament-mcp
+
+# Or run without installing
+uvx uk-parliament-mcp
+```
+
+## Development Setup
 
 ```bash
 # Create virtual environment and install dependencies
@@ -29,6 +39,19 @@ mypy src/
 ruff check src/
 ruff format src/
 ```
+
+## CI/CD
+
+GitHub Actions workflows in `.github/workflows/`:
+
+- **ci.yml**: Runs on push/PR - linting (ruff), type checking (mypy), tests (pytest)
+- **publish.yml**: Runs on GitHub Release - builds and publishes to PyPI via Trusted Publishing
+
+**Release process:**
+1. Update version in `src/uk_parliament_mcp/__init__.py`
+2. Commit and push
+3. Create GitHub Release with tag (e.g., `v1.0.1`)
+4. Package auto-publishes to PyPI
 
 ## Architecture
 
