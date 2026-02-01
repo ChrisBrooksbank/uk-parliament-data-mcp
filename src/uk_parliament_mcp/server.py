@@ -2,6 +2,7 @@
 
 from mcp.server.fastmcp import FastMCP
 
+from uk_parliament_mcp.tools.core import SYSTEM_PROMPT
 from uk_parliament_mcp.tools import (
     bills,
     committees,
@@ -23,7 +24,7 @@ from uk_parliament_mcp.tools import (
 
 def create_server() -> FastMCP:
     """Create and configure the MCP server with all tools registered."""
-    mcp = FastMCP(name="uk-parliament-mcp")
+    mcp = FastMCP(name="uk-parliament-mcp", instructions=SYSTEM_PROMPT)
 
     # Register all tool modules
     core.register_tools(mcp)
