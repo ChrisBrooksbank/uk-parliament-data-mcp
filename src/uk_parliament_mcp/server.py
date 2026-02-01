@@ -6,6 +6,7 @@ from uk_parliament_mcp.tools import (
     bills,
     committees,
     commons_votes,
+    composite,
     core,
     erskine_may,
     hansard,
@@ -26,6 +27,7 @@ def create_server() -> FastMCP:
 
     # Register all tool modules
     core.register_tools(mcp)
+    composite.register_tools(mcp)
     members.register_tools(mcp)
     bills.register_tools(mcp)
     committees.register_tools(mcp)

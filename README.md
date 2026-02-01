@@ -1,34 +1,25 @@
 # UK Parliament AI Assistant
 
-This project helps Artificial Intelligence (AI) assistants, like Microsoft Copilot, answer questions using comprehensive official data from the UK Parliament. It acts as a bridge, allowing the AI to access up-to-date, reliable information directly from the source, covering members, bills, voting records, committees, debates, procedures, and much more.
+Access official UK Parliament data through AI assistants. Query MPs, Lords, bills, votes, committees, debates, and more.
 
-## 🔥 ESSENTIAL: System Prompt (Required for Best Results!)
+## Quick Install
 
-**IMPORTANT**: You MUST use the starting system prompt when starting a new conversation. This is critical for accurate responses.
+```bash
+# Install from PyPI (recommended)
+pip install uk-parliament-mcp
 
-The easiest way to do this is to start all new conversations with the prompt  "Hello Parliament".
-
-Or you can copy and past the following instead : 
-
-```plaintext
-You are a helpful assistant that answers questions using only data from UK Parliament MCP servers.
-
-When the session begins, introduce yourself with a brief message such as:
-
-"Hello! I’m a parliamentary data assistant. I can help answer questions using official data from the UK Parliament MCP APIs. Just ask me something, and I’ll fetch what I can — and I’ll always show you which sources I used."
-
-When responding to user queries, you must:
-
-Only retrieve and use data from the MCP API endpoints this server provides.
-
-Avoid using any external sources or inferred knowledge.
-
-After every response, append a list of all MCP API URLs used to generate the answer.
-
-If no relevant data is available via the MCP API, state that clearly and do not attempt to fabricate a response.
-
-Convert raw data into human-readable summaries while preserving accuracy, but always list the raw URLs used.
+# Or run without installing
+uvx uk-parliament-mcp
 ```
+
+## Getting Started
+
+Once installed and configured with your AI assistant, start a parliamentary research session:
+
+1. **Use the `/parliament` slash command** (in Claude Desktop or compatible MCP clients)
+2. **Or say "Hello Parliament"** to initialize the session
+
+This gives your AI assistant the context it needs to effectively use the 86 available tools.
 
 ## What Can I Ask?
 
@@ -44,42 +35,17 @@ You can ask questions about virtually all aspects of UK Parliament data. Here ar
 *   **Official Documents:** "Are there any statutory instruments about housing?" or "What treaties involve trade agreements?"
 *   **Transparency Data:** "Show register of interests for Treasury ministers" or "What are the declared interests categories?"
 
-## Disconnecting from parliament
+## Disconnecting from Parliament
 
-Start a new chat session, or to keep context but disconnect from Parliament MCP servers prompt : "Goodbye Parliament"
-
-## How Does It Work?
-
-When you ask a question to an AI assistant connected to this tool, it doesn't just guess the answer. Instead, the assistant uses this project to query the official UK Parliament database and provides a response based on the data it finds.
-
-This means the answers you get are more likely to be accurate and based on facts.
+Start a new chat session, or say "Goodbye Parliament" to end the parliamentary session while keeping context.
 
 ---
 
-## Installation and Usage Guide
+## Full Installation Guide
 
-This project makes public UK Parliamentary data accessible to large language models (LLMs/AIs) using the [Model Context Protocol (MCP)](https://www.anthropic.com/news/model-context-protocol).
+This project uses the [Model Context Protocol (MCP)](https://www.anthropic.com/news/model-context-protocol) to make UK Parliamentary data accessible to AI assistants like Claude Desktop and Microsoft Copilot.
 
-It enables AI tools (e.g. Microsoft Copilot) to answer questions about UK Parliamentary data, as long as they support the MCP protocol.
-
-> ✅ This project provides comprehensive coverage of UK Parliamentary data including members, bills, amendments, voting records, committees, debates, procedures, constituencies, and official documents.
-> Additional data sources and endpoints are continuously being added.
-
-Since AI is involved, some responses may be inaccurate. See **Prompting Tips** below to improve reliability.
-
-### Quick Install (Recommended)
-
-Install directly from PyPI:
-
-```bash
-pip install uk-parliament-mcp
-```
-
-Or run without installing using uvx:
-
-```bash
-uvx uk-parliament-mcp
-```
+> **Note**: Since AI is involved, some responses may be inaccurate. See **Prompting Tips** below to improve reliability.
 
 ### Installation from Source
 
@@ -209,9 +175,9 @@ What is happening now in the House of Commons?
 
 ### Prompting Tips
 
-#### ✅ System Prompt
+#### ✅ Initialize Your Session
 
-Always begin your session with the **System Prompt** defined at the top of this guide. This is the most crucial step for ensuring the AI assistant stays on track, uses only the provided data, and cites its sources correctly.
+Always begin your session with `/parliament` or "Hello Parliament". This ensures the AI assistant uses the correct tools and cites its sources properly.
 
 #### 🔄 Clear Context
 

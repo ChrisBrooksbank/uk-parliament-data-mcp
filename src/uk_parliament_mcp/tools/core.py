@@ -16,10 +16,17 @@ Convert raw data into human-readable summaries while preserving accuracy, but al
 
 GOODBYE_PROMPT = """You are now interacting as a normal assistant. There are no special restrictions or requirements for using UK Parliament MCP data. You may answer questions using any available data or knowledge, and you do not need to append MCP API URLs or limit yourself to MCP sources. Resume normal assistant behavior."""
 
-QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (86 tools)
+QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (94 tools)
+
+### Composite Tools (Start Here for Common Queries!)
+These tools combine multiple API calls - use them first for efficiency:
+- get_mp_profile(name) - Complete MP profile in one call
+- check_mp_vote(mp_name, topic) - Check how an MP voted on a topic
+- get_bill_overview(search_term) - Full bill info with stages
+- get_committee_summary(topic) - Committee with evidence and publications
 
 ### Key Conventions
-- House IDs: 1 = Commons, 2 = Lords
+- House IDs: 1 = Commons, 2 = Lords (for some tools: 'Commons' or 'Lords' as strings)
 - Dates: YYYY-MM-DD format
 - Pagination: skip/take parameters (typical defaults: 20-30)
 - IDs: Use search tools first to get member_id, bill_id, etc.
@@ -27,30 +34,66 @@ QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (86 tools)
 ### Tool Categories & Entry Points
 | Module | Tools | Start With |
 |--------|-------|------------|
-| members | 25 | get_member_by_name(name) |
+| composite | 4 | get_mp_profile(name) |
+| members | 26 | get_member_by_name(name) |
 | bills | 21 | search_bills(search_term) |
 | committees | 12 | search_committees(search_term) |
 | commons_votes | 5 | search_commons_divisions(search_term) |
 | lords_votes | 5 | search_lords_divisions(search_term) |
-| hansard | 1 | search_hansard(search_term) |
+| hansard | 1 | search_hansard(house, start_date, end_date, search_term) |
 | oral_questions | 3 | search_early_day_motions(search_term) |
 | interests | 3 | search_roi(member_id) |
 | now | 2 | happening_now_in_commons() |
-| whatson | 3 | search_calendar(from_date, to_date) |
+| whatson | 3 | search_calendar(house, start_date, end_date) |
 | statutory_instruments | 2 | search_statutory_instruments() |
 | treaties | 1 | search_treaties(search_text) |
 | erskine_may | 1 | search_erskine_may(search_term) |
 
 ### Common Patterns
-1. Search by name/term -> Get by ID -> Get related data
-2. For MP voting: get_member_by_name() -> get_commons_voting_record_for_member()
-3. For bill progress: search_bills() -> get_bill_stages()
+1. Use composite tools first for common queries (saves multiple calls)
+2. For detailed data: Search by name/term -> Get by ID -> Get related data
+3. For MP voting: check_mp_vote() OR get_member_by_name() -> get_commons_voting_record_for_member()
+4. For bill progress: get_bill_overview() OR search_bills() -> get_bill_stages()
 
 Use parliament_guide(topic) for detailed tool information.
 Use parliament_workflow(query) for step-by-step research planning."""
 
 GUIDANCE_CONTENT = {
-    "members": """## Members Tools (25 tools)
+    "composite": """## Composite Tools (4 tools)
+
+High-level tools that combine multiple API calls for common research tasks.
+Use these FIRST for common queries to reduce tool calls and improve efficiency.
+
+### MP/Lord Research
+- get_mp_profile(name) - Complete profile in one call
+  - Combines: member search + details + biography + interests + voting
+  - Returns: Basic info, biography, registered interests, recent votes
+  - Example: get_mp_profile("Keir Starmer")
+
+- check_mp_vote(mp_name, topic) - Check voting stance on a topic
+  - Combines: member search + division search with member filter
+  - Returns: MP info and divisions on the topic where they voted
+  - Example: check_mp_vote("Boris Johnson", "climate")
+
+### Bill Research
+- get_bill_overview(search_term) - Full bill information
+  - Combines: bill search + details + stages + publications
+  - Returns: Bill details, legislative stages, associated documents
+  - Example: get_bill_overview("Online Safety")
+
+### Committee Research
+- get_committee_summary(topic) - Committee with evidence and reports
+  - Combines: committee search + details + oral evidence + written evidence + publications
+  - Returns: Committee info, witness testimonies, written submissions, reports
+  - Example: get_committee_summary("Treasury")
+
+### When to Use Individual Tools Instead
+Use the individual tools (in members, bills, etc.) when you need:
+- Specific filtering options not available in composite tools
+- Pagination through large result sets
+- Access to specific endpoints not covered by composite tools
+- More control over which data is fetched""",
+    "members": """## Members Tools (26 tools)
 
 ### Primary Search Tools
 - search_members(name, location, party_id, house, is_current_member, skip, take) - Comprehensive member search with filters
@@ -98,51 +141,48 @@ GUIDANCE_CONTENT = {
 - search_bills(search_term, skip, take) - Find bills by keyword
 - get_recently_updated_bills(take) - Latest legislative activity
 - get_bill_by_id(bill_id) - Full bill details with current stage
-- get_bills_types() - Types of bills (Public, Private, Hybrid, etc.)
+- bill_types() - Types of bills (Public, Private, Hybrid, etc.)
 
 ### Bill Progress & Stages
 - get_bill_stages(bill_id) - Track legislative journey through Parliament
-- get_stage_types() - Stage definitions (1st Reading, 2nd Reading, Committee, etc.)
+- bill_stages() - Stage definitions (1st Reading, 2nd Reading, Committee, etc.)
 - get_bill_stage_sittings(bill_id, stage_id) - When stage was debated
 
 ### Amendments
-- get_bill_amendments(bill_id, skip, take) - All amendments proposed
 - get_bill_stage_amendments(bill_id, stage_id) - Amendments at specific stage
-- get_bill_amendment_by_id(amendment_id) - Detailed amendment info
+- get_amendment_by_id(bill_id, bill_stage_id, amendment_id) - Detailed amendment info
 
 ### Publications & News
 - get_bill_publications(bill_id) - Associated documents and papers
 - get_publication_types() - Types of parliamentary publications
-- get_bill_news(bill_id) - News articles about the bill
-
-### Sponsors
-- get_bill_sponsors(bill_id) - Who introduced/backs the bill
+- get_bill_news_articles(bill_id) - News articles about the bill
 
 ### RSS Feeds
-- get_bills_rss() - RSS feed of recent bill updates
-- get_rss_bill_stages() - RSS feed of stage changes
+- get_all_bills_rss() - RSS feed of all bills
+- get_public_bills_rss() - RSS feed of public bills
+- get_private_bills_rss() - RSS feed of private bills
+- get_bill_rss(bill_id) - RSS feed for a specific bill
 
 ### Typical Workflow
 1. Search: search_bills("climate") -> find bill_id
 2. Overview: get_bill_by_id(bill_id) -> current status
 3. Progress: get_bill_stages(bill_id) -> legislative journey
-4. Details: get_bill_amendments(bill_id) -> proposed changes
-5. Sponsors: get_bill_sponsors(bill_id) -> who supports it""",
+4. Details: get_bill_stage_amendments(bill_id, stage_id) -> proposed changes""",
     "votes": """## Voting Tools (10 tools: 5 Commons + 5 Lords)
 
 ### Commons Divisions
-- search_commons_divisions(search_term, skip, take) - Find Commons votes by keyword
+- search_commons_divisions(search_term) - Find Commons votes by keyword
 - get_commons_division_by_id(division_id) - Full voting details with lists
-- get_commons_voting_record_for_member(member_id, skip, take) - All votes by MP
-- get_commons_divisions_by_member_grouped_by_party(member_id) - Votes grouped by party alignment
-- get_commons_divisions_by_member_vote_count(member_id) - Vote tallies
+- get_commons_voting_record_for_member(member_id) - All votes by MP
+- get_commons_divisions_grouped_by_party(search_term, member_id) - Votes grouped by party alignment
+- get_commons_divisions_search_count(search_term) - Count of matching divisions
 
 ### Lords Divisions
-- search_lords_divisions(search_term, skip, take) - Find Lords votes by keyword
+- search_lords_divisions(search_term) - Find Lords votes by keyword
 - get_lords_division_by_id(division_id) - Full voting details with lists
-- get_lords_voting_record_for_member(member_id, skip, take) - All votes by Lord
-- get_lords_divisions_by_member_grouped_by_party(member_id) - Votes grouped by party alignment
-- get_lords_divisions_by_member_vote_count(member_id) - Vote tallies
+- get_lords_voting_record_for_member(member_id) - All votes by Lord
+- get_lords_divisions_grouped_by_party(member_id) - Votes grouped by party alignment
+- get_lords_divisions_search_count(search_term) - Count of matching divisions
 
 ### Key Concepts
 - Division: A formal recorded vote in Parliament
@@ -157,32 +197,31 @@ GUIDANCE_CONTENT = {
     "committees": """## Committee Tools (12 tools)
 
 ### Search & Discovery
-- search_committees(search_term, skip, take) - Find committees by topic
+- search_committees(search_term) - Find committees by topic
 - get_committee_by_id(committee_id) - Full committee details
+- get_committee_types() - Select Committee, Joint Committee, etc.
 
 ### Meetings & Events
 - get_committee_meetings(from_date, to_date) - Find meetings by date range (YYYY-MM-DD)
-- get_committee_event_by_id(committee_id, event_id) - Specific meeting details
+- get_events(...) - Search events with flexible filtering
+- get_event_by_id(event_id) - Specific event details
+- get_committee_events(committee_id, ...) - Events for a specific committee
 
-### Members & Participants
-- get_committee_members(committee_id, skip, take) - Current committee members
-- get_committee_attendees_for_event(committee_id, event_id) - Who attended meeting
+### Members
+- get_committee_members(committee_id) - Current committee members
 
 ### Evidence & Publications
-- get_oral_evidence(committee_id, skip, take) - Oral evidence transcripts
-- get_written_evidence(committee_id, skip, take) - Written submissions
-- get_committee_publications(committee_id, skip, take) - Reports and documents
-- get_committee_publication_document_chapters(committee_id, publication_id) - Document sections
-
-### Types
-- get_committee_types() - Select Committee, Joint Committee, etc.
+- get_oral_evidence(committee_id) - Oral evidence transcripts
+- get_written_evidence(committee_id) - Written submissions
+- get_publications(committee_id) - Reports and documents
+- get_publication_by_id(publication_id) - Specific publication details
 
 ### Typical Workflow
 1. Search: search_committees("health") -> find committee_id
 2. Details: get_committee_by_id(committee_id) -> scope and membership
 3. Activity: get_committee_meetings("2024-01-01", "2024-12-31") -> recent meetings
-4. Evidence: get_oral_evidence(committee_id) -> witness testimonies
-5. Reports: get_committee_publications(committee_id) -> published reports""",
+4. Evidence: get_oral_evidence(committee_id=committee_id) -> witness testimonies
+5. Reports: get_publications(committee_id=committee_id) -> published reports""",
     "hansard": """## Hansard Tools (1 tool)
 
 ### Search
@@ -205,14 +244,15 @@ Hansard is the official verbatim record of everything said in Parliament:
 - Results include date, speaker, and context
 - Use date ranges to narrow results
 - Combine with member tools to find who said what""",
-    "questions": """## Questions & Motions Tools (3 tools)
+    "questions": """## Questions & Motions Tools (4 tools)
 
 ### Early Day Motions (EDMs)
-- search_early_day_motions(search_term, skip, take) - Find EDMs by topic
+- get_recently_tabled_edms(take) - Get recently tabled EDMs
+- search_early_day_motions(search_term) - Find EDMs by topic
 - edms_for_member_id(member_id) - EDMs signed/sponsored by a member
 
 ### Oral Questions
-- search_question_times(from_date, to_date, skip, take) - Find question sessions
+- search_oral_question_times(answering_date_start, answering_date_end) - Find question sessions
 
 ### About EDMs
 Early Day Motions are formal notices of a motion:
@@ -230,7 +270,7 @@ Question Time sessions where MPs/Lords ask ministers:
 ### Search & Browse
 - search_roi(member_id) - Get member's registered interests
 - interests_categories() - List interest categories
-- interests_registers() - Available registers
+- get_registers_of_interests() - Available registers
 
 ### About Register of Interests
 MPs and Lords must declare:
@@ -263,9 +303,9 @@ MPs and Lords must declare:
 - happening_now_in_lords() - Current Lords chamber activity
 
 ### Calendar & Schedule
-- search_calendar(from_date, to_date, house, skip, take) - Find scheduled events
-- get_session_days(from_date, to_date) - Parliamentary sitting days
-- get_non_sitting_days() - Recesses, bank holidays, etc.
+- search_calendar(house, start_date, end_date) - Find scheduled events (house: 'Commons' or 'Lords')
+- get_sessions() - List of parliamentary sessions
+- get_non_sitting_days(house, start_date, end_date) - Recesses, bank holidays, etc.
 
 ### Parameters
 - Dates: YYYY-MM-DD format
@@ -312,8 +352,8 @@ International agreements requiring parliamentary scrutiny:
 - search_erskine_may(search_term) - Search parliamentary procedure manual
 
 ### Bill Reference
-- get_bills_types() - Types of bills (from bills module)
-- get_stage_types() - Stage definitions (from bills module)
+- bill_types() - Types of bills (from bills module)
+- bill_stages() - Stage definitions (from bills module)
 
 ### About Erskine May
 "Parliamentary Practice" - the authoritative guide to:
@@ -336,42 +376,46 @@ International agreements requiring parliamentary scrutiny:
 5. Third Reading: Final debate
 6. Lords/Commons stages: Mirror process in other House
 7. Royal Assent: Becomes law""",
-    "all": """## All UK Parliament MCP Tools (86 tools)
+    "all": """## All UK Parliament MCP Tools (94 tools)
 
-### Members (25 tools)
+### Composite (4 tools) - Use These First!
+get_mp_profile, check_mp_vote, get_bill_overview, get_committee_summary
+
+### Members (26 tools)
 Search: search_members, get_member_by_name, search_members_historical
 Details: get_member_by_id, get_members_biography, get_members_contact, get_member_synopsis, get_member_experience, get_member_focus
 Activity: get_member_voting, get_commons_voting_record_for_member, get_lords_voting_record_for_member, get_member_written_questions, get_contributions, edms_for_member_id
-Interests: get_member_registered_interests, get_member_staff
+Interests: get_member_registered_interests, get_member_staff, get_lords_interests_staff
 Electoral: get_member_latest_election_result, get_constituencies, get_election_results_for_constituency
 Reference: parties_list_by_house, get_departments, get_answering_bodies
+History: get_members_history
+Images: get_member_portrait_url, get_member_thumbnail_url
 
 ### Bills (21 tools)
-Search: search_bills, get_recently_updated_bills, get_bill_by_id, get_bills_types
-Stages: get_bill_stages, get_stage_types, get_bill_stage_sittings
-Amendments: get_bill_amendments, get_bill_stage_amendments, get_bill_amendment_by_id
-Publications: get_bill_publications, get_publication_types, get_bill_news
-Sponsors: get_bill_sponsors
-RSS: get_bills_rss, get_rss_bill_stages
+Search: search_bills, get_recently_updated_bills, get_bill_by_id, bill_types
+Stages: get_bill_stages, bill_stages, get_bill_stage_details, get_sittings
+Amendments: get_bill_stage_amendments, get_amendment_by_id
+Ping-pong: get_bill_stage_ping_pong_items, get_ping_pong_item_by_id
+Publications: get_bill_publications, get_bill_stage_publications, get_publication_document, get_publication_types, get_bill_news_articles
+RSS: get_all_bills_rss, get_public_bills_rss, get_private_bills_rss, get_bill_rss
 
 ### Votes (10 tools)
-Commons: search_commons_divisions, get_commons_division_by_id, get_commons_voting_record_for_member, get_commons_divisions_by_member_grouped_by_party, get_commons_divisions_by_member_vote_count
-Lords: search_lords_divisions, get_lords_division_by_id, get_lords_voting_record_for_member, get_lords_divisions_by_member_grouped_by_party, get_lords_divisions_by_member_vote_count
+Commons: search_commons_divisions, get_commons_division_by_id, get_commons_voting_record_for_member, get_commons_divisions_grouped_by_party, get_commons_divisions_search_count
+Lords: search_lords_divisions, get_lords_division_by_id, get_lords_voting_record_for_member, get_lords_divisions_grouped_by_party, get_lords_divisions_search_count
 
 ### Committees (12 tools)
-Search: search_committees, get_committee_by_id
-Meetings: get_committee_meetings, get_committee_event_by_id
-Members: get_committee_members, get_committee_attendees_for_event
+Search: search_committees, get_committee_by_id, get_committee_types
+Meetings: get_committee_meetings, get_events, get_event_by_id, get_committee_events
+Members: get_committee_members
 Evidence: get_oral_evidence, get_written_evidence
-Publications: get_committee_publications, get_committee_publication_document_chapters
-Types: get_committee_types
+Publications: get_publications, get_publication_by_id
 
-### Other Tools (18 tools)
+### Other Tools (22 tools)
 Hansard: search_hansard
-Questions: search_early_day_motions, edms_for_member_id, search_question_times
-Interests: search_roi, interests_categories, interests_registers
+Questions: get_recently_tabled_edms, search_early_day_motions, search_oral_question_times
+Interests: search_roi, interests_categories, get_registers_of_interests
 Live: happening_now_in_commons, happening_now_in_lords
-Calendar: search_calendar, get_session_days, get_non_sitting_days
+Calendar: search_calendar, get_sessions, get_non_sitting_days
 Legislation: search_statutory_instruments, get_statutory_instruments_business_items, search_treaties
 Procedures: search_erskine_may
 Session: hello_parliament, goodbye_parliament, parliament_guide, parliament_workflow""",

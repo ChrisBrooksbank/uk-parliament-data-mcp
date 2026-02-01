@@ -177,11 +177,12 @@ class TestParliamentGuide:
         """parliament_guide with 'all' returns comprehensive tool list."""
         content_list, _ = await mcp.call_tool("parliament_guide", {"topic": "all"})
         text = content_list[0].text
-        assert "86 tools" in text
+        assert "94 tools" in text
         assert "Members" in text
         assert "Bills" in text
         assert "Votes" in text
         assert "Committees" in text
+        assert "Composite" in text
 
     @pytest.mark.asyncio
     async def test_guide_conventions_returns_content(self, mcp: FastMCP):
