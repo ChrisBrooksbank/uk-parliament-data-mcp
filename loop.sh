@@ -1,53 +1,73 @@
 #!/bin/bash
-# Ralph Wiggum Loop - UK Parliament MCP Migration
-# Usage:
-#   ./loop.sh          # Build mode, unlimited iterations
-#   ./loop.sh plan     # Planning mode
-#   ./loop.sh 20       # Build mode, max 20 iterations
-#   ./loop.sh plan 5   # Planning mode, max 5 iterations
+# Ralph Wiggum Loop - Fresh context per iteration
+# Usage: ./loop.sh [plan|build] [max_iterations]
+#
+# Examples:
+#   ./loop.sh plan      # Planning mode, unlimited
+#   ./loop.sh plan 5    # Planning mode, max 5 iterations
+#   ./loop.sh build     # Build mode, unlimited
+#   ./loop.sh build 20  # Build mode, max 20 iterations
 
-MODE="build"
-MAX=0
+set -e
 
-# Parse arguments
-for arg in "$@"; do
-    if [[ "$arg" == "plan" ]]; then
-        MODE="plan"
-    elif [[ "$arg" =~ ^[0-9]+$ ]]; then
-        MAX=$arg
-    fi
-done
+MODE="${1:-build}"
+MAX_ITERATIONS="${2:-0}"
+ITERATION=0
 
-# Select prompt file
-if [[ "$MODE" == "plan" ]]; then
-    PROMPT="PROMPT_plan.md"
+if [ "$MODE" = "plan" ]; then
+  PROMPT_FILE="PROMPT_plan.md"
+elif [ "$MODE" = "build" ]; then
+  PROMPT_FILE="PROMPT_build.md"
 else
-    PROMPT="PROMPT_build.md"
+  echo "Usage: ./loop.sh [plan|build] [max_iterations]"
+  exit 1
 fi
 
-echo "=== Ralph Wiggum Loop ==="
+if [ ! -f "$PROMPT_FILE" ]; then
+  echo "Error: $PROMPT_FILE not found"
+  exit 1
+fi
+
+echo "=========================================="
+echo "Ralph Wiggum Loop - Improvements"
 echo "Mode: $MODE"
-echo "Prompt: $PROMPT"
-echo "Max iterations: $([ $MAX -gt 0 ] && echo $MAX || echo 'unlimited')"
-echo "========================="
-echo ""
+echo "Prompt: $PROMPT_FILE"
+[ $MAX_ITERATIONS -gt 0 ] && echo "Max iterations: $MAX_ITERATIONS"
+echo "=========================================="
 
-count=0
-while :; do
-    ((count++))
-    echo "--- Iteration $count ---"
-
-    cat "$PROMPT" | claude --dangerously-skip-permissions
-
-    if [[ $MAX -gt 0 && $count -ge $MAX ]]; then
-        echo ""
-        echo "=== Max iterations ($MAX) reached ==="
-        break
-    fi
-
+while true; do
+  if [ $MAX_ITERATIONS -gt 0 ] && [ $ITERATION -ge $MAX_ITERATIONS ]; then
     echo ""
-    echo "--- Iteration $count complete. Starting next... ---"
-    echo ""
+    echo "Reached max iterations ($MAX_ITERATIONS). Stopping."
+    break
+  fi
+
+  ITERATION=$((ITERATION + 1))
+  echo ""
+  echo "=========================================="
+  echo "Iteration $ITERATION (Mode: $MODE)"
+  echo "$(date '+%Y-%m-%d %H:%M:%S')"
+  echo "=========================================="
+
+  # Fresh Claude session each iteration - context resets!
+  cat "$PROMPT_FILE" | claude -p \
+    --dangerously-skip-permissions \
+    --model sonnet
+
+  # Auto-commit progress after each iteration
+  git add -A
+  if ! git diff --staged --quiet; then
+    git commit -m "Ralph iteration $ITERATION ($MODE mode)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+    echo "Changes committed."
+  else
+    echo "No changes to commit."
+  fi
+
+  echo "Iteration $ITERATION complete."
+  sleep 2
 done
 
-echo "=== Loop finished after $count iterations ==="
+echo ""
+echo "Ralph loop finished after $ITERATION iterations."

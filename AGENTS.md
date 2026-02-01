@@ -1,73 +1,56 @@
-# AGENTS.md - Operational Reference
+# AGENTS.md - Operational Guide
 
-## Project: UK Parliament MCP Server (Python Migration)
+Keep this file under 60 lines. It's loaded every iteration.
 
-### Quick Reference
+## Build Commands
 
 ```bash
-# Create virtual environment
-uv venv
-.venv\Scripts\activate     # Windows
-source .venv/bin/activate  # Linux/Mac
+# Install dependencies (dev mode)
+pip install -e ".[dev]"
 
-# Install dependencies
-uv pip install -e ".[dev]"
-
-# Run MCP server
+# Run the MCP server
 python -m uk_parliament_mcp
-
-# Run tests
-pytest
-
-# Type checking
-mypy src/
-
-# Linting
-ruff check src/
-ruff format src/
-
-# All checks (must pass before commit)
-pytest && mypy src/ && ruff check src/
 ```
 
-### Project Structure
+## Test Commands
 
-```
-uk-parliament-mcp-lab/
-├── specs/python-migration-spec.md    # Migration specification
-├── src/uk_parliament_mcp/            # Python package
-│   ├── __main__.py                   # Entry point
-│   ├── server.py                     # FastMCP setup
-│   ├── http_client.py                # HTTP with retry
-│   └── tools/                        # 14 tool modules
-├── tests/                            # pytest tests
-├── context/                          # API spec JSONs
-└── OpenData.Mcp.Server/              # C# reference (DO NOT DELETE)
+```bash
+pytest                              # Run all tests
+pytest tests/test_tools/            # Run tool tests only
+pytest --cov=uk_parliament_mcp      # Run with coverage
 ```
 
-### Key Conventions
+## Validation (run before committing)
 
+```bash
+ruff check src/                     # Lint check
+ruff format --check src/            # Format check
+mypy src/                           # Type check
+pytest                              # Tests
+
+# All at once:
+ruff check src/ && ruff format --check src/ && mypy src/ && pytest
+```
+
+## Fixing Issues
+
+```bash
+ruff check src/ --fix               # Auto-fix lint issues
+ruff format src/                    # Auto-format code
+```
+
+## Project Notes
+
+- Python 3.11+ required
+- Tool descriptions use semantic format: `Action | Keywords | Use case | Returns`
 - House IDs: 1 = Commons, 2 = Lords
 - Date format: YYYY-MM-DD
-- All tools are read-only and idempotent
-- Tool response format: `{"url": "...", "data": "..."}` or `{"url": "...", "error": "...", "statusCode": N}`
+- API base URLs should be in `src/uk_parliament_mcp/config.py` (after Phase 2.1)
+- Test files mirror source structure: `tools/members.py` -> `test_tools/test_members.py`
 
-### Tool Count Target
+## Key Files
 
-86 tools across 14 modules. Verify with:
-```python
-server = create_server()
-assert len(list(server.list_tools())) == 86
-```
-
-### C# Reference
-
-Keep `OpenData.Mcp.Server/` as reference during migration. Only delete after all 86 tools verified working.
-
-### Commit Format
-
-```
-feat: Add {module} tools ({count} tools)
-fix: Correct {issue} in {module}
-test: Add tests for {module}
-```
+- `docs/IMPROVEMENT_PLAN.md` - Master improvement plan
+- `docs/PHASE*.md` - Detailed phase specifications
+- `IMPLEMENTATION_PLAN_IMPROVEMENTS.md` - Current task tracking
+- `CLAUDE.md` - Project documentation for Claude Code

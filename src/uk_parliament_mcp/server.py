@@ -2,7 +2,6 @@
 
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.tools.core import SYSTEM_PROMPT
 from uk_parliament_mcp.tools import (
     bills,
     committees,
@@ -20,6 +19,7 @@ from uk_parliament_mcp.tools import (
     treaties,
     whatson,
 )
+from uk_parliament_mcp.tools.core import SYSTEM_PROMPT
 
 
 def create_server() -> FastMCP:

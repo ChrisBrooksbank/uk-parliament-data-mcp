@@ -1,119 +1,57 @@
-# PROMPT_build.md - Build Phase
+# BUILD MODE
 
-You are migrating the UK Parliament MCP Server from C# .NET 9.0 to Python. This is the BUILD phase - implement one task at a time with full validation.
+You are in build mode. Your job is to implement ONE task from the plan, then exit.
 
-## Phase 0: Orientation
+## 0a. Read AGENTS.md
 
-Study the project state:
+Read `AGENTS.md` to understand build/test/lint commands for this project.
 
-1. Read `AGENTS.md` for build commands and conventions
-2. Read `IMPLEMENTATION_PLAN.md` for current task status
-3. Read `specs/python-migration-spec.md` if you need implementation details
+## 0b. Read Implementation Plan
 
-## Phase 1: Select Task
+Read `IMPLEMENTATION_PLAN_IMPROVEMENTS.md`. Find the first uncompleted task (marked with `- [ ]`).
 
-From `IMPLEMENTATION_PLAN.md`, select the FIRST unchecked task (`- [ ]`) in the highest priority section.
+## 0c. Study Relevant Specs
 
-If no tasks remain, report completion and stop.
+Read the specification file(s) in `docs/` related to your task to understand requirements.
 
-## Phase 2: Investigate
+## 0d. Understand Existing Code
 
-Before implementing, study:
+Read relevant existing code to understand patterns and conventions.
 
-1. The C# reference implementation in `OpenData.Mcp.Server/Tools/` for:
-   - Exact API endpoints
-   - Query parameter names
-   - Tool description text
-   - Error handling patterns
+## 1. Implement the Task
 
-2. Existing Python code for:
-   - Import patterns
-   - How other tools are structured
-   - Shared utilities in http_client.py
+Write code to complete the task:
+- Follow existing code patterns
+- Write tests for new functionality (if applicable)
+- Keep changes focused on the single task
 
-Use only 1 subagent for investigation to preserve context.
+## 2. Validate
 
-## Phase 3: Implement
-
-Write the code following the spec patterns:
-
-```python
-@mcp.tool()
-async def tool_name(param: str) -> str:
-    """Description from C# [Description] attribute.
-
-    Args:
-        param: Description from C# parameter attribute.
-
-    Returns:
-        Response format description.
-    """
-    url = build_url(f"{API_BASE}/endpoint", {"param": param})
-    return await get_result(url)
-```
-
-Key requirements:
-- Match C# tool descriptions exactly
-- Use `build_url()` for query parameters
-- Use `quote()` from urllib.parse for path segments
-- Return type is always `str`
-
-## Phase 4: Validate
-
-Run ALL checks. ALL must pass before proceeding:
-
+Run the validation command from AGENTS.md:
 ```bash
-# 1. Type check
-mypy src/
-
-# 2. Lint
-ruff check src/
-
-# 3. Tests (if they exist)
-pytest
-
-# 4. Server starts
-python -m uk_parliament_mcp
+ruff check src/ && ruff format --check src/ && mypy src/ && pytest
 ```
 
-If any check fails, fix the issue before continuing.
+If validation fails:
+- Fix the issues
+- Run validation again
+- Repeat until passing
 
-## Phase 5: Update Plan
+## 3. Update Plan and Exit
 
-Mark the completed task in `IMPLEMENTATION_PLAN.md`:
+After validation passes:
+1. Mark the task complete in `IMPLEMENTATION_PLAN_IMPROVEMENTS.md`: `- [ ]` becomes `- [x]`
+2. Exit cleanly
 
-```markdown
-- [x] tools/members.py - get_member_by_name
-```
+The loop will restart with fresh context for the next task.
 
-## Phase 6: Commit
+---
 
-Create a commit with a descriptive message:
+## 99999. GUARDRAILS - READ CAREFULLY
 
-```bash
-git add .
-git commit -m "feat: Add get_member_by_name tool to members module"
-```
-
-## Guardrails
-
-999. Only implement ONE task per iteration
-1000. NEVER skip validation - all checks must pass
-1001. NEVER delete C# reference code
-1002. If stuck on a task for 2+ attempts, mark it as blocked and move to next
-1003. Keep IMPLEMENTATION_PLAN.md accurate
-
-## Blocked Tasks
-
-If a task is blocked, update the plan:
-
-```markdown
-- [ ] ~tools/foo.py - blocked_tool~ BLOCKED: [reason]
-```
-
-## Output
-
-After each iteration, report:
-- Task completed (or blocked reason)
-- Validation results
-- Next task to attempt
+- **DON'T skip validation** - always run tests/lint before finishing
+- **DON'T implement multiple tasks** - one task per iteration
+- **DON'T modify unrelated code** - stay focused on the current task
+- **DO follow existing code patterns** - consistency matters
+- **DO write tests** for new functionality
+- **DO update `IMPLEMENTATION_PLAN_IMPROVEMENTS.md`** before exiting

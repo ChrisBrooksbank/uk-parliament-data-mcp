@@ -1,80 +1,63 @@
-# PROMPT_plan.md - Planning Phase
+# PLANNING MODE
 
-You are migrating the UK Parliament MCP Server from C# .NET 9.0 to Python. This is the PLANNING phase - you must NOT implement anything. Your job is to analyze gaps and generate a prioritized task list.
+You are in planning mode. Your job is to analyze the improvement specifications and update the implementation plan. DO NOT write any code.
 
-## Phase 0: Orientation
+## 0a. Study Specifications
 
-Study these files using parallel subagents:
+Using parallel subagents, read and understand each file in the `docs/` directory:
+- `docs/IMPROVEMENT_PLAN.md` - Master plan overview
+- `docs/PHASE1_QUICK_WINS.md` - Badges, TOC, tool count verification
+- `docs/PHASE2_CODE_QUALITY.md` - Centralized config, TypedDict, validators
+- `docs/PHASE3_TESTING.md` - Test coverage expansion
+- `docs/PHASE4_DOCUMENTATION.md` - README restructure, CHANGELOG, CONTRIBUTING
+- `docs/PHASE5_ARCHITECTURE.md` - CI coverage, caching, pre-commit hooks
 
-1. **Specification subagent**: Study `specs/python-migration-spec.md` - understand target architecture, code patterns, all 86 tools
-2. **C# Reference subagent**: Study `OpenData.Mcp.Server/Tools/*.cs` - understand current implementation, exact API endpoints, parameter handling
-3. **Current State subagent**: Study existing Python files in `src/` (if any) - understand what's already implemented
+These define what needs to be implemented.
 
-Don't assume anything is or isn't implemented. Study the actual files.
+## 0b. Review Current Plan
 
-## Phase 1: Gap Analysis
+Read `IMPLEMENTATION_PLAN_IMPROVEMENTS.md` to understand what tasks exist and their status.
 
-After orientation, compare:
-- What the spec requires (86 tools, http_client, server setup)
-- What currently exists in Python
+## 0c. Examine Codebase
 
-For each component, determine:
-- NOT_STARTED: No Python file exists
-- PARTIAL: File exists but incomplete
-- COMPLETE: File exists and matches spec
+Using parallel subagents, explore the existing codebase to understand:
+- What's already implemented
+- Code patterns and conventions in `src/uk_parliament_mcp/`
+- Test structure in `tests/`
+- Current README.md and documentation state
 
-## Phase 2: Generate Implementation Plan
+## 1. Gap Analysis
 
-Write to `IMPLEMENTATION_PLAN.md` with this structure:
+Compare the improvement specifications against the existing codebase:
+- What improvements are fully implemented?
+- What improvements are partially implemented?
+- What improvements have no implementation?
 
-```markdown
-# Implementation Plan
+## 2. Update Implementation Plan
 
-## Status Summary
-- Total tools required: 86
-- Tools implemented: [count]
-- Core infrastructure: [status]
+Update `IMPLEMENTATION_PLAN_IMPROVEMENTS.md` with:
+- New tasks for unimplemented requirements
+- Refined tasks based on what you learned
+- Clear priority order (Phase 1 before Phase 2, etc.)
+- Mark any completed tasks as done
 
-## Priority 1: Core Infrastructure
-- [ ] Create pyproject.toml
-- [ ] Create src/uk_parliament_mcp/__init__.py
-- [ ] Create src/uk_parliament_mcp/__main__.py
-- [ ] Create src/uk_parliament_mcp/server.py
-- [ ] Create src/uk_parliament_mcp/http_client.py
-
-## Priority 2: Core Tools (2 tools)
-- [ ] tools/core.py - hello_parliament
-- [ ] tools/core.py - goodbye_parliament
-
-## Priority 3: Members Tools (24 tools)
-- [ ] tools/members.py - get_member_by_name
-- [ ] tools/members.py - get_member_by_id
-... (list each tool)
-
-## Priority 4-14: Remaining Modules
-... (list each module and its tools)
-
-## Priority 15: Testing
-- [ ] tests/test_http_client.py
-- [ ] tests/test_tools/test_core.py
-...
-
-## Priority 16: Documentation
-- [ ] Update CLAUDE.md for Python
-- [ ] Update README.md for Python
+Format tasks as:
+```
+- [ ] Task description (spec: PHASE#_NAME.md)
+- [x] Completed task
 ```
 
-## Guardrails
+## 3. Exit
 
-999. DO NOT write any code or create any files except IMPLEMENTATION_PLAN.md
-1000. DO NOT delete any files
-1001. Every task must be specific and actionable
-1002. Reference exact C# tool names and methods
-1003. Keep IMPLEMENTATION_PLAN.md up to date with current state
+After updating the plan, your work is done. Exit cleanly. The loop will restart with fresh context for the next iteration.
 
-## Output
+---
 
-After generating the plan, report:
-- Total tasks identified
-- Current completion status
-- Recommended next action for build phase
+## 99999. GUARDRAILS - READ CAREFULLY
+
+- **DON'T assume code doesn't exist** - always verify by reading files first
+- **DON'T write any implementation code** - planning mode is for planning only
+- **DON'T modify source files** - only modify `IMPLEMENTATION_PLAN_IMPROVEMENTS.md`
+- **DO capture architectural decisions** in the plan
+- **DO prioritize tasks logically** (Phase 1 before Phase 2, dependencies first)
+- **DO keep tasks small** - one task = one iteration in build mode
