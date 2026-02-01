@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 86 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
+UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 94 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
 
 ## Installation
 
@@ -71,9 +71,10 @@ AI Assistant ──(MCP/stdio)──> uk_parliament_mcp ──(HTTP)──> UK P
   - URL building with parameter filtering (`build_url`)
   - Consistent response format: `{url, data}` or `{url, error, statusCode}`
 
-- **`tools/*.py`**: 14 tool modules (86 total tools) each targeting a specific Parliament API:
+- **`tools/*.py`**: 15 tool modules (94 total tools) each targeting a specific Parliament API:
   | Module | API Domain | Purpose |
   |--------|------------|---------|
+  | composite.py | Multiple APIs | High-level tools combining multiple API calls |
   | members.py | members-api.parliament.uk | MPs, Lords, constituencies, parties |
   | bills.py | bills-api.parliament.uk | Legislation, amendments, stages |
   | commons_votes.py | commonsvotes-api.parliament.uk | Commons divisions |
@@ -160,9 +161,33 @@ Initialize a UK Parliament research session. Invocable as a slash command in Cla
 
 This prompt is separate from the guidance **tools** below - prompts appear in the "/" menu and provide session context, while tools are called explicitly during research.
 
+## Composite Tools
+
+High-level tools that combine multiple API calls for common research tasks. Use these first for efficiency:
+
+### `get_mp_profile(name)`
+Get comprehensive MP/Lord profile in one call. Combines member search + biography + interests + voting.
+- Returns: Basic info, biography, registered interests, recent votes
+- Example: `get_mp_profile("Keir Starmer")`
+
+### `check_mp_vote(mp_name, topic)`
+Check how an MP voted on a specific topic. Combines member search + division lookup.
+- Returns: MP info and divisions on the topic where they voted
+- Example: `check_mp_vote("Boris Johnson", "climate")`
+
+### `get_bill_overview(search_term)`
+Get comprehensive bill overview. Combines bill search + details + stages + publications.
+- Returns: Bill details, legislative stages, associated documents
+- Example: `get_bill_overview("Online Safety")`
+
+### `get_committee_summary(topic)`
+Get comprehensive committee summary. Combines committee search + details + evidence + publications.
+- Returns: Committee info, witness testimonies, written submissions, reports
+- Example: `get_committee_summary("Treasury")`
+
 ## Agent Guidance Tools
 
-The server also includes guidance **tools** to help AI assistants navigate the 86 available tools:
+The server also includes guidance **tools** to help AI assistants navigate the 94 available tools:
 
 ### `hello_parliament()`
 Initialize a parliamentary research session. Returns:
@@ -175,7 +200,8 @@ End the parliamentary session and restore normal assistant behavior.
 
 ### `parliament_guide(topic)`
 Get detailed guidance for a specific domain. Available topics:
-- `members` - 25 tools for MPs, Lords, constituencies, parties
+- `composite` - 4 high-level tools combining multiple API calls
+- `members` - 26 tools for MPs, Lords, constituencies, parties
 - `bills` - 21 tools for legislation, amendments, stages
 - `votes` - 10 tools for Commons and Lords divisions
 - `committees` - 12 tools for committee info, meetings, evidence
@@ -185,7 +211,7 @@ Get detailed guidance for a specific domain. Available topics:
 - `live` - Current activity, calendar (now + whatson)
 - `legislation` - SIs, treaties
 - `procedures` - Erskine May, bill types, stage definitions
-- `all` - Condensed reference of all 86 tools
+- `all` - Condensed reference of all 94 tools
 - `conventions` - Date formats, house IDs, pagination
 - `workflows` - Overview of common research patterns
 
@@ -235,7 +261,8 @@ src/uk_parliament_mcp/
 └── tools/
     ├── __init__.py
     ├── core.py         # Session management & guidance (4 tools)
-    ├── members.py      # Member tools (25 tools)
+    ├── composite.py    # High-level composite tools (4 tools)
+    ├── members.py      # Member tools (26 tools)
     ├── bills.py        # Bills tools (21 tools)
     ├── committees.py   # Committees tools (12 tools)
     ├── commons_votes.py    # Commons votes (5 tools)
