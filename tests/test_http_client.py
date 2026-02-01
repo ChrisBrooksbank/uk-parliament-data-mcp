@@ -10,7 +10,9 @@ from pytest_httpx import HTTPXMock
 from uk_parliament_mcp.http_client import (
     ParliamentHTTPClient,
     build_url,
+    clear_cache,
     get_result,
+    get_result_cached,
 )
 
 
@@ -222,3 +224,158 @@ class TestGetResultGlobal:
 
         assert parsed["url"] == "https://api.example.com/test"
         assert "data" in parsed
+
+
+class TestGetResultCached:
+    """Tests for the cached get_result function."""
+
+    @pytest.mark.asyncio
+    async def test_cache_hit(self, httpx_mock: HTTPXMock):
+        """Second call with same cache_key returns cached result."""
+        clear_cache()  # Ensure clean state
+
+        httpx_mock.add_response(
+            url="https://api.example.com/bill-types",
+            json={"items": ["type1", "type2"]},
+        )
+
+        # First call - should hit the API
+        result1 = await get_result_cached(
+            "https://api.example.com/bill-types", cache_key="bill_types"
+        )
+        parsed1 = json.loads(result1)
+        assert "data" in parsed1
+
+        # Second call - should use cache (no additional mock needed)
+        result2 = await get_result_cached(
+            "https://api.example.com/bill-types", cache_key="bill_types"
+        )
+        parsed2 = json.loads(result2)
+        assert "data" in parsed2
+
+        # Should have only made one HTTP request
+        assert len(httpx_mock.get_requests()) == 1
+
+        # Results should be identical
+        assert result1 == result2
+
+    @pytest.mark.asyncio
+    async def test_no_cache_without_key(self, httpx_mock: HTTPXMock):
+        """Without cache_key, no caching occurs."""
+        clear_cache()
+
+        httpx_mock.add_response(
+            url="https://api.example.com/test",
+            json={"data": "first"},
+        )
+        httpx_mock.add_response(
+            url="https://api.example.com/test",
+            json={"data": "second"},
+        )
+
+        # First call without cache_key
+        result1 = await get_result_cached("https://api.example.com/test")
+        parsed1 = json.loads(result1)
+        assert "data" in parsed1
+
+        # Second call should make another request
+        result2 = await get_result_cached("https://api.example.com/test")
+        parsed2 = json.loads(result2)
+        assert "data" in parsed2
+
+        # Should have made two HTTP requests
+        assert len(httpx_mock.get_requests()) == 2
+
+    @pytest.mark.asyncio
+    async def test_error_not_cached(self, httpx_mock: HTTPXMock):
+        """Error responses are not cached."""
+        clear_cache()
+
+        # First call fails with 404 (non-retryable error for clean test)
+        httpx_mock.add_response(
+            url="https://api.example.com/test",
+            status_code=404,
+        )
+
+        result1 = await get_result_cached(
+            "https://api.example.com/test", cache_key="test_key"
+        )
+        parsed1 = json.loads(result1)
+        assert "error" in parsed1
+
+        # Second call should fetch again (add success response)
+        httpx_mock.add_response(
+            url="https://api.example.com/test",
+            json={"data": "success"},
+        )
+
+        result2 = await get_result_cached(
+            "https://api.example.com/test", cache_key="test_key"
+        )
+        parsed2 = json.loads(result2)
+        assert "data" in parsed2
+        assert "error" not in parsed2
+
+        # Should have made two requests (first error, second success)
+        assert len(httpx_mock.get_requests()) == 2
+
+    @pytest.mark.asyncio
+    async def test_clear_cache(self, httpx_mock: HTTPXMock):
+        """clear_cache removes all cached entries."""
+        clear_cache()
+
+        httpx_mock.add_response(
+            url="https://api.example.com/test",
+            json={"data": "first"},
+        )
+
+        # Cache a result
+        result1 = await get_result_cached(
+            "https://api.example.com/test", cache_key="test_key"
+        )
+        assert "data" in json.loads(result1)
+
+        # Clear cache
+        clear_cache()
+
+        # Next call should hit API again
+        httpx_mock.add_response(
+            url="https://api.example.com/test",
+            json={"data": "second"},
+        )
+
+        result2 = await get_result_cached(
+            "https://api.example.com/test", cache_key="test_key"
+        )
+        assert "data" in json.loads(result2)
+
+        # Should have made two requests (before and after clear)
+        assert len(httpx_mock.get_requests()) == 2
+
+    @pytest.mark.asyncio
+    async def test_different_cache_keys(self, httpx_mock: HTTPXMock):
+        """Different cache keys result in separate cache entries."""
+        clear_cache()
+
+        httpx_mock.add_response(
+            url="https://api.example.com/test1",
+            json={"data": "first"},
+        )
+        httpx_mock.add_response(
+            url="https://api.example.com/test2",
+            json={"data": "second"},
+        )
+
+        # Cache two different results
+        result1 = await get_result_cached(
+            "https://api.example.com/test1", cache_key="key1"
+        )
+        result2 = await get_result_cached(
+            "https://api.example.com/test2", cache_key="key2"
+        )
+
+        assert "data" in json.loads(result1)
+        assert "data" in json.loads(result2)
+
+        # Both should have been fetched
+        assert len(httpx_mock.get_requests()) == 2

@@ -4,9 +4,8 @@ from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP
 
+from uk_parliament_mcp.config import STATUTORY_INSTRUMENTS_API_BASE
 from uk_parliament_mcp.http_client import get_result
-
-STATUTORY_INSTRUMENTS_API_BASE = "https://statutoryinstruments-api.parliament.uk/api/v2"
 
 
 def register_tools(mcp: FastMCP) -> None:

@@ -2,9 +2,8 @@
 
 from mcp.server.fastmcp import FastMCP
 
+from uk_parliament_mcp.config import NOW_API_BASE
 from uk_parliament_mcp.http_client import get_result
-
-NOW_API_BASE = "https://now-api.parliament.uk/api"
 
 
 def register_tools(mcp: FastMCP) -> None:

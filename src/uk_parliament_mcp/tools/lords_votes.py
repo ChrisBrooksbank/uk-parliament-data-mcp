@@ -4,9 +4,8 @@ from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP
 
+from uk_parliament_mcp.config import LORDS_VOTES_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
-
-LORDS_VOTES_API_BASE = "http://lordsvotes-api.parliament.uk/data"
 
 
 def register_tools(mcp: FastMCP) -> None:

@@ -5,12 +5,41 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any
+from datetime import datetime, timedelta
+from typing import Any, NotRequired, TypedDict
 from urllib.parse import urlencode
 
 import httpx
 
 logger = logging.getLogger(__name__)
+
+
+# Response type definitions
+class SuccessResponse(TypedDict):
+    """Response structure for successful API calls."""
+
+    url: str
+    data: str
+
+
+class ErrorResponse(TypedDict):
+    """Response structure for failed API calls."""
+
+    url: str
+    error: str
+    statusCode: NotRequired[int]
+
+
+# Union type for API responses
+APIResponse = SuccessResponse | ErrorResponse
+
+
+class CacheEntry(TypedDict):
+    """Cache entry structure for storing API responses."""
+
+    data: str
+    expires: datetime
+
 
 # Configuration constants (matching C# implementation)
 HTTP_TIMEOUT = 30.0  # seconds
@@ -19,6 +48,10 @@ RETRY_DELAY_BASE = 1.0  # seconds
 
 # HTTP status codes that should trigger a retry
 TRANSIENT_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
+
+# Cache configuration
+CACHE_TTL = timedelta(minutes=15)
+_cache: dict[str, CacheEntry] = {}
 
 
 def build_url(base_url: str, parameters: dict[str, Any]) -> str:
@@ -158,3 +191,47 @@ _client = ParliamentHTTPClient()
 async def get_result(url: str) -> str:
     """Convenience function using global client."""
     return await _client.get_result(url)
+
+
+async def get_result_cached(url: str, cache_key: str | None = None) -> str:
+    """
+    Get result with optional caching for reference data.
+
+    Use this for frequently accessed reference data that rarely changes,
+    such as bill types, bill stages, committee types, etc.
+
+    Args:
+        url: API URL to fetch
+        cache_key: Optional cache key. If None, no caching is used.
+
+    Returns:
+        JSON response string in the same format as get_result()
+    """
+    key = cache_key or url
+
+    # Check cache
+    if key in _cache:
+        entry = _cache[key]
+        if datetime.now() < entry["expires"]:
+            logger.debug("Cache hit for %s", key)
+            return entry["data"]
+        else:
+            # Expired entry, remove it
+            del _cache[key]
+            logger.debug("Cache expired for %s", key)
+
+    # Fetch fresh data
+    result = await get_result(url)
+
+    # Cache if successful and cache_key provided
+    if cache_key and '"error"' not in result:
+        _cache[key] = {"data": result, "expires": datetime.now() + CACHE_TTL}
+        logger.debug("Cached result for %s", key)
+
+    return result
+
+
+def clear_cache() -> None:
+    """Clear all cached data."""
+    _cache.clear()
+    logger.debug("Cache cleared")

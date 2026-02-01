@@ -1,6 +1,23 @@
 # UK Parliament AI Assistant
 
+[![PyPI version](https://badge.fury.io/py/uk-parliament-mcp.svg)](https://badge.fury.io/py/uk-parliament-mcp)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/actions/workflows/ci.yml)
+
 Access official UK Parliament data through AI assistants. Query MPs, Lords, bills, votes, committees, debates, and more.
+
+## Table of Contents
+
+- [Quick Install](#quick-install)
+- [Getting Started](#getting-started)
+- [What Can I Ask?](#what-can-i-ask)
+- [Full Installation Guide](#full-installation-guide)
+  - [Installation from Source](#installation-from-source)
+  - [Claude Desktop Configuration](#add-mcp-server-in-claude-desktop-application)
+  - [VS Code Configuration](#add-mcp-server-in-vs-code)
+- [Prompting Tips](#prompting-tips)
+- [Example Prompts](#example-prompts)
 
 ## Quick Install
 
@@ -22,7 +39,7 @@ uvx uk-parliament-mcp
 - Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
 - Or say "Hello Parliament" to initialize the session
 
-This gives your AI assistant the context it needs to effectively use the 94 available tools.
+This gives your AI assistant the context it needs to effectively use the 92 available tools.
 
 ## What Can I Ask?
 
@@ -37,6 +54,23 @@ You can ask questions about virtually all aspects of UK Parliament data. Here ar
 *   **Constituencies & Elections:** "Show me election results for Birmingham constituencies" or "List all constituencies in Scotland"
 *   **Official Documents:** "Are there any statutory instruments about housing?" or "What treaties involve trade agreements?"
 *   **Transparency Data:** "Show register of interests for Treasury ministers" or "What are the declared interests categories?"
+
+## Power Tools
+
+These high-level tools combine multiple API calls for common research tasks:
+
+| Tool | What it does |
+|------|--------------|
+| `get_mp_profile(name)` | Complete MP/Lord profile: bio, interests, voting record |
+| `check_mp_vote(mp_name, topic)` | How an MP voted on a specific topic |
+| `get_bill_overview(search_term)` | Full bill info: details, stages, publications |
+| `get_committee_summary(topic)` | Committee overview: evidence, publications |
+
+**Example:**
+```
+Tell me everything about Keir Starmer
+```
+The AI will use `get_mp_profile` to fetch biography, registered interests, and voting history in a single efficient call.
 
 ## Disconnecting from Parliament
 
@@ -93,6 +127,19 @@ pip install -e .
 * Exit claude ( with TaskMon if needed ) and restart it
 * Open developer tab again and check it is running
 * Enter the system prompt and test its working ok
+
+##### Which Configuration Should I Use?
+
+| Method | Best For | Pros | Cons |
+|--------|----------|------|------|
+| `uvx uk-parliament-mcp` | Most users | No install needed, always latest version | Requires uvx installed |
+| `pip install uk-parliament-mcp` | Production use | Stable, version locked | Requires pip, manual updates |
+| Local development install | Contributors | Full source access, can modify | More complex setup |
+
+**Quick recommendation:**
+- **New users:** Use `uvx` method
+- **Developers:** Use local install
+- **Production deployments:** Use `pip install` with pinned version
 
 **Using uvx (recommended - no installation needed):**
 
@@ -225,12 +272,18 @@ Show me the JSON returned from the last MCP call.
 
 ### Example Prompts
 
-#### 🏛️ Live Parliamentary Activity
+<details>
+<summary><strong>Live Parliamentary Activity</strong> (3 examples)</summary>
+
 - What is happening now in both Houses?
 - What's currently happening in the House of Commons?
 - What's currently happening in the House of Lords?
 
-#### 👥 Members of Parliament
+</details>
+
+<details>
+<summary><strong>Members of Parliament</strong> (14 examples)</summary>
+
 - Show me the interests of Sir Keir Starmer
 - Who is Boris Johnson?
 - Who is the member with ID 1471?
@@ -246,7 +299,11 @@ Show me the JSON returned from the last MCP call.
 - Get the constituency election results for member 4129
 - Show me the portrait and thumbnail images for member 172
 
-#### 📜 Bills and Legislation
+</details>
+
+<details>
+<summary><strong>Bills and Legislation</strong> (14 examples)</summary>
+
 - What recent bills are about fishing?
 - What bills were updated recently?
 - Show me details of bill 425
@@ -262,7 +319,11 @@ Show me the JSON returned from the last MCP call.
 - Get the RSS feed for public bills only
 - Get the RSS feed for bill 425
 
-#### 🗳️ Voting and Divisions
+</details>
+
+<details>
+<summary><strong>Voting and Divisions</strong> (6 examples)</summary>
+
 - Search Commons Divisions for the keyword "refugee"
 - Show details of Commons division 1234
 - Show details of Lords division 5678
@@ -270,7 +331,11 @@ Show me the JSON returned from the last MCP call.
 - Get Lords divisions grouped by party for member 3743
 - How many divisions match the search term "brexit"?
 
-#### 🏢 Committees and Inquiries
+</details>
+
+<details>
+<summary><strong>Committees and Inquiries</strong> (9 examples)</summary>
+
 - Which committees are focused on women's issues?
 - List committee meetings scheduled for November 2024
 - Show me details of committee 789
@@ -281,7 +346,11 @@ Show me the JSON returned from the last MCP call.
 - Show me oral evidence from committee 789 hearings
 - What are all the committee types?
 
-#### 🏛️ Parliamentary Procedures
+</details>
+
+<details>
+<summary><strong>Parliamentary Procedures</strong> (9 examples)</summary>
+
 - Search Erskine May for references to the Mace
 - Show oral question times for questions tabled in November 2024
 - Search Hansard for contributions on Brexit from November 2024
@@ -292,30 +361,48 @@ Show me the JSON returned from the last MCP call.
 - Show parliamentary calendar events for Commons in December 2024
 - When is Parliament not sitting in January 2025?
 
-#### 📍 Constituencies and Elections
+</details>
+
+<details>
+<summary><strong>Constituencies and Elections</strong> (3 examples)</summary>
+
 - List all UK constituencies
 - Show the election results for constituency 4359
 - Search for constituencies containing "london"
 
-#### 💰 Transparency and Interests
+</details>
+
+<details>
+<summary><strong>Transparency and Interests</strong> (4 examples)</summary>
+
 - List all categories of members' interests
 - Get published registers of interests
 - Show staff interests for Lords members
 - Search the register of interests for member 1471
 
-#### 📋 Official Documents and Publications
+</details>
+
+<details>
+<summary><strong>Official Documents and Publications</strong> (5 examples)</summary>
+
 - Are there any statutory instruments about harbours?
 - Search Acts of Parliament that mention roads
 - What treaties involve Spain?
 - What publication types are available for bills?
 - Show me document 123 from publication 456
 
-#### 🔍 Advanced Queries
+</details>
+
+<details>
+<summary><strong>Advanced Queries</strong> (5 examples)</summary>
+
 - Show the full data from this pasted API result: {PasteApiResultHere}
 - Show me the JSON returned from the last MCP call
 - Show me the API URL you just used
 - Search for bills sponsored by member 172 from the Environment department
 - Find all committee meetings about climate change between November and December 2024
+
+</details>
 
 ---
 

@@ -4,74 +4,189 @@
 
 ## Status Summary
 
-- **Planning iterations:** 0
-- **Build iterations:** 0
-- **Last updated:** (auto-updated by planning mode)
+- **Planning iterations:** 1
+- **Build iterations:** 2
+- **Last updated:** 2026-02-01
 
-## Phase 1: Quick Wins
+## Gap Analysis Summary
 
-- [ ] Add badges to README.md (PyPI, Python version, License, CI) (spec: PHASE1_QUICK_WINS.md)
-- [ ] Add table of contents to README.md (spec: PHASE1_QUICK_WINS.md)
-- [ ] Verify tool count consistency across README, CLAUDE.md, and core.py (spec: PHASE1_QUICK_WINS.md)
-- [ ] Remove unused imports in tool modules if any exist (spec: PHASE1_QUICK_WINS.md)
+### What's Already Implemented
+- README has emoji-organized example prompts (Phase 4.1 - partially done)
+- Basic test structure exists (tests/test_http_client.py, test_core.py, test_composite.py)
+- CI workflow exists with lint, type check, and tests
+
+### What's Not Implemented
+- No badges in README
+- No table of contents in README
+- Tool count is WRONG (claims 94, actual is 92)
+- No centralized config.py
+- No TypedDict in http_client.py
+- Unsafe dict access exists in composite.py:78
+- tenacity dependency is unused
+- No pytest-cov or coverage config
+- Only 3 tool test files exist (11 modules untested)
+- No CHANGELOG.md or CONTRIBUTING.md
+- No pip caching in CI
+- No coverage reporting in CI
+- No dependabot.yml
+
+---
+
+## Phase 1: Quick Wins (High Priority)
+
+### 1.1 README Badges
+- [x] Add badges after title: PyPI version, Python 3.11+, MIT License, CI status (spec: PHASE1_QUICK_WINS.md)
+
+### 1.2 README Table of Contents
+- [x] Add TOC after badges with links to major sections (spec: PHASE1_QUICK_WINS.md)
+
+### 1.3 Tool Count Correction (CRITICAL)
+- [x] Update README.md: Change "94 tools" to "92 tools" (spec: PHASE1_QUICK_WINS.md)
+- [x] Update CLAUDE.md: Change "94 tools" to "92 tools", change members.py from 26 to 25 tools (spec: PHASE1_QUICK_WINS.md)
+- [x] Update core.py SYSTEM_PROMPT: Change tool count if mentioned (spec: PHASE1_QUICK_WINS.md)
+
+**Finding:** Actual count is 92 tools (members.py has 25, not 26). Documentation is incorrect.
+
+### 1.4 Unused Imports
+- [x] Check commons_votes.py for unused `quote` import and remove if unused (spec: PHASE1_QUICK_WINS.md)
+- [x] Scan all tool modules for other unused imports with ruff (spec: PHASE1_QUICK_WINS.md)
+
+---
 
 ## Phase 2: Code Quality
 
-- [ ] Create `src/uk_parliament_mcp/config.py` with centralized API URLs (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update composite.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update members.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update bills.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update committees.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update commons_votes.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update lords_votes.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update hansard.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update interests.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update now.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update whatson.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update statutory_instruments.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update treaties.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update erskine_may.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Update oral_questions.py to import from config.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Add TypedDict for response types in http_client.py (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Fix unsafe dict access in composite.py line 78 (spec: PHASE2_CODE_QUALITY.md)
-- [ ] Remove unused tenacity dependency from pyproject.toml (spec: PHASE2_CODE_QUALITY.md)
+### 2.1 Centralize API URLs (Foundation for Phase 3)
+- [x] Create `src/uk_parliament_mcp/config.py` with all API base URLs and constants (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update composite.py to import from config (lines 14-18) (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update members.py to import MEMBERS_API_BASE from config (line 8) (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update bills.py to import from config (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update committees.py to import from config (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update commons_votes.py to import from config (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update lords_votes.py to import from config (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update hansard.py to import from config (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update interests.py to import from config (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update now.py to import from config (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update whatson.py to import from config (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update statutory_instruments.py to import from config (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update treaties.py to import from config (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update erskine_may.py to import from config (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update oral_questions.py to import from config (spec: PHASE2_CODE_QUALITY.md)
 
-## Phase 3: Testing
+**Note:** This is a prerequisite for writing comprehensive tests in Phase 3.
 
-- [ ] Add pytest-cov to dev dependencies in pyproject.toml (spec: PHASE3_TESTING.md)
-- [ ] Add coverage configuration to pyproject.toml (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_members.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_bills.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_commons_votes.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_lords_votes.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_committees.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_hansard.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_interests.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_now.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_whatson.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_statutory_instruments.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_treaties.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_erskine_may.py (spec: PHASE3_TESTING.md)
-- [ ] Create tests/test_tools/test_oral_questions.py (spec: PHASE3_TESTING.md)
+### 2.2 Add TypedDict
+- [x] Add SuccessResponse and ErrorResponse TypedDict to http_client.py (spec: PHASE2_CODE_QUALITY.md)
+- [x] Update get_result() return type annotation to use TypedDict (spec: PHASE2_CODE_QUALITY.md)
 
-## Phase 4: Documentation
+### 2.3 Fix Unsafe Dict Access
+- [x] Fix composite.py line 78: Use safer pattern for latestHouseMembership access (spec: PHASE2_CODE_QUALITY.md)
 
-- [ ] Restructure README.md example prompts into collapsible sections (spec: PHASE4_DOCUMENTATION.md)
-- [ ] Add configuration decision matrix to README.md (spec: PHASE4_DOCUMENTATION.md)
-- [ ] Add composite tools section to README.md (spec: PHASE4_DOCUMENTATION.md)
-- [ ] Create CHANGELOG.md (spec: PHASE4_DOCUMENTATION.md)
-- [ ] Create CONTRIBUTING.md (spec: PHASE4_DOCUMENTATION.md)
+**Current:** `house = 1 if basic_info.get("latestHouseMembership", {}).get("house") == 1 else 2`
+**Fixed:** Handle None case explicitly
 
-## Phase 5: Architecture & CI/CD
+### 2.4 Remove Unused Dependencies
+- [x] Remove tenacity>=8.2.0 from pyproject.toml dependencies (spec: PHASE2_CODE_QUALITY.md)
 
-- [ ] Add pip caching to .github/workflows/ci.yml (spec: PHASE5_ARCHITECTURE.md)
-- [ ] Add coverage reporting to .github/workflows/ci.yml (spec: PHASE5_ARCHITECTURE.md)
-- [ ] Create .github/dependabot.yml (spec: PHASE5_ARCHITECTURE.md)
+**Reason:** Manual retry logic is used in http_client.py, tenacity is not imported anywhere.
+
+---
+
+## Phase 3: Testing (Requires Phase 2.1 Complete)
+
+### 3.1 Test Infrastructure
+- [x] Add pytest-cov>=4.1.0 to dev dependencies (spec: PHASE3_TESTING.md)
+- [x] Add pytest coverage config to pyproject.toml (addopts, testpaths) (spec: PHASE3_TESTING.md)
+- [x] Add coverage.run and coverage.report sections to pyproject.toml (spec: PHASE3_TESTING.md)
+
+### 3.2 Create Test Files (11 new files)
+- [x] Create tests/test_tools/test_members.py - test 25 tools (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_bills.py - test 21 tools (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_commons_votes.py - test 5 tools (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_lords_votes.py - test 5 tools (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_committees.py - test 12 tools (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_hansard.py - test 1 tool (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_interests.py - test 3 tools (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_now.py - test 2 tools (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_whatson.py - test 3 tools (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_statutory_instruments.py - test 2 tools (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_treaties.py - test 1 tool (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_erskine_may.py - test 1 tool (spec: PHASE3_TESTING.md)
+- [x] Create tests/test_tools/test_oral_questions.py - test 3 tools (spec: PHASE3_TESTING.md)
+
+**Test Pattern:** Each test should verify URL construction, parameter filtering, and special character handling.
+
+---
+
+## Phase 4: Documentation (Can be done in parallel with Phase 2-3)
+
+### 4.1 README Example Prompts Restructure
+**Status:** Complete
+
+- [x] Convert emoji sections (🏛️, 👥, etc.) to HTML <details> tags with <summary> (spec: PHASE4_DOCUMENTATION.md)
+- [x] Remove emojis from section headers inside collapsible sections (spec: PHASE4_DOCUMENTATION.md)
+- [x] Test that GitHub renders collapsible sections correctly (spec: PHASE4_DOCUMENTATION.md)
+
+**Current:** Lines 228-319 use emoji headers (####)
+**Target:** Use `<details><summary><strong>Category</strong> (N examples)</summary>` format
+
+### 4.2 Configuration Decision Matrix
+- [x] Add "Which Configuration Should I Use?" table before config examples in README (spec: PHASE4_DOCUMENTATION.md)
+
+### 4.3 Composite Tools in README
+- [x] Add "Power Tools" section after "What Can I Ask?" in README (spec: PHASE4_DOCUMENTATION.md)
+- [x] Document get_mp_profile, check_mp_vote, get_bill_overview, get_committee_summary (spec: PHASE4_DOCUMENTATION.md)
+
+**Note:** Currently only documented in CLAUDE.md
+
+### 4.4 Create CHANGELOG.md
+- [x] Create CHANGELOG.md with Keep a Changelog format (spec: PHASE4_DOCUMENTATION.md)
+- [x] Document versions 1.0.0, 1.0.1, and Unreleased (spec: PHASE4_DOCUMENTATION.md)
+
+### 4.5 Create CONTRIBUTING.md
+- [x] Create CONTRIBUTING.md with dev setup, code style, testing, PR process (spec: PHASE4_DOCUMENTATION.md)
+
+---
+
+## Phase 5: Architecture & CI/CD (Requires Phase 3 Complete)
+
+### 5.1 CI Improvements
+- [x] Add `cache: 'pip'` to setup-python action in ci.yml (spec: PHASE5_ARCHITECTURE.md)
+- [x] Update test step to `pytest --cov=uk_parliament_mcp --cov-report=xml --cov-report=term-missing` (spec: PHASE5_ARCHITECTURE.md)
+- [x] Add codecov upload step to ci.yml (spec: PHASE5_ARCHITECTURE.md)
+
+**Note:** Codecov setup is optional (requires CODECOV_TOKEN secret)
+
+### 5.2 Dependabot
+- [x] Create .github/dependabot.yml for pip and github-actions (spec: PHASE5_ARCHITECTURE.md)
+
+### 5.3 Optional Enhancements (Future)
+- [x] (Optional) Create .pre-commit-config.yaml with ruff and mypy hooks (spec: PHASE5_ARCHITECTURE.md)
+- [x] (Optional) Implement response caching in http_client.py for reference data (spec: PHASE5_ARCHITECTURE.md)
+- [x] (Optional) Add validators.py for parameter validation (spec: PHASE2_CODE_QUALITY.md)
+
+---
 
 ## Completed
 
-<!-- Completed tasks move here -->
+<!-- Completed tasks move here when done -->
+
+---
 
 ## Notes
 
-<!-- Architectural decisions and learnings -->
+### Architectural Decisions
+
+1. **Tool Count:** Verified actual count is 92 tools (not 94). members.py has 25 tools (not 26).
+
+2. **Phase Dependencies:**
+   - Phase 3 tests depend on Phase 2.1 (centralized config) for cleaner test setup
+   - Phase 5 CI coverage depends on Phase 3 (pytest-cov setup)
+   - Phase 1 and 4 can be done independently
+
+3. **README Status:** Example prompts already use emoji organization but need collapsible sections for better UX.
+
+4. **Test Coverage:** Current coverage is minimal (3 tool modules tested, 11 untested). Target: 80%+.
+
+5. **Unused Dependencies:** tenacity is listed but never imported - safe to remove.
+
+6. **CI Status:** Basic CI exists (lint, type check, test) but missing caching and coverage reporting.

@@ -8,14 +8,14 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
+from uk_parliament_mcp.config import (
+    BILLS_API_BASE,
+    COMMITTEES_API_BASE,
+    COMMONS_VOTES_API_BASE,
+    INTERESTS_API_BASE,
+    MEMBERS_API_BASE,
+)
 from uk_parliament_mcp.http_client import build_url, get_result
-
-# API bases
-MEMBERS_API_BASE = "https://members-api.parliament.uk/api"
-BILLS_API_BASE = "https://bills-api.parliament.uk/api/v1"
-COMMONS_VOTES_API_BASE = "http://commonsvotes-api.parliament.uk/data"
-COMMITTEES_API_BASE = "https://committees-api.parliament.uk/api"
-INTERESTS_API_BASE = "https://interests-api.parliament.uk/api/v1"
 
 
 def _parse_response(response: str) -> dict[str, Any]:
@@ -75,7 +75,8 @@ def register_tools(mcp: FastMCP) -> None:
 
         # Get basic info from search result
         basic_info = member_data.get("items", [{}])[0].get("value", {})
-        house = 1 if basic_info.get("latestHouseMembership", {}).get("house") == 1 else 2
+        latest_membership = basic_info.get("latestHouseMembership") or {}
+        house = latest_membership.get("house", 1)
 
         # Step 2: Parallel requests for details
         biography_url = f"{MEMBERS_API_BASE}/Members/{member_id}/Biography"

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 94 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
+UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 92 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
 
 ## Installation
 
@@ -217,7 +217,7 @@ End the parliamentary session and restore normal assistant behavior.
 ### `parliament_guide(topic)`
 Get detailed guidance for a specific domain. Available topics:
 - `composite` - 4 high-level tools combining multiple API calls
-- `members` - 26 tools for MPs, Lords, constituencies, parties
+- `members` - 25 tools for MPs, Lords, constituencies, parties
 - `bills` - 21 tools for legislation, amendments, stages
 - `votes` - 10 tools for Commons and Lords divisions
 - `committees` - 12 tools for committee info, meetings, evidence
@@ -227,7 +227,7 @@ Get detailed guidance for a specific domain. Available topics:
 - `live` - Current activity, calendar (now + whatson)
 - `legislation` - SIs, treaties
 - `procedures` - Erskine May, bill types, stage definitions
-- `all` - Condensed reference of all 94 tools
+- `all` - Condensed reference of all 92 tools
 - `conventions` - Date formats, house IDs, pagination
 - `workflows` - Overview of common research patterns
 
@@ -278,7 +278,7 @@ src/uk_parliament_mcp/
     ├── __init__.py
     ├── core.py         # Session management & guidance (4 tools)
     ├── composite.py    # High-level composite tools (4 tools)
-    ├── members.py      # Member tools (26 tools)
+    ├── members.py      # Member tools (25 tools)
     ├── bills.py        # Bills tools (21 tools)
     ├── committees.py   # Committees tools (12 tools)
     ├── commons_votes.py    # Commons votes (5 tools)

@@ -2,9 +2,8 @@
 
 from mcp.server.fastmcp import FastMCP
 
+from uk_parliament_mcp.config import COMMONS_VOTES_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
-
-COMMONS_VOTES_API_BASE = "http://commonsvotes-api.parliament.uk/data"
 
 
 def register_tools(mcp: FastMCP) -> None:

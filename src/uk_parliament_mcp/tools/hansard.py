@@ -2,9 +2,8 @@
 
 from mcp.server.fastmcp import FastMCP
 
+from uk_parliament_mcp.config import HANSARD_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
-
-HANSARD_API_BASE = "https://hansard-api.parliament.uk"
 
 
 def register_tools(mcp: FastMCP) -> None:

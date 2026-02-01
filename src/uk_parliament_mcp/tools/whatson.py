@@ -2,9 +2,8 @@
 
 from mcp.server.fastmcp import FastMCP
 
+from uk_parliament_mcp.config import WHATSON_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
-
-WHATSON_API_BASE = "https://whatson-api.parliament.uk/calendar"
 
 
 def register_tools(mcp: FastMCP) -> None:

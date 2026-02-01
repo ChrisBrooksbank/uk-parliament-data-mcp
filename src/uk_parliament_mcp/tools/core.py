@@ -16,7 +16,7 @@ Convert raw data into human-readable summaries while preserving accuracy, but al
 
 GOODBYE_PROMPT = """You are now interacting as a normal assistant. There are no special restrictions or requirements for using UK Parliament MCP data. You may answer questions using any available data or knowledge, and you do not need to append MCP API URLs or limit yourself to MCP sources. Resume normal assistant behavior."""
 
-QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (94 tools)
+QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (92 tools)
 
 ### Composite Tools (Start Here for Common Queries!)
 These tools combine multiple API calls - use them first for efficiency:
@@ -35,7 +35,7 @@ These tools combine multiple API calls - use them first for efficiency:
 | Module | Tools | Start With |
 |--------|-------|------------|
 | composite | 4 | get_mp_profile(name) |
-| members | 26 | get_member_by_name(name) |
+| members | 25 | get_member_by_name(name) |
 | bills | 21 | search_bills(search_term) |
 | committees | 12 | search_committees(search_term) |
 | commons_votes | 5 | search_commons_divisions(search_term) |
@@ -93,7 +93,7 @@ Use the individual tools (in members, bills, etc.) when you need:
 - Pagination through large result sets
 - Access to specific endpoints not covered by composite tools
 - More control over which data is fetched""",
-    "members": """## Members Tools (26 tools)
+    "members": """## Members Tools (25 tools)
 
 ### Primary Search Tools
 - search_members(name, location, party_id, house, is_current_member, skip, take) - Comprehensive member search with filters
@@ -376,12 +376,12 @@ International agreements requiring parliamentary scrutiny:
 5. Third Reading: Final debate
 6. Lords/Commons stages: Mirror process in other House
 7. Royal Assent: Becomes law""",
-    "all": """## All UK Parliament MCP Tools (94 tools)
+    "all": """## All UK Parliament MCP Tools (92 tools)
 
 ### Composite (4 tools) - Use These First!
 get_mp_profile, check_mp_vote, get_bill_overview, get_committee_summary
 
-### Members (26 tools)
+### Members (25 tools)
 Search: search_members, get_member_by_name, search_members_historical
 Details: get_member_by_id, get_members_biography, get_members_contact, get_member_synopsis, get_member_experience, get_member_focus
 Activity: get_member_voting, get_commons_voting_record_for_member, get_lords_voting_record_for_member, get_member_written_questions, get_contributions, edms_for_member_id
