@@ -63,7 +63,7 @@ AI Assistant ──(MCP/stdio)──> uk_parliament_mcp ──(HTTP)──> UK P
 
 - **`__main__.py`**: Entry point. Configures logging to stderr (stdout reserved for MCP protocol), creates and runs the FastMCP server.
 
-- **`server.py`**: FastMCP server setup. Creates the MCP server and registers all tool modules.
+- **`server.py`**: FastMCP server setup. Creates the MCP server with server-level instructions and registers all tool modules.
 
 - **`http_client.py`**: HTTP client with retry logic. Provides:
   - HTTP request handling with 3-retry exponential backoff
@@ -143,9 +143,25 @@ new_api.register_tools(mcp)
 - Use `build_url(base, params)` for URL construction with parameter filtering
 - Use `await get_result(url)` for HTTP requests with retry logic
 
+## Server Instructions (Automatic Context)
+
+The server provides automatic context to MCP clients via the `instructions` parameter in FastMCP. This means:
+
+- **No initialization required**: Clients receive guidance during MCP handshake without needing to call `hello_parliament()` or `/parliament` first
+- **Automatic behavior**: Per MCP spec, clients may add these instructions to the system prompt
+- **Consistent sessions**: Every session starts with proper guidance about data sources and citation requirements
+
+The instructions use the same `SYSTEM_PROMPT` from `core.py`, ensuring consistency across all initialization methods.
+
+**How clients receive context:**
+1. Client connects to MCP server
+2. Server responds with `instructions` in initialize response
+3. Client incorporates instructions (implementation varies by client)
+4. Assistant automatically knows to use Parliament tools and cite sources
+
 ## Agent Skill (MCP Prompt)
 
-The server provides a `/parliament` agent skill that appears in the "/" command menu in MCP clients like Claude Desktop:
+The server also provides a `/parliament` agent skill that appears in the "/" command menu in MCP clients like Claude Desktop:
 
 ### `/parliament` (or `parliament` prompt)
 Initialize a UK Parliament research session. Invocable as a slash command in Claude Desktop.
@@ -190,7 +206,7 @@ Get comprehensive committee summary. Combines committee search + details + evide
 The server also includes guidance **tools** to help AI assistants navigate the 94 available tools:
 
 ### `hello_parliament()`
-Initialize a parliamentary research session. Returns:
+Initialize a parliamentary research session (optional with server instructions). Returns:
 - System prompt with data source transparency requirements
 - Quick reference of all tool categories with entry points
 - Key conventions (house IDs, date formats, pagination)
