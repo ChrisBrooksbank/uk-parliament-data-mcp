@@ -14,12 +14,15 @@ uvx uk-parliament-mcp
 
 ## Getting Started
 
-Once installed and configured with your AI assistant, start a parliamentary research session:
+**Step 1:** Install the package (see Quick Install above)
 
-1. **Use the `/parliament` slash command** (in Claude Desktop or compatible MCP clients)
-2. **Or say "Hello Parliament"** to initialize the session
+**Step 2:** Configure your AI assistant (see [Claude Desktop](#add-mcp-server-in-claude-desktop-application) or [VS Code](#add-mcp-server-in-vs-code) setup below)
 
-This gives your AI assistant the context it needs to effectively use the 86 available tools.
+**Step 3:** Start a parliamentary research session:
+- Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
+- Or say "Hello Parliament" to initialize the session
+
+This gives your AI assistant the context it needs to effectively use the 94 available tools.
 
 ## What Can I Ask?
 
