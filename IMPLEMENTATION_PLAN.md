@@ -223,5 +223,60 @@
 ## Reference Files
 
 - Migration spec: `specs/python-migration-spec.md`
-- C# reference: `OpenData.Mcp.Server/Tools/*.cs`
+- Agent guidance spec: `specs/agent-guidance-spec.md`
+- Improvement spec: `specs/improvement-spec.md`
+- **v2.0 Improvements spec: `specs/v2-improvements-spec.md`**
 - Operational guide: `AGENTS.md`
+
+---
+
+## v2.0 Improvements (spec: v2-improvements-spec.md)
+
+### Phase 1: Foundation (P1)
+
+- [ ] Create `normalize_house()` helper in validators.py (spec: 1.1)
+- [ ] Update `parties_list_by_house()` to use normalize_house (spec: 1.1)
+- [ ] Update `search_members()` house parameter (spec: 1.1)
+- [ ] Update `get_member_registered_interests()` house parameter (spec: 1.1)
+- [ ] Update `get_member_voting()` house parameter (spec: 1.1)
+- [ ] Update `search_hansard()` house parameter (spec: 1.1)
+- [ ] Update `search_calendar()` house parameter (spec: 1.1)
+- [ ] Update `get_non_sitting_days()` house parameter (spec: 1.1)
+- [ ] Update `get_sittings()` house parameter (spec: 1.1)
+- [ ] Enable caching for `bill_types()` (spec: 1.2)
+- [ ] Enable caching for `bill_stages()` (spec: 1.2)
+- [ ] Enable caching for `parties_list_by_house()` (spec: 1.2)
+- [ ] Enable caching for `get_publication_types()` (spec: 1.2)
+- [ ] Enable caching for `get_answering_bodies()` (spec: 1.2)
+- [ ] Add `validate_date()` function (spec: 1.3)
+- [ ] Add `validate_positive_int()` function (spec: 1.3)
+- [ ] Add `validate_pagination()` function (spec: 1.3)
+- [ ] Apply validation to tools with date parameters (spec: 1.3)
+- [ ] Apply validation to tools with ID parameters (spec: 1.3)
+
+### Phase 2: Discoverability (P2)
+
+- [ ] Add cross-references to members.py docstrings (spec: 2.1)
+- [ ] Add cross-references to bills.py docstrings (spec: 2.1)
+- [ ] Add cross-references to committees.py docstrings (spec: 2.1)
+- [ ] Add "Uses" section to composite.py tools (spec: 2.2)
+
+### Phase 3: New Capabilities (P2)
+
+- [ ] Implement `compare_mp_voting()` composite tool (spec: 3.1)
+- [ ] Implement `search_parliament()` aggregated search (spec: 3.2)
+- [ ] Implement `get_bills_by_sponsor()` tool (spec: 3.3)
+- [ ] Add tests for new composite tools
+
+### Phase 4: Code Quality (P3)
+
+- [ ] Standardize oral_questions.py docstrings (spec: 4.1)
+- [ ] Standardize erskine_may.py docstrings (spec: 4.1)
+- [ ] Standardize interests.py docstrings (spec: 4.1)
+- [ ] Add error recovery guidance to composite tools (spec: 4.2)
+
+### Phase 5: Project Quality (P4)
+
+- [ ] Create LICENSE file (spec: 5.1)
+- [ ] Create CHANGELOG.md (spec: 5.2)
+- [ ] Create .pre-commit-config.yaml (spec: 5.3)
