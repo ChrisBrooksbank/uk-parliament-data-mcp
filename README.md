@@ -50,6 +50,8 @@ This gives your AI assistant the context it needs to effectively use the 92 avai
 5. Open the Developer tab to verify the server is running
 
 > **Note:** This uses `uvx` which runs the package directly without installation. It automatically uses the latest version from PyPI.
+>
+> Don't have uvx? Install it with: `pip install uv` or see [uv installation docs](https://docs.astral.sh/uv/getting-started/installation/)
 
 ## VS Code Setup
 
