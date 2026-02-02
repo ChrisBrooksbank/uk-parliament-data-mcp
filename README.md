@@ -9,37 +9,70 @@ Access official UK Parliament data through AI assistants. Query MPs, Lords, bill
 
 ## Table of Contents
 
-- [Quick Install](#quick-install)
 - [Getting Started](#getting-started)
+- [Claude Desktop Setup](#claude-desktop-setup)
+- [VS Code Setup](#vs-code-setup)
 - [What Can I Ask?](#what-can-i-ask)
-- [Full Installation Guide](#full-installation-guide)
-  - [Installation from Source](#installation-from-source)
-  - [Claude Desktop Configuration](#add-mcp-server-in-claude-desktop-application)
-  - [VS Code Configuration](#add-mcp-server-in-vs-code)
+- [Power Tools](#power-tools)
 - [Prompting Tips](#prompting-tips)
 - [Example Prompts](#example-prompts)
-
-## Quick Install
-
-```bash
-# Install from PyPI (recommended)
-pip install uk-parliament-mcp
-
-# Or run without installing
-uvx uk-parliament-mcp
-```
+- [Alternative Installation Methods](#alternative-installation-methods)
+- [Final Thoughts](#final-thoughts)
 
 ## Getting Started
 
-**Step 1:** Install the package (see Quick Install above)
+**Step 1:** Configure your AI assistant (see [Claude Desktop](#claude-desktop-setup) or [VS Code](#vs-code-setup) below)
 
-**Step 2:** Configure your AI assistant (see [Claude Desktop](#add-mcp-server-in-claude-desktop-application) or [VS Code](#add-mcp-server-in-vs-code) setup below)
-
-**Step 3:** Start a parliamentary research session:
+**Step 2:** Start a parliamentary research session:
 - Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
 - Or say "Hello Parliament" to initialize the session
 
 This gives your AI assistant the context it needs to effectively use the 92 available tools.
+
+## Claude Desktop Setup
+
+1. Open Claude Desktop
+2. Click **Settings** → **Developer** → **Edit Config**
+3. Add the following configuration and save with UTF-8 encoding:
+
+```json
+{
+  "mcpServers": {
+    "uk-parliament": {
+      "command": "uvx",
+      "args": ["uk-parliament-mcp"]
+    }
+  }
+}
+```
+
+4. Restart Claude Desktop
+5. Open the Developer tab to verify the server is running
+
+> **Note:** This uses `uvx` which runs the package directly without installation. It automatically uses the latest version from PyPI.
+
+## VS Code Setup
+
+1. Press `Ctrl+Shift+P` to open the Command Palette
+2. Select **MCP: Add Server**
+3. Choose **Command: Stdio**
+4. Enter: `uvx uk-parliament-mcp`
+5. Press **Enter**
+
+### Start the Server
+
+1. Press `Ctrl+Shift+P` again
+2. Select **MCP: List Servers**
+3. Click the server you just added and choose **Start server**
+
+### First Interaction
+
+1. Open **Copilot Chat** in VS Code
+2. Set **Agent mode** using the dropdown in the bottom-left
+3. Select your preferred model (e.g., Claude Sonnet 4)
+4. Click **Configure Tools**, and select all tools from the newly added MCP server
+5. Try a prompt such as: "What is happening now in the House of Commons?"
+6. Accept any permission request to allow the MCP call
 
 ## What Can I Ask?
 
@@ -78,168 +111,25 @@ Start a new chat session, or say "Goodbye Parliament" to end the parliamentary s
 
 ---
 
-## Full Installation Guide
+## Prompting Tips
 
-This project uses the [Model Context Protocol (MCP)](https://www.anthropic.com/news/model-context-protocol) to make UK Parliamentary data accessible to AI assistants like Claude Desktop and Microsoft Copilot.
+> **Note**: Since AI is involved, some responses may be inaccurate. These tips help improve reliability.
 
-> **Note**: Since AI is involved, some responses may be inaccurate. See **Prompting Tips** below to improve reliability.
-
-### Installation from Source
-
-For development or to get the latest unreleased changes:
-
-#### Prerequisites
-
-Make sure you have the following installed:
-
-- [Python](https://www.python.org/downloads/) (v3.11 or later)
-- [Git](https://git-scm.com/downloads)
-- [Visual Studio Code](https://code.visualstudio.com/download)
-
-#### Clone and Open the Project
-
-```bash
-git clone https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab.git
-cd uk-parliament-mcp-lab
-```
-
-Or download manually and open the folder in VS Code.
-
-#### Install Dependencies
-
-```bash
-# Create and activate virtual environment
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# .venv\Scripts\activate   # Windows
-
-# Install the package
-pip install -e .
-```
-
-#### Add MCP Server in Claude Desktop Application
-
-* Open the claude desktop application
-* Click settings
-* Click Developer tag
-* Click Edit Config
-* Edit file and save with UTF-8 encoding
-* Exit claude ( with TaskMon if needed ) and restart it
-* Open developer tab again and check it is running
-* Enter the system prompt and test its working ok
-
-##### Which Configuration Should I Use?
-
-| Method | Best For | Pros | Cons |
-|--------|----------|------|------|
-| `uvx uk-parliament-mcp` | Most users | No install needed, always latest version | Requires uvx installed |
-| `pip install uk-parliament-mcp` | Production use | Stable, version locked | Requires pip, manual updates |
-| Local development install | Contributors | Full source access, can modify | More complex setup |
-
-**Quick recommendation:**
-- **New users:** Use `uvx` method
-- **Developers:** Use local install
-- **Production deployments:** Use `pip install` with pinned version
-
-**Using uvx (recommended - no installation needed):**
-
-```json
-{
-  "mcpServers": {
-    "uk-parliament": {
-      "command": "uvx",
-      "args": ["uk-parliament-mcp"]
-    }
-  }
-}
-```
-
-**Using pip install:**
-
-```json
-{
-  "mcpServers": {
-    "uk-parliament": {
-      "command": "uk-parliament-mcp"
-    }
-  }
-}
-```
-
-**Using local development install:**
-
-```json
-{
-  "mcpServers": {
-    "uk-parliament": {
-      "command": "C:\\code\\uk-parliament-mcp-lab\\.venv\\Scripts\\python.exe",
-      "args": ["-m", "uk_parliament_mcp"],
-      "cwd": "C:\\code\\uk-parliament-mcp-lab"
-    }
-  }
-}
-```
-
-
-
-
-
-#### Add MCP Server in VS Code
-
-1.  Press `Ctrl+Shift+P` to open the Command Palette.
-2.  Select **MCP: Add Server**.
-3.  Choose **Command: Stdio**.
-4.  Enter the following command (adjust path if needed):
-
-```bash
-python -m uk_parliament_mcp
-```
-
-Or use the full path to the virtual environment Python:
-
-```bash
-C:\code\uk-parliament-mcp-lab\.venv\Scripts\python.exe -m uk_parliament_mcp
-```
-
-5.  Press **Enter**.
-
-#### Start the Server
-
-1.  Press `Ctrl+Shift+P` again.
-2.  Select **MCP: List Servers**.
-3.  Click the server you just added and choose **Start server**.
-
-#### First Interaction
-
-1.  Open **Copilot Chat** in VS Code.
-2.  Set **Agent mode** using the dropdown in the bottom-left.
-3.  Select your prefferred model e.g. Claude Sonnet 4
-4.  Click **Configure Tools**, and select all tools from the newly added MCP server.
-5.  (enter the system prompt and then) Try a prompt such as:
-
-```plaintext
-What is happening now in the House of Commons?
-```
-
-6.  Accept any permission request to allow the MCP call.
-
-### Prompting Tips
-
-#### ✅ Initialize Your Session
+### ✅ Initialize Your Session
 
 Always begin your session with `/parliament` or "Hello Parliament". This ensures the AI assistant uses the correct tools and cites its sources properly.
 
-#### 🔄 Clear Context
+### 🔄 Clear Context
 
 Use the `+` icon (new chat) if:
 - The AI seems stuck in a loop
 - You want to reset the conversation context
 
-#### 🔗 Re-Display the API URL
+### 🔗 Re-Display the API URL
 
 While the AI is instructed to list source URLs automatically, you can ask for them again at any time. This is useful for troubleshooting or if you simply want to re-confirm the source for the last response.
 
-You can ask : 
+You can ask:
 
 ```plaintext
 Show me the API URL you just used.
@@ -249,7 +139,7 @@ Example response:
 > The API URL just used to retrieve information about Boris Johnson is:
 > `https://members-api.parliament.uk/api/Members/Search?Name=Boris%20Johnson`
 
-#### 🧠 Combine Data from Multiple Sources
+### 🧠 Combine Data from Multiple Sources
 
 Example:
 ```plaintext
@@ -261,7 +151,7 @@ The AI may:
 - Combine the results
 - Offer more detail if requested
 
-#### 🧾 See the Raw JSON
+### 🧾 See the Raw JSON
 
 For debugging or to inspect the raw data structure, you can ask the assistant to show you the full JSON response from its last API call. This is particularly useful for developers who want to understand exactly what information the AI is working with before it is summarized.
 
@@ -270,7 +160,7 @@ Example prompt:
 Show me the JSON returned from the last MCP call.
 ```
 
-### Example Prompts
+## Example Prompts
 
 <details>
 <summary><strong>Live Parliamentary Activity</strong> (3 examples)</summary>
@@ -403,6 +293,87 @@ Show me the JSON returned from the last MCP call.
 - Find all committee meetings about climate change between November and December 2024
 
 </details>
+
+---
+
+## Alternative Installation Methods
+
+The `uvx` method shown above is recommended for most users. For specific use cases, here are alternative approaches:
+
+### Which Method Should I Use?
+
+| Method | Best For | Pros | Cons |
+|--------|----------|------|------|
+| `uvx uk-parliament-mcp` | Most users | No install needed, always latest version | Requires uvx installed |
+| `pip install uk-parliament-mcp` | Production use | Stable, version locked | Requires pip, manual updates |
+| Local development install | Contributors | Full source access, can modify | More complex setup |
+
+### Using pip install
+
+Install the package globally:
+
+```bash
+pip install uk-parliament-mcp
+```
+
+Then configure your AI client:
+
+**Claude Desktop:**
+```json
+{
+  "mcpServers": {
+    "uk-parliament": {
+      "command": "uk-parliament-mcp"
+    }
+  }
+}
+```
+
+**VS Code:** Use `uk-parliament-mcp` as the command when adding the MCP server.
+
+### Installation from Source
+
+For development or to get the latest unreleased changes:
+
+#### Prerequisites
+
+- [Python](https://www.python.org/downloads/) (v3.11 or later)
+- [Git](https://git-scm.com/downloads)
+
+#### Clone and Install
+
+```bash
+git clone https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab.git
+cd uk-parliament-mcp-lab
+
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
+
+# Install the package
+pip install -e .
+```
+
+#### Configure for Local Development
+
+**Claude Desktop:**
+```json
+{
+  "mcpServers": {
+    "uk-parliament": {
+      "command": "C:\\code\\uk-parliament-mcp-lab\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "uk_parliament_mcp"],
+      "cwd": "C:\\code\\uk-parliament-mcp-lab"
+    }
+  }
+}
+```
+
+**VS Code:** Use the full path to the virtual environment Python:
+```bash
+C:\code\uk-parliament-mcp-lab\.venv\Scripts\python.exe -m uk_parliament_mcp
+```
 
 ---
 

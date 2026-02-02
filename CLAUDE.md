@@ -71,7 +71,7 @@ AI Assistant ──(MCP/stdio)──> uk_parliament_mcp ──(HTTP)──> UK P
   - URL building with parameter filtering (`build_url`)
   - Consistent response format: `{url, data}` or `{url, error, statusCode}`
 
-- **`tools/*.py`**: 15 tool modules (94 total tools) each targeting a specific Parliament API:
+- **`tools/*.py`**: 15 tool modules (92 total tools) each targeting a specific Parliament API:
   | Module | API Domain | Purpose |
   |--------|------------|---------|
   | composite.py | Multiple APIs | High-level tools combining multiple API calls |
@@ -203,7 +203,7 @@ Get comprehensive committee summary. Combines committee search + details + evide
 
 ## Agent Guidance Tools
 
-The server also includes guidance **tools** to help AI assistants navigate the 94 available tools:
+The server also includes guidance **tools** to help AI assistants navigate the 92 available tools:
 
 ### `hello_parliament()`
 Initialize a parliamentary research session (optional with server instructions). Returns:
