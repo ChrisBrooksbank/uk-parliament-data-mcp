@@ -23,3 +23,33 @@ def register_tools(mcp: FastMCP) -> None:
         """
         url = f"{TREATIES_API_BASE}/Treaty?SearchText={quote(search_text)}"
         return await get_result(url)
+
+    @mcp.tool()
+    async def get_treaty(treaty_id: str) -> str:
+        """Get treaty details | international agreement, treaty, diplomatic |
+        Get full details of a specific treaty |
+        Returns treaty details including status, dates, parties
+
+        Args:
+            treaty_id: The treaty ID (alphanumeric string from search results).
+
+        Returns:
+            Full treaty details including status, dates, and parties.
+        """
+        url = f"{TREATIES_API_BASE}/Treaty/{treaty_id}"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_treaty_business_items(treaty_id: str) -> str:
+        """Get treaty scrutiny | treaty progress, CRaG, debates, parliamentary scrutiny |
+        Get parliamentary business items for treaty scrutiny |
+        Returns list of business items with dates
+
+        Args:
+            treaty_id: The treaty ID (alphanumeric string from search results).
+
+        Returns:
+            Business items for the treaty with dates.
+        """
+        url = f"{TREATIES_API_BASE}/Treaty/{treaty_id}/BusinessItems"
+        return await get_result(url)

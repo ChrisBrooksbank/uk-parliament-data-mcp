@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 92 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
+UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 120 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
 
 ## Installation
 
@@ -71,7 +71,7 @@ AI Assistant ──(MCP/stdio)──> uk_parliament_mcp ──(HTTP)──> UK P
   - URL building with parameter filtering (`build_url`)
   - Consistent response format: `{url, data}` or `{url, error, statusCode}`
 
-- **`tools/*.py`**: 15 tool modules (92 total tools) each targeting a specific Parliament API:
+- **`tools/*.py`**: 16 tool modules (120 total tools) each targeting a specific Parliament API:
   | Module | API Domain | Purpose |
   |--------|------------|---------|
   | composite.py | Multiple APIs | High-level tools combining multiple API calls |
@@ -82,6 +82,7 @@ AI Assistant ──(MCP/stdio)──> uk_parliament_mcp ──(HTTP)──> UK P
   | committees.py | committees-api.parliament.uk | Committee info, evidence |
   | hansard.py | hansard-api.parliament.uk | Parliamentary record |
   | oral_questions.py | oralquestionsandmotions-api.parliament.uk | EDMs, questions |
+  | written_questions.py | writtenquestions-api.parliament.uk | Written PQs, statements |
   | interests.py | interests-api.parliament.uk | Register of interests |
   | now.py | now-api.parliament.uk | Live chamber activity |
   | whatson.py | whatson-api.parliament.uk | Calendar, sessions |
@@ -227,7 +228,7 @@ Get detailed guidance for a specific domain. Available topics:
 - `live` - Current activity, calendar (now + whatson)
 - `legislation` - SIs, treaties
 - `procedures` - Erskine May, bill types, stage definitions
-- `all` - Condensed reference of all 92 tools
+- `all` - Condensed reference of all 120 tools
 - `conventions` - Date formats, house IDs, pagination
 - `workflows` - Overview of common research patterns
 
@@ -278,17 +279,18 @@ src/uk_parliament_mcp/
     ├── __init__.py
     ├── core.py         # Session management & guidance (4 tools)
     ├── composite.py    # High-level composite tools (4 tools)
-    ├── members.py      # Member tools (25 tools)
+    ├── members.py      # Member tools (29 tools)
     ├── bills.py        # Bills tools (21 tools)
     ├── committees.py   # Committees tools (12 tools)
     ├── commons_votes.py    # Commons votes (5 tools)
     ├── lords_votes.py      # Lords votes (5 tools)
-    ├── hansard.py          # Hansard (1 tool)
-    ├── oral_questions.py   # Questions (3 tools)
+    ├── hansard.py          # Hansard (7 tools)
+    ├── oral_questions.py   # EDMs & oral questions (5 tools)
+    ├── written_questions.py # Written PQs & statements (7 tools)
     ├── interests.py        # Interests (3 tools)
     ├── now.py              # Live activity (2 tools)
-    ├── whatson.py          # Calendar (3 tools)
-    ├── statutory_instruments.py  # SIs (2 tools)
-    ├── treaties.py         # Treaties (1 tool)
+    ├── whatson.py          # Calendar & procedural dates (7 tools)
+    ├── statutory_instruments.py  # SIs & Acts (5 tools)
+    ├── treaties.py         # Treaties (3 tools)
     └── erskine_may.py      # Procedure (1 tool)
 ```

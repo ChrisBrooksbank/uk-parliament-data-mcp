@@ -53,3 +53,53 @@ def register_tools(mcp: FastMCP) -> None:
         """
         url = f"{ORAL_QUESTIONS_API_BASE}/oralquestiontimes/list?parameters.answeringDateStart={quote(answering_date_start)}&parameters.answeringDateEnd={quote(answering_date_end)}"
         return await get_result(url)
+
+    @mcp.tool()
+    async def get_early_day_motion(edm_id: int) -> str:
+        """Get EDM details | early day motion, signatures, sponsors, full text |
+        Get full text and signature details for an Early Day Motion |
+        Returns EDM text, primary sponsor, supporters, signature count
+
+        Args:
+            edm_id: The EDM ID number.
+
+        Returns:
+            Full EDM details including text, sponsors, and signature count.
+        """
+        url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotion/{edm_id}"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def search_oral_questions(
+        answering_body_id: int = 0,
+        asking_member_id: int = 0,
+        question_status: str = "",
+        skip: int = 0,
+        take: int = 20,
+    ) -> str:
+        """Search oral questions | PQs, question time, oral PQs, minister questions |
+        Search oral parliamentary questions (not EDMs) |
+        Returns list of oral questions with details
+
+        Args:
+            answering_body_id: Filter by department/body answering (0 for all).
+            asking_member_id: Filter by member asking (0 for all).
+            question_status: Filter by status (empty for all).
+            skip: Number of results to skip.
+            take: Number of results to return.
+
+        Returns:
+            List of oral questions matching the filters.
+        """
+        params = []
+        if answering_body_id:
+            params.append(f"parameters.answeringBodyId={answering_body_id}")
+        if asking_member_id:
+            params.append(f"parameters.askingMemberId={asking_member_id}")
+        if question_status:
+            params.append(f"parameters.questionStatus={quote(question_status)}")
+        params.append(f"parameters.skip={skip}")
+        params.append(f"parameters.take={take}")
+        query = "&".join(params)
+        url = f"{ORAL_QUESTIONS_API_BASE}/oralquestions/list?{query}"
+        return await get_result(url)

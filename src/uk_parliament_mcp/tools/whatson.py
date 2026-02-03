@@ -70,3 +70,89 @@ def register_tools(mcp: FastMCP) -> None:
             },
         )
         return await get_result(url)
+
+    @mcp.tool()
+    async def get_sitting_dates(
+        house: str,
+        start_date: str,
+        end_date: str,
+    ) -> str:
+        """Get sitting dates | recess, sitting days, parliamentary calendar, when sitting |
+        Get sitting dates for a house within a date range |
+        Returns list of sitting dates
+
+        Args:
+            house: House name: 'Commons' or 'Lords'.
+            start_date: Start date (YYYY-MM-DD).
+            end_date: End date (YYYY-MM-DD).
+
+        Returns:
+            List of sitting dates for the specified house.
+        """
+        url = build_url(
+            f"{WHATSON_API_BASE}/proceduraldates/{house}/sittingdates.json",
+            {"startDate": start_date, "endDate": end_date},
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_next_sitting_date(house: str, date_to_check: str) -> str:
+        """Get next sitting | parliament returns, next sitting day, when back |
+        Get the next sitting date after a specified date |
+        Returns next sitting date
+
+        Args:
+            house: House name: 'Commons' or 'Lords'.
+            date_to_check: Date to find next sitting after (YYYY-MM-DD). Use today's date to find when Parliament next sits.
+
+        Returns:
+            Next sitting date for the specified house.
+        """
+        url = build_url(
+            f"{WHATSON_API_BASE}/proceduraldates/{house}/nextsittingdate.json",
+            {"dateToCheck": date_to_check},
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_tabling_deadline(house: str, requested_date: str) -> str:
+        """Get tabling deadline | table questions, submission deadline, EDM deadline |
+        Get the valid tabling date for a specified date (Commons only) |
+        Returns tabling deadline date
+
+        Args:
+            house: House name: 'Commons' or 'Lords'.
+            requested_date: Date to find tabling deadline for (YYYY-MM-DD).
+
+        Returns:
+            Tabling deadline date for the specified house.
+        """
+        url = build_url(
+            f"{WHATSON_API_BASE}/proceduraldates/{house}/tablingdate.json",
+            {"requestedDate": requested_date},
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_answer_deadline(
+        house: str,
+        question_type: str,
+        tabled_date: str,
+    ) -> str:
+        """Get answer deadline | PQ answer date, response deadline, when answers due |
+        Get the earliest answer date for a written question (Commons only) |
+        Returns answer deadline date
+
+        Args:
+            house: House name: 'Commons' or 'Lords'.
+            question_type: Type of written question: 'NamedDay' or 'Ordinary'.
+            tabled_date: Date the question was tabled (YYYY-MM-DD).
+
+        Returns:
+            Answer deadline date for the question.
+        """
+        url = build_url(
+            f"{WHATSON_API_BASE}/proceduraldates/{house}/answerdate.json",
+            {"questionType": question_type, "tabledDate": tabled_date},
+        )
+        return await get_result(url)

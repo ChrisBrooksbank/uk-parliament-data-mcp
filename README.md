@@ -27,7 +27,7 @@ Access official UK Parliament data through AI assistants. Query MPs, Lords, bill
 - Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
 - Or say "Hello Parliament" to initialize the session
 
-This gives your AI assistant the context it needs to effectively use the 105 available tools.
+This gives your AI assistant the context it needs to effectively use the 120 available tools.
 
 ## Claude Desktop Setup
 

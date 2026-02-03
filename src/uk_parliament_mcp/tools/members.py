@@ -437,3 +437,58 @@ def register_tools(mcp: FastMCP) -> None:
         """
         url = f"{MEMBERS_API_BASE}/Members/{member_id}/ThumbnailUrl"
         return await get_result(url)
+
+    @mcp.tool()
+    async def get_government_posts() -> str:
+        """Get government posts | ministers, cabinet, government positions, Home Secretary, Chancellor |
+        List all current government ministerial positions with their holders |
+        Returns list of posts with member details
+
+        Returns:
+            List of government ministerial positions with current holders.
+        """
+        url = f"{MEMBERS_API_BASE}/Posts/GovernmentPosts"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_opposition_posts() -> str:
+        """Get opposition posts | shadow cabinet, shadow ministers, opposition frontbench |
+        List all current opposition frontbench positions with their holders |
+        Returns list of posts with member details
+
+        Returns:
+            List of opposition frontbench positions with current holders.
+        """
+        url = f"{MEMBERS_API_BASE}/Posts/OppositionPosts"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_state_of_parties(house: int, for_date: str) -> str:
+        """Get party seat counts | party breakdown, seats, composition, majority |
+        Get number of seats held by each party in a house |
+        Returns party names with seat counts
+
+        Args:
+            house: 1 for Commons, 2 for Lords.
+            for_date: Date for the party composition (YYYY-MM-DD). Use today's date for current.
+
+        Returns:
+            Party names with seat counts for the specified house.
+        """
+        url = f"{MEMBERS_API_BASE}/Parties/StateOfTheParties/{house}/{for_date}"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_lords_by_type(for_date: str) -> str:
+        """Get Lords by peerage type | hereditary, life peers, bishops, crossbench |
+        Breakdown of Lords by type of peerage |
+        Returns counts by peerage type
+
+        Args:
+            for_date: Date for the composition (YYYY-MM-DD). Use today's date for current.
+
+        Returns:
+            Counts of Lords by peerage type.
+        """
+        url = f"{MEMBERS_API_BASE}/Parties/LordsByType/{for_date}"
+        return await get_result(url)
