@@ -73,7 +73,7 @@ class TestSearchHansard:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert f"{HANSARD_API_BASE}/search.json" in call_url
+            assert f"{HANSARD_API_BASE}/search/debates.json" in call_url
             assert "queryParameters.house=1" in call_url
             assert "queryParameters.startDate=2024-01-01" in call_url
             assert "queryParameters.endDate=2024-01-31" in call_url

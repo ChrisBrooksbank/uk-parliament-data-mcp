@@ -34,7 +34,7 @@ def register_tools(mcp: FastMCP) -> None:
             Hansard records matching the search criteria.
         """
         url = build_url(
-            f"{HANSARD_API_BASE}/search.json",
+            f"{HANSARD_API_BASE}/search/debates.json",
             {
                 "queryParameters.house": house,
                 "queryParameters.startDate": start_date,
