@@ -18,6 +18,7 @@ from uk_parliament_mcp.tools import (
     statutory_instruments,
     treaties,
     whatson,
+    written_questions,
 )
 from uk_parliament_mcp.tools.core import SYSTEM_PROMPT
 
@@ -42,6 +43,7 @@ def create_server() -> FastMCP:
     statutory_instruments.register_tools(mcp)
     treaties.register_tools(mcp)
     erskine_may.register_tools(mcp)
+    written_questions.register_tools(mcp)
 
     # Register prompts (agent skills)
     core.register_prompts(mcp)

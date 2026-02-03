@@ -14,6 +14,7 @@ STATUTORY_INSTRUMENTS_API_BASE = "https://statutoryinstruments-api.parliament.uk
 TREATIES_API_BASE = "https://treaties-api.parliament.uk/api"
 ERSKINE_MAY_API_BASE = "https://erskinemay-api.parliament.uk/api"
 ORAL_QUESTIONS_API_BASE = "https://oralquestionsandmotions-api.parliament.uk"
+WRITTEN_QUESTIONS_API_BASE = "https://writtenquestions-api.parliament.uk/api"
 
 # Common constants
 HOUSE_COMMONS = 1
