@@ -27,7 +27,7 @@ Access official UK Parliament data through AI assistants. Query MPs, Lords, bill
 - Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
 - Or say "Hello Parliament" to initialize the session
 
-This gives your AI assistant the context it needs to effectively use the 92 available tools.
+This gives your AI assistant the context it needs to effectively use the 99 available tools.
 
 ## Claude Desktop Setup
 
@@ -177,26 +177,26 @@ Show me the JSON returned from the last MCP call.
 <summary><strong>Members of Parliament</strong> (14 examples)</summary>
 
 - Show me the interests of Sir Keir Starmer
-- Who is Boris Johnson?
-- Who is the member with ID 1471?
-- Get the biography of member 172
+- Tell me about Boris Johnson's parliamentary career
+- Look up the MP with ID 1471
+- Show me the biography for member 172
 - Show me contact details for member 4129
 - What are the registered interests of member 3743?
-- Show recent contributions from member 172
-- What is the Commons voting record for member 4129?
-- What is the Lords voting record for member 3743?
-- Show the professional experience of member 1471
+- What speeches has member 172 made recently?
+- Show me how member 4129 has voted in the Commons
+- Show me how member 3743 has voted in the Lords
+- What was member 1471's career before Parliament?
 - What policy areas does member 172 focus on?
-- Show early day motions submitted by member 1471
+- What early day motions has member 1471 signed?
 - Get the constituency election results for member 4129
-- Show me the portrait and thumbnail images for member 172
+- Show me photos of member 172
 
 </details>
 
 <details>
 <summary><strong>Bills and Legislation</strong> (14 examples)</summary>
 
-- What recent bills are about fishing?
+- What bills about fishing are currently before Parliament?
 - What bills were updated recently?
 - Show me details of bill 425
 - What stages has bill 425 been through?
@@ -206,9 +206,9 @@ Show me the JSON returned from the last MCP call.
 - What news articles are there about bill 425?
 - Show me all bill types available
 - What are the different stages a bill can go through?
-- Search for bills containing the word "environment"
-- Get the RSS feed for all bills
-- Get the RSS feed for public bills only
+- Find bills related to the environment
+- Get the RSS feed to track all bills
+- Get the RSS feed for public bills
 - Get the RSS feed for bill 425
 
 </details>
@@ -216,12 +216,26 @@ Show me the JSON returned from the last MCP call.
 <details>
 <summary><strong>Voting and Divisions</strong> (6 examples)</summary>
 
-- Search Commons Divisions for the keyword "refugee"
+- How have MPs voted on refugee-related issues?
 - Show details of Commons division 1234
 - Show details of Lords division 5678
-- Get Commons divisions grouped by party for keyword "climate"
-- Get Lords divisions grouped by party for member 3743
-- How many divisions match the search term "brexit"?
+- Show how parties voted on climate issues in the Commons
+- How did Lords vote by party on issues involving member 3743?
+- How many votes have there been on Brexit?
+
+</details>
+
+<details>
+<summary><strong>Written Questions & Statements</strong> (8 examples)</summary>
+
+- What written questions have MPs asked about climate change?
+- Show me unanswered written questions to the Home Office
+- Find written questions about the NHS from the last month
+- Get details of written question 12345
+- What written ministerial statements were made about the budget?
+- Search for written statements about housing policy
+- Show me the daily report of written questions for this week
+- Has any MP asked written questions about artificial intelligence?
 
 </details>
 
@@ -229,13 +243,13 @@ Show me the JSON returned from the last MCP call.
 <summary><strong>Committees and Inquiries</strong> (9 examples)</summary>
 
 - Which committees are focused on women's issues?
-- List committee meetings scheduled for November 2024
+- What committee meetings are scheduled this month?
 - Show me details of committee 789
-- What events has committee 789 held?
+- What hearings has committee 789 held?
 - Who are the members of committee 789?
-- Search for committee publications about healthcare
-- Show me written evidence submitted to committee 789
-- Show me oral evidence from committee 789 hearings
+- Find committee reports on healthcare
+- What written evidence was submitted to committee 789?
+- What oral evidence was given to committee 789?
 - What are all the committee types?
 
 </details>
@@ -244,14 +258,14 @@ Show me the JSON returned from the last MCP call.
 <summary><strong>Parliamentary Procedures</strong> (9 examples)</summary>
 
 - Search Erskine May for references to the Mace
-- Show oral question times for questions tabled in November 2024
-- Search Hansard for contributions on Brexit from November 2024
+- What oral question times are coming up?
+- Search Hansard for recent debates on Brexit
 - What government departments exist?
 - What are the answering bodies in Parliament?
 - What parties are represented in the House of Commons?
 - What parties are represented in the House of Lords?
-- Show parliamentary calendar events for Commons in December 2024
-- When is Parliament not sitting in January 2025?
+- What's on the Commons calendar this month?
+- When are the upcoming parliamentary recesses?
 
 </details>
 
@@ -269,7 +283,7 @@ Show me the JSON returned from the last MCP call.
 
 - List all categories of members' interests
 - Get published registers of interests
-- Show staff interests for Lords members
+- Show staff interests declared by Lords members
 - Search the register of interests for member 1471
 
 </details>
@@ -292,7 +306,7 @@ Show me the JSON returned from the last MCP call.
 - Show me the JSON returned from the last MCP call
 - Show me the API URL you just used
 - Search for bills sponsored by member 172 from the Environment department
-- Find all committee meetings about climate change between November and December 2024
+- Find committee meetings about climate change in the last few months
 
 </details>
 
