@@ -22,21 +22,31 @@ class TestHansardToolsRegistration:
         return server
 
     @pytest.mark.asyncio
-    async def test_register_tools_adds_hansard_tool(self, mcp: FastMCP):
-        """register_tools adds the search_hansard tool."""
+    async def test_register_tools_adds_all_hansard_tools(self, mcp: FastMCP):
+        """register_tools adds all hansard tools."""
         tools = await mcp.list_tools()
         tool_names = [t.name for t in tools]
 
-        assert "search_hansard" in tool_names
+        expected_tools = [
+            "search_hansard",
+            "get_debate_by_id",
+            "get_member_hansard_contributions",
+            "get_debate_divisions",
+            "get_division_details",
+            "get_hansard_sitting_day",
+            "get_hansard_calendar",
+        ]
+        for tool_name in expected_tools:
+            assert tool_name in tool_names
 
     @pytest.mark.asyncio
-    async def test_search_hansard_has_description(self, mcp: FastMCP):
-        """search_hansard tool has a description."""
+    async def test_all_tools_have_descriptions(self, mcp: FastMCP):
+        """All hansard tools have descriptions."""
         tools = await mcp.list_tools()
-        tool = next(t for t in tools if t.name == "search_hansard")
 
-        assert tool.description is not None
-        assert len(tool.description) > 0
+        for tool in tools:
+            assert tool.description is not None
+            assert len(tool.description) > 0
 
 
 class TestSearchHansard:
@@ -121,3 +131,245 @@ class TestSearchHansard:
             # URL encoding: & -> %26, ' -> %27, space -> %20
             assert "%20" in call_url or "+" in call_url  # Space encoding
             assert "Johnson" in call_url
+
+    @pytest.mark.asyncio
+    async def test_with_optional_member_id(self):
+        """search_hansard includes member_id when provided."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "search_hansard",
+                {
+                    "house": 1,
+                    "start_date": "2024-01-01",
+                    "end_date": "2024-01-31",
+                    "search_term": "Brexit",
+                    "member_id": 4514,
+                },
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "queryParameters.memberId=4514" in call_url
+
+    @pytest.mark.asyncio
+    async def test_with_pagination(self):
+        """search_hansard includes skip and take parameters."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "search_hansard",
+                {
+                    "house": 1,
+                    "start_date": "2024-01-01",
+                    "end_date": "2024-01-31",
+                    "search_term": "tax",
+                    "skip": 20,
+                    "take": 50,
+                },
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "queryParameters.skip=20" in call_url
+            assert "queryParameters.take=50" in call_url
+
+
+class TestGetDebateById:
+    """Tests for get_debate_by_id tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_debate_by_id builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_debate_by_id",
+                {"debate_section_id": "abc123-def456"},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/debates/debate/abc123-def456.json" == call_url
+
+
+class TestGetMemberHansardContributions:
+    """Tests for get_member_hansard_contributions tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_member_hansard_contributions builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_member_hansard_contributions",
+                {
+                    "member_id": 4514,
+                    "debate_section_id": "abc123",
+                },
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/debates/memberdebatecontributions/4514.json" in call_url
+            assert "debateSectionExtId=abc123" in call_url
+
+
+class TestGetDebateDivisions:
+    """Tests for get_debate_divisions tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_debate_divisions builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_debate_divisions",
+                {"debate_section_id": "xyz789"},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/debates/divisions/xyz789.json" == call_url
+
+
+class TestGetDivisionDetails:
+    """Tests for get_division_details tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url_default(self):
+        """get_division_details builds correct URL with defaults."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_division_details",
+                {"division_id": "div123"},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/debates/division/div123.json" in call_url
+            # isEvel should not be in URL when False
+            assert "isEvel" not in call_url
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url_with_evel(self):
+        """get_division_details includes isEvel when True."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_division_details",
+                {
+                    "division_id": "div123",
+                    "is_evel": True,
+                },
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "isEvel=True" in call_url or "isEvel=true" in call_url
+
+
+class TestGetHansardSittingDay:
+    """Tests for get_hansard_sitting_day tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url_commons(self):
+        """get_hansard_sitting_day builds correct URL for Commons."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_hansard_sitting_day",
+                {
+                    "sitting_date": "2024-03-15",
+                    "house": 1,
+                },
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/overview/sectionsforday.json" in call_url
+            assert "date=2024-03-15" in call_url
+            assert "house=1" in call_url
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url_lords(self):
+        """get_hansard_sitting_day builds correct URL for Lords."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_hansard_sitting_day",
+                {
+                    "sitting_date": "2024-03-15",
+                    "house": 2,
+                },
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "house=2" in call_url
+
+
+class TestGetHansardCalendar:
+    """Tests for get_hansard_calendar tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_hansard_calendar builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_hansard_calendar",
+                {
+                    "year": 2024,
+                    "month": 3,
+                    "house": 1,
+                },
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/overview/calendar.json" in call_url
+            assert "year=2024" in call_url
+            assert "month=3" in call_url
+            assert "house=1" in call_url

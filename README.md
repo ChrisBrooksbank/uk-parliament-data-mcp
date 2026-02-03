@@ -27,7 +27,7 @@ Access official UK Parliament data through AI assistants. Query MPs, Lords, bill
 - Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
 - Or say "Hello Parliament" to initialize the session
 
-This gives your AI assistant the context it needs to effectively use the 99 available tools.
+This gives your AI assistant the context it needs to effectively use the 105 available tools.
 
 ## Claude Desktop Setup
 
@@ -255,17 +255,31 @@ Show me the JSON returned from the last MCP call.
 </details>
 
 <details>
+<summary><strong>Hansard (Official Record)</strong> (8 examples)</summary>
+
+- Search Hansard for recent debates on Brexit
+- What was said about immigration in the Commons last month?
+- Show me the full transcript of debate abc123-def456
+- What did Keir Starmer say during the debate on the economy?
+- Were there any votes during the NHS funding debate?
+- What debates happened in the Commons on March 15th 2024?
+- Which days in January 2024 had Commons sittings?
+- Show me all speeches by member 4514 in debate xyz789
+
+</details>
+
+<details>
 <summary><strong>Parliamentary Procedures</strong> (9 examples)</summary>
 
 - Search Erskine May for references to the Mace
 - What oral question times are coming up?
-- Search Hansard for recent debates on Brexit
 - What government departments exist?
 - What are the answering bodies in Parliament?
 - What parties are represented in the House of Commons?
 - What parties are represented in the House of Lords?
 - What's on the Commons calendar this month?
 - When are the upcoming parliamentary recesses?
+- What are the procedural rules for bill amendments?
 
 </details>
 
