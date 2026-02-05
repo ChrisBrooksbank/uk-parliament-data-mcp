@@ -7,7 +7,7 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import format_output, run_async
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import COMMITTEES_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
 
@@ -32,7 +32,7 @@ def get_meetings(
     """
     url = f"{COMMITTEES_API_BASE}/Broadcast/Meetings?FromDate={quote(from_date)}&ToDate={quote(to_date)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search")
@@ -52,7 +52,7 @@ def search_committees(
     """
     url = f"{COMMITTEES_API_BASE}/Committees?SearchTerm={quote(search_term)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("types")
@@ -65,7 +65,7 @@ def get_types() -> None:
     """
     url = f"{COMMITTEES_API_BASE}/CommitteeType"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, False, False))
+    echo_utf8(format_output(result, False, False))
 
 
 @app.command("get")
@@ -95,7 +95,7 @@ def get_committee(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("events")
@@ -156,7 +156,7 @@ def get_events(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("event")
@@ -182,7 +182,7 @@ def get_event(
         {"showOnWebsiteOnly": show_on_website_only},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("committee-events")
@@ -242,7 +242,7 @@ def get_committee_events(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("members")
@@ -278,7 +278,7 @@ def get_members(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("publications")
@@ -321,7 +321,7 @@ def get_publications(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("publication")
@@ -347,7 +347,7 @@ def get_publication(
         {"showOnWebsiteOnly": show_on_website_only},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("written-evidence")
@@ -392,7 +392,7 @@ def get_written_evidence(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("oral-evidence")
@@ -437,7 +437,7 @@ def get_oral_evidence(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("business")
@@ -485,7 +485,7 @@ def get_business(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("business-details")
@@ -511,7 +511,7 @@ def get_business_details(
         {"showOnWebsiteOnly": show_on_website_only},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("business-types")
@@ -523,7 +523,7 @@ def get_business_types() -> None:
     """
     url = f"{COMMITTEES_API_BASE}/CommitteeBusinessType"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, False, False))
+    echo_utf8(format_output(result, False, False))
 
 
 @app.command("next-events")
@@ -555,7 +555,7 @@ def get_next_events(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("staff")
@@ -590,7 +590,7 @@ def get_staff(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("publications-summary")
@@ -609,7 +609,7 @@ def get_publications_summary(
     """
     url = f"{COMMITTEES_API_BASE}/Committees/{committee_id}/Publications/Summary"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("event-activities")
@@ -628,7 +628,7 @@ def get_event_activities(
     """
     url = f"{COMMITTEES_API_BASE}/Events/{event_id}/Activities"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("event-attendance")
@@ -647,7 +647,7 @@ def get_event_attendance(
     """
     url = f"{COMMITTEES_API_BASE}/Events/{event_id}/Attendance"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("member-memberships")
@@ -679,7 +679,7 @@ def get_member_memberships(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("oral-evidence-details")
@@ -704,7 +704,7 @@ def get_oral_evidence_details(
         {"showOnWebsiteOnly": show_on_website_only},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("written-evidence-details")
@@ -729,7 +729,7 @@ def get_written_evidence_details(
         {"showOnWebsiteOnly": show_on_website_only},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("publication-types")
@@ -741,7 +741,7 @@ def get_publication_types() -> None:
     """
     url = f"{COMMITTEES_API_BASE}/PublicationType"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, False, False))
+    echo_utf8(format_output(result, False, False))
 
 
 @app.command("bill-petitions")
@@ -785,7 +785,7 @@ def search_bill_petitions(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("business-publications-summary")
@@ -804,4 +804,4 @@ def get_business_publications_summary(
     """
     url = f"{COMMITTEES_API_BASE}/CommitteeBusiness/{business_id}/Publications/Summary"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))

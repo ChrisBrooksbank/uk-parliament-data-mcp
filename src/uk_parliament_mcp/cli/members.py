@@ -7,7 +7,7 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import format_output, run_async
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import MEMBERS_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
 
@@ -30,7 +30,7 @@ def search_member(
     """
     url = f"{MEMBERS_API_BASE}/Members/Search?Name={quote(name)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get")
@@ -49,7 +49,7 @@ def get_member(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("biography")
@@ -68,7 +68,7 @@ def get_biography(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Biography"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("contact")
@@ -87,7 +87,7 @@ def get_contact(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Contact"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("experience")
@@ -106,7 +106,7 @@ def get_experience(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Experience"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("focus")
@@ -125,7 +125,7 @@ def get_focus(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Focus"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("interests")
@@ -150,7 +150,7 @@ def get_registered_interests(
         {"house": house},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("staff")
@@ -169,7 +169,7 @@ def get_staff(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Staff"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("synopsis")
@@ -188,7 +188,7 @@ def get_synopsis(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Synopsis"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("voting")
@@ -212,7 +212,7 @@ def get_voting(
         {"house": house, "page": page},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("written-questions")
@@ -235,7 +235,7 @@ def get_written_questions(
         {"page": page},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("edms")
@@ -254,7 +254,7 @@ def get_edms(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Edms"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("contributions")
@@ -273,7 +273,7 @@ def get_contributions(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/ContributionSummary?page=1"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("history")
@@ -292,7 +292,7 @@ def get_history(
     """
     url = build_url(f"{MEMBERS_API_BASE}/Members/History", {"ids": member_ids})
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("latest-election")
@@ -311,7 +311,7 @@ def get_latest_election(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/LatestElectionResult"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("portrait")
@@ -330,7 +330,7 @@ def get_portrait_url(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/PortraitUrl"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("thumbnail")
@@ -349,7 +349,7 @@ def get_thumbnail_url(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/ThumbnailUrl"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-advanced")
@@ -431,7 +431,7 @@ def search_members_advanced(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("constituencies")
@@ -454,7 +454,7 @@ def list_constituencies(
         {"skip": skip, "take": take},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("constituency-elections")
@@ -473,7 +473,7 @@ def get_constituency_elections(
     """
     url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}/ElectionResults"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("parties")
@@ -492,7 +492,7 @@ def list_parties(
     """
     url = f"{MEMBERS_API_BASE}/Parties/GetActive/{house}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("party-state")
@@ -512,7 +512,7 @@ def get_party_state(
     """
     url = f"{MEMBERS_API_BASE}/Parties/StateOfTheParties/{house}/{for_date}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("lords-by-type")
@@ -531,7 +531,7 @@ def get_lords_by_type(
     """
     url = f"{MEMBERS_API_BASE}/Parties/LordsByType/{for_date}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("spokespersons")
@@ -553,7 +553,7 @@ def get_spokespersons(
         {"partyId": party_id},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("government-posts")
@@ -571,7 +571,7 @@ def get_government_posts(
     """
     url = f"{MEMBERS_API_BASE}/Posts/GovernmentPosts"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("opposition-posts")
@@ -589,7 +589,7 @@ def get_opposition_posts(
     """
     url = f"{MEMBERS_API_BASE}/Posts/OppositionPosts"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("answering-bodies")
@@ -607,7 +607,7 @@ def get_answering_bodies(
     """
     url = f"{MEMBERS_API_BASE}/Reference/AnsweringBodies"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("departments")
@@ -625,7 +625,7 @@ def get_departments(
     """
     url = f"{MEMBERS_API_BASE}/Reference/Departments"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("policy-interests")
@@ -643,7 +643,7 @@ def get_policy_interests(
     """
     url = f"{MEMBERS_API_BASE}/Reference/PolicyInterests"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("lords-staff-interests")
@@ -662,4 +662,4 @@ def search_lords_staff_interests(
     """
     url = f"{MEMBERS_API_BASE}/LordsInterests/Staff?searchTerm={quote(search_term)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))

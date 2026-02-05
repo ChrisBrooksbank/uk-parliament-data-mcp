@@ -12,7 +12,7 @@ import typer.main
 from rich.console import Console
 from rich.panel import Panel
 
-from uk_parliament_mcp.cli.utils import run_async
+from uk_parliament_mcp.cli.utils import echo_utf8, run_async
 from uk_parliament_mcp.tools.core import (
     GUIDANCE_CONTENT,
     QUICK_REFERENCE,
@@ -308,7 +308,7 @@ def tools(
     result = run_async(_order_order_async())
     # For guide commands, output is plain text, not JSON
     # So we skip the format_output wrapper
-    typer.echo(result)
+    echo_utf8(result)
 
 
 @app.command("topic")
@@ -326,7 +326,7 @@ def topic(
     typical workflows for the selected domain.
     """
     result = run_async(_parliament_guide_async(domain))
-    typer.echo(result)
+    echo_utf8(result)
 
 
 @app.command("workflow")
@@ -347,7 +347,7 @@ def workflow(
       - "Does MP have conflicts of interest?"
     """
     result = run_async(_parliament_workflow_async(query))
-    typer.echo(result)
+    echo_utf8(result)
 
 
 @app.command("reference")
@@ -373,7 +373,7 @@ def reference(
     groups = _get_all_commands()
 
     if json_output:
-        typer.echo(_format_json_output(groups))
+        echo_utf8(_format_json_output(groups))
         return
 
     if search:

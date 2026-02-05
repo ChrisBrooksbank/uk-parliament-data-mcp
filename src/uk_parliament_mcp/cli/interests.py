@@ -5,7 +5,7 @@ from __future__ import annotations
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import format_output, run_async
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import INTERESTS_API_BASE
 from uk_parliament_mcp.http_client import get_result
 
@@ -30,7 +30,7 @@ def search_roi(
     """
     url = f"{INTERESTS_API_BASE}/Interests/?MemberId={member_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("categories")
@@ -49,7 +49,7 @@ def interests_categories(
     """
     url = f"{INTERESTS_API_BASE}/Categories"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("registers")
@@ -68,4 +68,4 @@ def get_registers_of_interests(
     """
     url = f"{INTERESTS_API_BASE}/Registers"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))

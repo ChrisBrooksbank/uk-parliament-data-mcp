@@ -7,7 +7,7 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import format_output, run_async
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import HANSARD_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
 
@@ -48,7 +48,7 @@ def search_hansard(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get-debate")
@@ -68,7 +68,7 @@ def get_debate_by_id(
     """
     url = f"{HANSARD_API_BASE}/debates/debate/{debate_section_id}.json"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("member-contributions")
@@ -88,7 +88,7 @@ def get_member_hansard_contributions(
     """
     url = f"{HANSARD_API_BASE}/debates/memberdebatecontributions/{member_id}.json?debateSectionExtId={quote(debate_section_id)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("debate-divisions")
@@ -108,7 +108,7 @@ def get_debate_divisions(
     """
     url = f"{HANSARD_API_BASE}/debates/divisions/{debate_section_id}.json"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("division-details")
@@ -132,7 +132,7 @@ def get_division_details(
         {"isEvel": is_evel if is_evel else None},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("sitting-day")
@@ -159,7 +159,7 @@ def get_hansard_sitting_day(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("calendar")
@@ -188,7 +188,7 @@ def get_hansard_calendar(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-all")
@@ -225,7 +225,7 @@ def search_hansard_full(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-contributions")
@@ -265,7 +265,7 @@ def search_hansard_contributions(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-members")
@@ -303,7 +303,7 @@ def search_hansard_members(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-divisions")
@@ -339,7 +339,7 @@ def search_hansard_divisions(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("member-summary")
@@ -367,7 +367,7 @@ def get_member_contribution_summary(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("speakers")
@@ -386,7 +386,7 @@ def get_debate_speakers(
     """
     url = f"{HANSARD_API_BASE}/debates/speakerslist/{debate_section_id}.json"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("top-level-debate-id")
@@ -405,7 +405,7 @@ def get_top_level_debate_id(
     """
     url = f"{HANSARD_API_BASE}/debates/topleveldebateid/{debate_section_id}.json"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("debate-by-title")
@@ -433,7 +433,7 @@ def get_debate_by_title(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("last-sitting-date")
@@ -452,7 +452,7 @@ def get_hansard_last_sitting_date(
     """
     url = f"{HANSARD_API_BASE}/overview/lastsittingdate.json?house={house}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("linked-dates")
@@ -479,7 +479,7 @@ def get_hansard_linked_dates(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("section-trees")
@@ -510,7 +510,7 @@ def get_hansard_section_trees(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("historic-sitting-days")
@@ -545,7 +545,7 @@ def search_historic_sitting_days(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("historic-sitting-day")
@@ -566,4 +566,4 @@ def get_historic_sitting_day(
     """
     url = f"{HANSARD_API_BASE}/historicsittingdays/{house}/{sitting_date}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))

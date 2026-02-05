@@ -10,7 +10,7 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import format_output, run_async
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import (
     BILLS_API_BASE,
     COMMITTEES_API_BASE,
@@ -273,7 +273,7 @@ def mp_profile(
     Returns basic info, biography, registered interests, and recent votes.
     """
     result = run_async(_get_mp_profile_async(name))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("check-vote")
@@ -293,7 +293,7 @@ def check_vote(
     Returns MP info and divisions on the topic where they voted.
     """
     result = run_async(_check_mp_vote_async(mp_name, topic))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("bill-overview")
@@ -312,7 +312,7 @@ def bill_overview(
     Returns bill details, legislative stages, and associated documents.
     """
     result = run_async(_get_bill_overview_async(search_term))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("committee-summary")
@@ -331,4 +331,4 @@ def committee_summary(
     Returns committee info, witness testimonies, written submissions, and reports.
     """
     result = run_async(_get_committee_summary_async(topic))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))

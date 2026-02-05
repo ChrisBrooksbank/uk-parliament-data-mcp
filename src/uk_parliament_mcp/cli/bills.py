@@ -7,7 +7,7 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import format_output, run_async
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import BILLS_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
 
@@ -30,7 +30,7 @@ def get_recent_bills(
     """
     url = f"{BILLS_API_BASE}/Bills?SortOrder=DateUpdatedDescending&skip=0&take={take}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search")
@@ -52,7 +52,7 @@ def search_bills(
     """
     url = f"{BILLS_API_BASE}/Bills?SearchTerm={quote(search_term)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("types")
@@ -70,7 +70,7 @@ def get_bill_types(
     """
     url = f"{BILLS_API_BASE}/BillTypes"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("stages-list")
@@ -88,7 +88,7 @@ def get_bill_stages_list(
     """
     url = f"{BILLS_API_BASE}/Stages"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get")
@@ -107,7 +107,7 @@ def get_bill(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("stages")
@@ -131,7 +131,7 @@ def get_stages(
         {"Skip": skip, "Take": take},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("stage-details")
@@ -151,7 +151,7 @@ def get_stage_details(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("amendments")
@@ -193,7 +193,7 @@ def get_amendments(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("amendment")
@@ -214,7 +214,7 @@ def get_amendment(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}/Amendments/{amendment_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("ping-pong")
@@ -256,7 +256,7 @@ def get_ping_pong_items(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("ping-pong-item")
@@ -277,7 +277,7 @@ def get_ping_pong_item(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}/PingPongItems/{item_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("publications")
@@ -296,7 +296,7 @@ def get_publications(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Publications"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("stage-publications")
@@ -316,7 +316,7 @@ def get_stage_publications(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}/Publications"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("publication-document")
@@ -336,7 +336,7 @@ def get_publication_document(
     """
     url = f"{BILLS_API_BASE}/Publications/{publication_id}/Documents/{document_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("news")
@@ -360,7 +360,7 @@ def get_news_articles(
         {"Skip": skip, "Take": take},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("rss-all")
@@ -378,7 +378,7 @@ def get_all_bills_rss(
     """
     url = f"{BILLS_API_BASE}/Rss/allbills.rss"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("rss-public")
@@ -396,7 +396,7 @@ def get_public_bills_rss(
     """
     url = f"{BILLS_API_BASE}/Rss/publicbills.rss"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("rss-private")
@@ -414,7 +414,7 @@ def get_private_bills_rss(
     """
     url = f"{BILLS_API_BASE}/Rss/privatebills.rss"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("rss-bill")
@@ -433,7 +433,7 @@ def get_bill_rss(
     """
     url = f"{BILLS_API_BASE}/Rss/Bills/{bill_id}.rss"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("publication-types")
@@ -456,7 +456,7 @@ def get_publication_types(
         {"Skip": skip, "Take": take},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("sittings")
@@ -488,4 +488,4 @@ def get_sittings(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))

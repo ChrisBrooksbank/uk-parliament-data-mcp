@@ -19,6 +19,7 @@ from uk_parliament_mcp.cli import (
     questions,
     votes,
 )
+from uk_parliament_mcp.cli.utils import echo_utf8
 
 app = typer.Typer(
     name="parliament",
@@ -74,7 +75,7 @@ def reference(
     groups = _get_all_commands()
 
     if json_output:
-        typer.echo(_format_json_output(groups))
+        echo_utf8(_format_json_output(groups))
         return
 
     if search:

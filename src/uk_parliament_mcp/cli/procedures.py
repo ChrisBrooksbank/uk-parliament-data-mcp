@@ -7,7 +7,7 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import format_output, run_async
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import ERSKINE_MAY_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
 
@@ -35,7 +35,7 @@ def search_erskine_may(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Search/ParagraphSearchResults/{quote(search_term)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("parts")
@@ -54,7 +54,7 @@ def get_erskine_may_parts(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Part"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("part")
@@ -74,7 +74,7 @@ def get_erskine_may_part(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Part/{part_number}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("chapter")
@@ -94,7 +94,7 @@ def get_erskine_may_chapter(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Chapter/{chapter_number}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("section")
@@ -114,7 +114,7 @@ def get_erskine_may_section(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Section/{section_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("section-relative")
@@ -135,7 +135,7 @@ def get_erskine_may_section_relative(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Section/{section_id},{step}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("paragraph")
@@ -155,7 +155,7 @@ def get_erskine_may_paragraph(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Search/Paragraph/{quote(reference)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("browse-index")
@@ -184,7 +184,7 @@ def browse_erskine_may_index(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("index-term")
@@ -204,7 +204,7 @@ def get_erskine_may_index_term(
     """
     url = f"{ERSKINE_MAY_API_BASE}/IndexTerm/{index_term_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-index")
@@ -231,7 +231,7 @@ def search_erskine_may_index(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-sections")
@@ -259,4 +259,4 @@ def search_erskine_may_sections(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))

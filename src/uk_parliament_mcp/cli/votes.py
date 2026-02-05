@@ -5,7 +5,7 @@ from __future__ import annotations
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import format_output, run_async
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import (
     COMMONS_VOTES_API_BASE,
     HOUSE_COMMONS,
@@ -79,7 +79,7 @@ def search_divisions(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get-division")
@@ -111,7 +111,7 @@ def get_division(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("member-voting")
@@ -172,7 +172,7 @@ def get_member_voting_record(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("grouped-by-party")
@@ -235,7 +235,7 @@ def get_divisions_grouped_by_party(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-count")
@@ -298,4 +298,4 @@ def get_divisions_search_count(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))

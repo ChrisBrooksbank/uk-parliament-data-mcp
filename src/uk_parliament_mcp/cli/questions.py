@@ -7,7 +7,7 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import format_output, run_async
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import ORAL_QUESTIONS_API_BASE, WRITTEN_QUESTIONS_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
 
@@ -32,7 +32,7 @@ def get_recently_tabled_edms(
     """
     url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotions/list?parameters.orderBy=DateTabledDesc&skip=0&take={take}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-edms")
@@ -87,7 +87,7 @@ def search_early_day_motions(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get-edm")
@@ -106,7 +106,7 @@ def get_early_day_motion(
     """
     url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotion/{edm_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 # Oral Questions Commands
@@ -128,7 +128,7 @@ def search_oral_question_times(
     """
     url = f"{ORAL_QUESTIONS_API_BASE}/oralquestiontimes/list?parameters.answeringDateStart={quote(answering_date_start)}&parameters.answeringDateEnd={quote(answering_date_end)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-oral")
@@ -161,7 +161,7 @@ def search_oral_questions(
     query = "&".join(params)
     url = f"{ORAL_QUESTIONS_API_BASE}/oralquestions/list?{query}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 # Written Questions Commands
@@ -207,7 +207,7 @@ def search_written_questions(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get-written-question")
@@ -232,7 +232,7 @@ def get_written_question(
         {"expandMember": expand_member},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get-written-question-by-uin")
@@ -258,7 +258,7 @@ def get_written_question_by_uin(
         {"expandMember": expand_member},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 # Written Statements Commands
@@ -298,7 +298,7 @@ def search_written_statements(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get-statement")
@@ -323,7 +323,7 @@ def get_written_statement(
         {"expandMember": expand_member},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get-statement-by-uin")
@@ -349,7 +349,7 @@ def get_written_statement_by_uin(
         {"expandMember": expand_member},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("daily-reports")
@@ -381,4 +381,4 @@ def get_daily_reports(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format))

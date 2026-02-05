@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from collections.abc import Coroutine
 from typing import Any
 
@@ -20,6 +21,22 @@ def run_async(coro: Coroutine[Any, Any, str]) -> str:
         The result from the coroutine
     """
     return asyncio.run(coro)
+
+
+def echo_utf8(text: str) -> None:
+    """
+    Print text with UTF-8 encoding, avoiding Windows cp1252 encoding errors.
+
+    Args:
+        text: The text to print
+    """
+    if sys.platform == "win32":
+        # On Windows, write directly to stdout buffer with UTF-8 encoding
+        sys.stdout.buffer.write((text + "\n").encode("utf-8"))
+        sys.stdout.buffer.flush()
+    else:
+        # On Unix-like systems, print normally
+        print(text)
 
 
 def format_output(
