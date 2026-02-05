@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import shutil
 import signal
 import sys
 from datetime import datetime
@@ -303,32 +304,54 @@ def _render_chamber_panel(data: dict[str, Any] | None, house_name: str) -> Panel
     return Panel(text, title=f"[bold]{house_name}[/bold]", border_style=border_style)
 
 
-def _render_calendar_table(events: list[dict[str, Any]]) -> Table | Text:
+def _calendar_subtitle(displayed: int, total: int) -> str | None:
+    """Return a subtitle string when calendar rows are truncated.
+
+    Args:
+        displayed: Number of rows actually shown.
+        total: Total number of events available.
+
+    Returns:
+        Rich markup string, or None when not truncated.
+    """
+    if total <= displayed:
+        return None
+    hidden = total - displayed
+    return f"[dim]showing {displayed} of {total} events ({hidden} more)[/dim]"
+
+
+def _render_calendar_table(
+    events: list[dict[str, Any]], max_rows: int | None = None
+) -> tuple[Table | Text, int]:
     """Render today's business as a Rich table.
 
     Args:
         events: List of calendar event dicts.
+        max_rows: Maximum number of rows to display. None means show all.
 
     Returns:
-        Rich Table or Text if no events.
+        Tuple of (Rich Table or Text if no events, total event count).
     """
     if not events:
-        return Text("No events scheduled for today", style="dim italic")
+        return Text("No events scheduled for today", style="dim italic"), 0
 
     table = Table(
         show_header=True,
         header_style="bold",
-        expand=False,
+        expand=True,
         row_styles=["", "dim"],
     )
     table.add_column("Time", width=5, style="cyan", no_wrap=True)
     table.add_column("House", width=7, no_wrap=True)
-    table.add_column("Event", max_width=50, overflow="ellipsis")
+    table.add_column("Event", ratio=1, overflow="ellipsis")
     table.add_column("Type", max_width=16)
     table.add_column("Location", max_width=20)
     table.add_column("Category", max_width=14)
 
-    for event in events:
+    total_count = len(events)
+    display_events = events[:max_rows] if max_rows is not None else events
+
+    for event in display_events:
         time_str = ""
         for key in ["StartTime", "startTime", "StartDate", "startDate"]:
             if key in event and event[key]:
@@ -351,7 +374,7 @@ def _render_calendar_table(events: list[dict[str, Any]]) -> Table | Text:
         event_str = ""
         for key in ["Description", "description", "Title", "title", "Name", "name"]:
             if key in event and event[key]:
-                event_str = str(event[key])[:60]
+                event_str = str(event[key])
                 break
 
         type_str = ""
@@ -374,7 +397,27 @@ def _render_calendar_table(events: list[dict[str, Any]]) -> Table | Text:
 
         table.add_row(time_str, house_str, event_str, type_str, location_str, category_str)
 
-    return table
+    return table, total_count
+
+
+_CHAMBER_MIN_HEIGHT = 5  # Panel chrome (2) + at least 3 content lines
+_CHAMBER_MAX_FRACTION = 0.4  # Never exceed 40% of terminal height
+
+
+def _estimate_chamber_height(panel: Panel) -> int:
+    """Estimate the number of terminal rows a chamber panel needs.
+
+    Args:
+        panel: Rich Panel produced by _render_chamber_panel.
+
+    Returns:
+        Estimated row count including panel borders.
+    """
+    renderable = panel.renderable
+    if isinstance(renderable, Text):
+        content = renderable.plain.rstrip("\n")
+        return content.count("\n") + 1 + 2  # content lines + panel borders
+    return _CHAMBER_MIN_HEIGHT
 
 
 def _render_dashboard(data: dict[str, Any]) -> Layout:
@@ -394,27 +437,52 @@ def _render_dashboard(data: dict[str, Any]) -> Layout:
         f"  UK Parliament Live | Last updated: {now} | Ctrl+C to exit", style="bold white on blue"
     )
 
-    # Chamber panels
+    # Chamber panels — build and measure
+    chamber_panels: list[Panel] = []
     chambers = Layout()
     if "commons" in data:
         commons_panel = _render_chamber_panel(data.get("commons"), "House of Commons")
+        chamber_panels.append(commons_panel)
         if "lords" in data:
             lords_panel = _render_chamber_panel(data.get("lords"), "House of Lords")
+            chamber_panels.append(lords_panel)
             chambers.split_row(Layout(commons_panel), Layout(lords_panel))
         else:
             chambers.update(commons_panel)
     elif "lords" in data:
         lords_panel = _render_chamber_panel(data.get("lords"), "House of Lords")
+        chamber_panels.append(lords_panel)
         chambers.update(lords_panel)
 
-    # Calendar
-    calendar_content = _render_calendar_table(data.get("calendar", []))
-    calendar_panel = Panel(calendar_content, title="[bold]Today's Business[/bold]")
+    # Size the chamber section to fit content, give calendar the rest
+    terminal_height = shutil.get_terminal_size().lines
+    max_chamber = int(terminal_height * _CHAMBER_MAX_FRACTION)
+    if chamber_panels:
+        tallest = max(_estimate_chamber_height(p) for p in chamber_panels)
+        chamber_size = max(_CHAMBER_MIN_HEIGHT, min(tallest, max_chamber))
+    else:
+        chamber_size = _CHAMBER_MIN_HEIGHT
+
+    # Calendar — compute how many rows fit in the remaining space
+    # header=3, chamber=chamber_size, calendar panel chrome=5 (border+title+header+subtitle+border)
+    available_rows = max(terminal_height - 3 - chamber_size - 5, 3)
+
+    calendar_events = data.get("calendar", [])
+    calendar_content, total_count = _render_calendar_table(
+        calendar_events, max_rows=available_rows
+    )
+    displayed = min(len(calendar_events), available_rows) if calendar_events else 0
+    subtitle = _calendar_subtitle(displayed, total_count)
+    calendar_panel = Panel(
+        calendar_content,
+        title="[bold]Today's Business[/bold]",
+        subtitle=subtitle,
+    )
 
     layout.split_column(
         Layout(Panel(header, style=""), size=3),
-        Layout(chambers, ratio=1),
-        Layout(calendar_panel),
+        Layout(chambers, size=chamber_size),
+        Layout(calendar_panel, ratio=1),
     )
 
     return layout

@@ -13,6 +13,10 @@ from rich.text import Text
 
 from uk_parliament_mcp.cli.watch import (
     MIN_INTERVAL,
+    _CHAMBER_MAX_FRACTION,
+    _CHAMBER_MIN_HEIGHT,
+    _calendar_subtitle,
+    _estimate_chamber_height,
     _fetch_all_data,
     _fetch_calendar_today,
     _fetch_commons_now,
@@ -383,8 +387,9 @@ class TestRenderCalendarTable:
     """Tests for _render_calendar_table."""
 
     def test_no_events_returns_text(self) -> None:
-        result = _render_calendar_table([])
+        result, count = _render_calendar_table([])
         assert isinstance(result, Text)
+        assert count == 0
 
     def test_renders_events_table(self) -> None:
         events = [
@@ -404,10 +409,11 @@ class TestRenderCalendarTable:
                 "Location": "Westminster Hall",
             },
         ]
-        result = _render_calendar_table(events)
+        result, count = _render_calendar_table(events)
         assert isinstance(result, Table)
         # Should have 6 columns: Time, House, Event, Type, Location, Category
         assert len(result.columns) == 6
+        assert count == 2
 
     def test_renders_location_and_type(self) -> None:
         events = [
@@ -420,9 +426,10 @@ class TestRenderCalendarTable:
                 "Category": "Committee",
             },
         ]
-        result = _render_calendar_table(events)
+        result, count = _render_calendar_table(events)
         assert isinstance(result, Table)
         assert len(result.columns) == 6
+        assert count == 1
         # Verify column headers
         col_headers = [col.header for col in result.columns]
         assert "Type" in [str(h) for h in col_headers]
@@ -430,10 +437,133 @@ class TestRenderCalendarTable:
 
     def test_handles_missing_fields(self) -> None:
         events = [{"Description": "Test Event"}]
-        result = _render_calendar_table(events)
+        result, count = _render_calendar_table(events)
         assert isinstance(result, Table)
         # Still has 6 columns even with missing data
         assert len(result.columns) == 6
+        assert count == 1
+
+    def test_table_expands_to_fill_width(self) -> None:
+        events = [{"Description": "Test"}]
+        result, _ = _render_calendar_table(events)
+        assert isinstance(result, Table)
+        assert result.expand is True
+
+    def test_event_column_uses_ratio(self) -> None:
+        events = [{"Description": "Test"}]
+        result, _ = _render_calendar_table(events)
+        assert isinstance(result, Table)
+        # Event is the 3rd column (index 2)
+        assert result.columns[2].ratio == 1
+
+    def test_max_rows_limits_displayed_events(self) -> None:
+        events = [{"Description": f"Event {i}"} for i in range(20)]
+        result, total = _render_calendar_table(events, max_rows=5)
+        assert isinstance(result, Table)
+        assert total == 20
+        assert result.row_count == 5
+
+    def test_max_rows_none_shows_all(self) -> None:
+        events = [{"Description": f"Event {i}"} for i in range(15)]
+        result, total = _render_calendar_table(events, max_rows=None)
+        assert isinstance(result, Table)
+        assert total == 15
+        assert result.row_count == 15
+
+    def test_max_rows_greater_than_events_shows_all(self) -> None:
+        events = [{"Description": f"Event {i}"} for i in range(3)]
+        result, total = _render_calendar_table(events, max_rows=10)
+        assert isinstance(result, Table)
+        assert total == 3
+        assert result.row_count == 3
+
+
+# ---------------------------------------------------------------------------
+# _calendar_subtitle
+# ---------------------------------------------------------------------------
+
+class TestCalendarSubtitle:
+    """Tests for _calendar_subtitle helper."""
+
+    def test_returns_none_when_not_truncated(self) -> None:
+        assert _calendar_subtitle(10, 10) is None
+
+    def test_returns_none_when_displayed_exceeds_total(self) -> None:
+        assert _calendar_subtitle(15, 10) is None
+
+    def test_returns_subtitle_when_truncated(self) -> None:
+        result = _calendar_subtitle(5, 20)
+        assert result is not None
+        assert "showing 5 of 20 events" in result
+        assert "15 more" in result
+
+
+# ---------------------------------------------------------------------------
+# _estimate_chamber_height
+# ---------------------------------------------------------------------------
+
+class TestEstimateChamberHeight:
+    """Tests for _estimate_chamber_height."""
+
+    def test_none_data_returns_small(self) -> None:
+        panel = _render_chamber_panel(None, "House of Commons")
+        height = _estimate_chamber_height(panel)
+        # "Not currently sitting" = 1 content line + 2 borders = 3
+        assert height == 3
+
+    def test_empty_data_returns_small(self) -> None:
+        panel = _render_chamber_panel({}, "House of Lords")
+        height = _estimate_chamber_height(panel)
+        assert height == 3
+
+    def test_annunciator_disabled(self) -> None:
+        msg = _make_message(annunciator_disabled=True)
+        panel = _render_chamber_panel(msg, "House of Commons")
+        height = _estimate_chamber_height(panel)
+        # Single line ("Annunciator offline") + 2 borders = 3
+        assert height == 3
+
+    def test_single_slide(self) -> None:
+        msg = _make_message(slides=[
+            _make_slide("NotSitting"),
+        ])
+        panel = _render_chamber_panel(msg, "House of Commons")
+        height = _estimate_chamber_height(panel)
+        # "Not Sitting\n" → 1 content line + 2 borders = 3
+        assert height >= 3
+
+    def test_division_bell_adds_line(self) -> None:
+        msg_no_bell = _make_message(slides=[_make_slide("Division")])
+        msg_bell = _make_message(
+            slides=[_make_slide("Division")],
+            show_commons_bell=True,
+        )
+        h_no_bell = _estimate_chamber_height(
+            _render_chamber_panel(msg_no_bell, "House of Commons")
+        )
+        h_bell = _estimate_chamber_height(
+            _render_chamber_panel(msg_bell, "House of Commons")
+        )
+        assert h_bell > h_no_bell
+
+    def test_scrolling_messages_increase_height(self) -> None:
+        msg_no_scroll = _make_message(
+            slides=[_make_slide("Debate", lines=[_make_line("Text", "Text100", 1)])],
+        )
+        msg_scroll = _make_message(
+            slides=[_make_slide("Debate", lines=[_make_line("Text", "Text100", 1)])],
+            scrolling=[
+                {"content": "Alert 1", "alertType": "Standard"},
+                {"content": "Alert 2", "alertType": "Standard"},
+            ],
+        )
+        h_no = _estimate_chamber_height(
+            _render_chamber_panel(msg_no_scroll, "House of Commons")
+        )
+        h_yes = _estimate_chamber_height(
+            _render_chamber_panel(msg_scroll, "House of Commons")
+        )
+        assert h_yes > h_no
 
 
 # ---------------------------------------------------------------------------
@@ -465,6 +595,56 @@ class TestRenderDashboard:
         data = {"commons": None, "lords": None, "calendar": []}
         result = _render_dashboard(data)
         assert isinstance(result, Layout)
+
+    def test_chambers_get_fixed_size(self) -> None:
+        """Chambers section should use size= (fixed height)."""
+        msg = _make_message(slides=[_make_slide("NotSitting")])
+        data = {"commons": msg, "lords": msg, "calendar": []}
+        layout = _render_dashboard(data)
+        # Layout children: header, chambers, calendar
+        children = layout.children
+        assert len(children) == 3
+        chambers_layout = children[1]
+        assert chambers_layout.size is not None
+        assert chambers_layout.size >= _CHAMBER_MIN_HEIGHT
+
+    def test_calendar_gets_remaining_space(self) -> None:
+        """Calendar section should use ratio (size=None) to fill remaining space."""
+        msg = _make_message(slides=[_make_slide("NotSitting")])
+        data = {"commons": msg, "lords": msg, "calendar": []}
+        layout = _render_dashboard(data)
+        children = layout.children
+        calendar_layout = children[2]
+        assert calendar_layout.size is None
+        assert calendar_layout.ratio == 1
+
+    def test_min_height_enforced(self) -> None:
+        """Chamber size should never go below _CHAMBER_MIN_HEIGHT."""
+        data = {"commons": None, "lords": None, "calendar": []}
+        with patch("uk_parliament_mcp.cli.watch.shutil.get_terminal_size") as mock_ts:
+            mock_ts.return_value = type("TS", (), {"lines": 50, "columns": 120})()
+            layout = _render_dashboard(data)
+        children = layout.children
+        chambers_layout = children[1]
+        assert chambers_layout.size >= _CHAMBER_MIN_HEIGHT
+
+    def test_max_fraction_cap(self) -> None:
+        """Chamber size should not exceed _CHAMBER_MAX_FRACTION of terminal height."""
+        # Build a chamber with many lines to push height up
+        many_lines = [_make_line(f"Line {i}", "Text100", i) for i in range(30)]
+        msg = _make_message(
+            slides=[_make_slide("Debate", lines=many_lines)],
+            scrolling=[{"content": f"Scroll {i}", "alertType": "Standard"} for i in range(10)],
+        )
+        data = {"commons": msg, "lords": msg, "calendar": []}
+        terminal_height = 40
+        with patch("uk_parliament_mcp.cli.watch.shutil.get_terminal_size") as mock_ts:
+            mock_ts.return_value = type("TS", (), {"lines": terminal_height, "columns": 120})()
+            layout = _render_dashboard(data)
+        children = layout.children
+        chambers_layout = children[1]
+        max_allowed = int(terminal_height * _CHAMBER_MAX_FRACTION)
+        assert chambers_layout.size <= max_allowed
 
 
 # ---------------------------------------------------------------------------
