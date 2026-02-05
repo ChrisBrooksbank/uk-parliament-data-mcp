@@ -243,35 +243,6 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def search_members_historical(
-        name: str | None = None,
-        date_to_search_for: str | None = None,
-        skip: int = 0,
-        take: int = 20,
-    ) -> str:
-        """Search for historical members who were active on a specific date. Use when you need to find MPs or Lords who served during a particular period in parliamentary history.
-
-        Args:
-            name: Optional: full or partial name to search for.
-            date_to_search_for: Optional: specific date to search for members active on that date (YYYY-MM-DD format).
-            skip: Number of records to skip (for pagination).
-            take: Number of records to return (default 20, max 100).
-
-        Returns:
-            Historical members matching the search criteria.
-        """
-        url = build_url(
-            f"{MEMBERS_API_BASE}/Members/SearchHistorical",
-            {
-                "name": name,
-                "dateToSearchFor": date_to_search_for,
-                "skip": skip,
-                "take": take,
-            },
-        )
-        return await get_result(url)
-
-    @mcp.tool()
     async def get_member_experience(member_id: int) -> str:
         """Get professional experience and career background of a member by ID. Use when researching a member's qualifications, previous employment, education, or professional history before entering Parliament.
 

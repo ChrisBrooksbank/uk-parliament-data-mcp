@@ -22,8 +22,8 @@ class TestMembersToolsRegistration:
         return server
 
     @pytest.mark.asyncio
-    async def test_register_tools_adds_all_25_tools(self, mcp: FastMCP):
-        """register_tools adds all 25 member tools."""
+    async def test_register_tools_adds_all_24_tools(self, mcp: FastMCP):
+        """register_tools adds all 24 member tools."""
         tools = await mcp.list_tools()
         tool_names = [t.name for t in tools]
 
@@ -41,7 +41,6 @@ class TestMembersToolsRegistration:
             "get_members_biography",
             "get_members_contact",
             "search_members",
-            "search_members_historical",
             "get_member_experience",
             "get_member_focus",
             "get_member_registered_interests",
@@ -438,45 +437,6 @@ class TestSearchMembers:
             assert "IsCurrentMember=true" in call_url
             assert "skip=10" in call_url
             assert "take=50" in call_url
-
-
-class TestSearchMembersHistorical:
-    """Tests for search_members_historical tool."""
-
-    @pytest.mark.asyncio
-    async def test_builds_url_with_minimal_params(self):
-        """search_members_historical builds URL with defaults."""
-        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
-            mock.return_value = '{"url": "test", "data": "{}"}'
-
-            mcp = FastMCP(name="test")
-            members.register_tools(mcp)
-
-            await mcp.call_tool("search_members_historical", {})
-
-            mock.assert_called_once()
-            call_url = mock.call_args[0][0]
-            assert f"{MEMBERS_API_BASE}/Members/SearchHistorical" in call_url
-            assert "skip=0" in call_url
-            assert "take=20" in call_url
-
-    @pytest.mark.asyncio
-    async def test_builds_url_with_date(self):
-        """search_members_historical builds URL with date parameter."""
-        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
-            mock.return_value = '{"url": "test", "data": "{}"}'
-
-            mcp = FastMCP(name="test")
-            members.register_tools(mcp)
-
-            await mcp.call_tool(
-                "search_members_historical",
-                {"date_to_search_for": "2020-01-01", "skip": 0, "take": 20},
-            )
-
-            mock.assert_called_once()
-            call_url = mock.call_args[0][0]
-            assert "dateToSearchFor=2020-01-01" in call_url
 
 
 class TestGetMemberExperience:

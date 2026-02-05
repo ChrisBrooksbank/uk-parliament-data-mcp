@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 125 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
+UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 122 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
 
 ## Installation
 
@@ -71,7 +71,7 @@ AI Assistant ──(MCP/stdio)──> uk_parliament_mcp ──(HTTP)──> UK P
   - URL building with parameter filtering (`build_url`)
   - Consistent response format: `{url, data}` or `{url, error, statusCode}`
 
-- **`tools/*.py`**: 16 tool modules (125 total tools) each targeting a specific Parliament API:
+- **`tools/*.py`**: 16 tool modules (122 total tools) each targeting a specific Parliament API:
   | Module | API Domain | Purpose |
   |--------|------------|---------|
   | composite.py | Multiple APIs | High-level tools combining multiple API calls |
@@ -148,7 +148,7 @@ new_api.register_tools(mcp)
 
 The server provides automatic context to MCP clients via the `instructions` parameter in FastMCP. This means:
 
-- **No initialization required**: Clients receive guidance during MCP handshake without needing to call `hello_parliament()` or `/parliament` first
+- **No initialization required**: Clients receive guidance during MCP handshake without needing to call `order_order()` or `/parliament` first
 - **Automatic behavior**: Per MCP spec, clients may add these instructions to the system prompt
 - **Consistent sessions**: Every session starts with proper guidance about data sources and citation requirements
 
@@ -204,21 +204,18 @@ Get comprehensive committee summary. Combines committee search + details + evide
 
 ## Agent Guidance Tools
 
-The server also includes guidance **tools** to help AI assistants navigate the 125 available tools:
+The server also includes guidance **tools** to help AI assistants navigate the 122 available tools:
 
-### `hello_parliament()`
-Initialize a parliamentary research session (optional with server instructions). Returns:
+### `order_order()`
+Start a UK Parliament research session. Say "Order Order" (like the Speaker) to activate. Returns:
 - System prompt with data source transparency requirements
 - Quick reference of all tool categories with entry points
 - Key conventions (house IDs, date formats, pagination)
 
-### `goodbye_parliament()`
-End the parliamentary session and restore normal assistant behavior.
-
 ### `parliament_guide(topic)`
 Get detailed guidance for a specific domain. Available topics:
 - `composite` - 4 high-level tools combining multiple API calls
-- `members` - 25 tools for MPs, Lords, constituencies, parties
+- `members` - 24 tools for MPs, Lords, constituencies, parties
 - `bills` - 21 tools for legislation, amendments, stages
 - `votes` - 10 tools for Commons and Lords divisions
 - `committees` - 24 tools for committee info, meetings, evidence
@@ -228,7 +225,7 @@ Get detailed guidance for a specific domain. Available topics:
 - `live` - Current activity, calendar (now + whatson)
 - `legislation` - SIs, treaties
 - `procedures` - 13 tools for Erskine May, bill types, stage definitions
-- `all` - Condensed reference of all 125 tools
+- `all` - Condensed reference of all 122 tools
 - `conventions` - Date formats, house IDs, pagination
 - `workflows` - Overview of common research patterns
 
@@ -244,7 +241,7 @@ Get step-by-step workflow for a research task. Matches queries to predefined pat
 Example usage:
 ```
 # Start session
-hello_parliament()
+order_order()
 
 # Get detailed guidance
 parliament_guide("members")
@@ -277,9 +274,9 @@ src/uk_parliament_mcp/
 ├── http_client.py      # HTTP client with retry
 └── tools/
     ├── __init__.py
-    ├── core.py         # Session management & guidance (4 tools)
+    ├── core.py         # Session management & guidance (3 tools)
     ├── composite.py    # High-level composite tools (4 tools)
-    ├── members.py      # Member tools (29 tools)
+    ├── members.py      # Member tools (28 tools)
     ├── bills.py        # Bills tools (21 tools)
     ├── committees.py   # Committees tools (24 tools)
     ├── commons_votes.py    # Commons votes (5 tools)

@@ -16,7 +16,7 @@ Convert raw data into human-readable summaries while preserving accuracy, but al
 
 GOODBYE_PROMPT = """You are now interacting as a normal assistant. There are no special restrictions or requirements for using UK Parliament MCP data. You may answer questions using any available data or knowledge, and you do not need to append MCP API URLs or limit yourself to MCP sources. Resume normal assistant behavior."""
 
-QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (125 tools)
+QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (122 tools)
 
 ### Composite Tools (Start Here for Common Queries!)
 These tools combine multiple API calls - use them first for efficiency:
@@ -35,7 +35,7 @@ These tools combine multiple API calls - use them first for efficiency:
 | Module | Tools | Start With |
 |--------|-------|------------|
 | composite | 4 | get_mp_profile(name) |
-| members | 25 | get_member_by_name(name) |
+| members | 24 | get_member_by_name(name) |
 | bills | 21 | search_bills(search_term) |
 | committees | 24 | search_committees(search_term) |
 | commons_votes | 5 | search_commons_divisions(search_term) |
@@ -93,12 +93,11 @@ Use the individual tools (in members, bills, etc.) when you need:
 - Pagination through large result sets
 - Access to specific endpoints not covered by composite tools
 - More control over which data is fetched""",
-    "members": """## Members Tools (25 tools)
+    "members": """## Members Tools (24 tools)
 
 ### Primary Search Tools
 - search_members(name, location, party_id, house, is_current_member, skip, take) - Comprehensive member search with filters
 - get_member_by_name(name) - Simple name search for MPs and Lords
-- search_members_historical(name, date_to_search_for) - Find historical members at a point in time
 
 ### Member Details (require member_id from search)
 - get_member_by_id(member_id) - Full member profile with party, constituency, status
@@ -436,13 +435,13 @@ Or search directly:
 5. Third Reading: Final debate
 6. Lords/Commons stages: Mirror process in other House
 7. Royal Assent: Becomes law""",
-    "all": """## All UK Parliament MCP Tools (125 tools)
+    "all": """## All UK Parliament MCP Tools (122 tools)
 
 ### Composite (4 tools) - Use These First!
 get_mp_profile, check_mp_vote, get_bill_overview, get_committee_summary
 
-### Members (25 tools)
-Search: search_members, get_member_by_name, search_members_historical
+### Members (24 tools)
+Search: search_members, get_member_by_name
 Details: get_member_by_id, get_members_biography, get_members_contact, get_member_synopsis, get_member_experience, get_member_focus
 Activity: get_member_voting, get_commons_voting_record_for_member, get_lords_voting_record_for_member, get_member_written_questions, get_contributions, edms_for_member_id
 Interests: get_member_registered_interests, get_member_staff, get_lords_interests_staff
@@ -482,13 +481,13 @@ Structure: get_erskine_may_parts, get_erskine_may_part, get_erskine_may_chapter,
 Search: search_erskine_may, search_erskine_may_sections, get_erskine_may_paragraph
 Index: browse_erskine_may_index, search_erskine_may_index, get_erskine_may_index_term
 
-### Other Tools (12 tools)
+### Other Tools (10 tools)
 Questions: get_recently_tabled_edms, search_early_day_motions, search_oral_question_times
 Interests: search_roi, interests_categories, get_registers_of_interests
 Live: happening_now_in_commons, happening_now_in_lords
 Calendar: search_calendar, get_sessions, get_non_sitting_days
 Legislation: search_statutory_instruments, get_statutory_instruments_business_items, search_treaties
-Session: hello_parliament, goodbye_parliament, parliament_guide, parliament_workflow""",
+Session: order_order, parliament_guide, parliament_workflow""",
     "conventions": """## UK Parliament MCP Conventions
 
 ### House Identification
@@ -880,14 +879,12 @@ def register_tools(mcp: FastMCP) -> None:
     """Register core tools with the MCP server."""
 
     @mcp.tool()
-    async def hello_parliament() -> str:
-        """Initialize Parliament data assistant with system prompt | setup, configuration, start session, getting started, how to use, instructions | Use FIRST when beginning parliamentary research to get proper assistant behavior and data handling guidelines | Returns system prompt for optimal parliamentary data interaction"""
+    async def order_order() -> str:
+        """Start UK Parliament research session | order, begin, initialize, start session, parliament mode |
+        Use at the START of any parliamentary research to get proper context and guidance.
+        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 122 tools.
+        """
         return f"{SYSTEM_PROMPT}\n\n---\n\n{QUICK_REFERENCE}"
-
-    @mcp.tool()
-    async def goodbye_parliament() -> str:
-        """End Parliament session and restore normal assistant behavior | exit, quit, finish session, reset, normal mode, end parliamentary mode | Use when finished with parliamentary research to return to standard assistant behavior | Removes parliamentary data restrictions and requirements"""
-        return GOODBYE_PROMPT
 
     @mcp.tool()
     async def parliament_guide(topic: str) -> str:
@@ -927,7 +924,7 @@ def register_prompts(mcp: FastMCP) -> None:
 
     @mcp.prompt()
     async def parliament(topic: str | None = None) -> str:
-        """Initialize UK Parliament research session with guidance on 125 available tools.
+        """Initialize UK Parliament research session with guidance on 122 available tools.
 
         Provides system instructions for parliamentary data queries, quick reference
         of tool categories, and guidance on common research workflows.

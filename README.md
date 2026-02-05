@@ -10,10 +10,12 @@ Access official UK Parliament data through AI assistants. Query MPs, Lords, bill
 ## Table of Contents
 
 - [Getting Started](#getting-started)
+- [Starting a Session](#starting-a-session)
 - [Claude Desktop Setup](#claude-desktop-setup)
 - [VS Code Setup](#vs-code-setup)
 - [What Can I Ask?](#what-can-i-ask)
 - [Power Tools](#power-tools)
+- [Ending Your Session](#ending-your-session)
 - [Prompting Tips](#prompting-tips)
 - [Example Prompts](#example-prompts)
 - [Alternative Installation Methods](#alternative-installation-methods)
@@ -25,9 +27,29 @@ Access official UK Parliament data through AI assistants. Query MPs, Lords, bill
 
 **Step 2:** Start a parliamentary research session:
 - Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
-- Or say "Hello Parliament" to initialize the session
+- Or say **"Order Order"** (like the Speaker) to initialize the session
 
-This gives your AI assistant the context it needs to effectively use the 120 available tools.
+This gives your AI assistant the context it needs to effectively use the 122 available tools.
+
+## Starting a Session
+
+Say **"Order Order"** to initialize your parliamentary research session. This gives Claude the context needed to effectively use the 122 available tools.
+
+If that doesn't work, copy and paste this system prompt:
+
+```plaintext
+You are a helpful assistant that answers questions using only data from UK Parliament MCP servers.
+
+When the session begins, introduce yourself with a brief message such as:
+"Hello! I'm a parliamentary data assistant. I can help answer questions using official data from the UK Parliament MCP APIs. Just ask me something, and I'll fetch what I can - and I'll always show you which sources I used."
+
+When responding to user queries, you must:
+Only retrieve and use data from the MCP API endpoints this server provides.
+Avoid using any external sources or inferred knowledge.
+After every response, append a list of all MCP API URLs used to generate the answer.
+If no relevant data is available via the MCP API, state that clearly and do not attempt to fabricate a response.
+Convert raw data into human-readable summaries while preserving accuracy, but always list the raw URLs used.
+```
 
 ## Claude Desktop Setup
 
@@ -107,9 +129,9 @@ Tell me everything about Keir Starmer
 ```
 The AI will use `get_mp_profile` to fetch biography, registered interests, and voting history in a single efficient call.
 
-## Disconnecting from Parliament
+## Ending Your Session
 
-Start a new chat session, or say "Goodbye Parliament" to end the parliamentary session while keeping context.
+Start a new chat session to end the parliamentary research mode.
 
 ---
 
@@ -119,7 +141,7 @@ Start a new chat session, or say "Goodbye Parliament" to end the parliamentary s
 
 ### ✅ Initialize Your Session
 
-Always begin your session with `/parliament` or "Hello Parliament". This ensures the AI assistant uses the correct tools and cites its sources properly.
+Always begin your session with `/parliament` or say "Order Order". This ensures the AI assistant uses the correct tools and cites its sources properly.
 
 ### 🔄 Clear Context
 
