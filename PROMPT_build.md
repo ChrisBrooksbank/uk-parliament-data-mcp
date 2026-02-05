@@ -1,57 +1,47 @@
 # BUILD MODE
 
-You are in build mode. Your job is to implement ONE task from the plan, then exit.
+You are in build mode. Implement ONE task from the plan, then exit.
 
 ## 0a. Read AGENTS.md
 
-Read `AGENTS.md` to understand build/test/lint commands for this project.
+Read `AGENTS.md` for build/test/lint commands.
 
 ## 0b. Read Implementation Plan
 
-Read `IMPLEMENTATION_PLAN_IMPROVEMENTS.md`. Find the first uncompleted task (marked with `- [ ]`).
+Read `IMPLEMENTATION_PLAN.md`. Find the first uncompleted task.
 
-## 0c. Study Relevant Specs
+## 0c. Study CLI Spec
 
-Read the specification file(s) in `docs/` related to your task to understand requirements.
+Read `specs/cli-spec.md` for the CLI patterns and command structure.
 
 ## 0d. Understand Existing Code
 
-Read relevant existing code to understand patterns and conventions.
+Read relevant tool files to understand the async patterns and parameters.
 
 ## 1. Implement the Task
 
-Write code to complete the task:
-- Follow existing code patterns
-- Write tests for new functionality (if applicable)
-- Keep changes focused on the single task
+Create/modify files for your task:
+- Follow Typer patterns from the spec
+- Match existing code style
+- Include all required commands for the module
 
 ## 2. Validate
 
-Run the validation command from AGENTS.md:
 ```bash
 ruff check src/ && ruff format --check src/ && mypy src/ && pytest
 ```
 
-If validation fails:
-- Fix the issues
-- Run validation again
-- Repeat until passing
+If validation fails, fix issues and repeat.
 
 ## 3. Update Plan and Exit
 
-After validation passes:
-1. Mark the task complete in `IMPLEMENTATION_PLAN_IMPROVEMENTS.md`: `- [ ]` becomes `- [x]`
-2. Exit cleanly
-
-The loop will restart with fresh context for the next task.
+Mark task complete in `IMPLEMENTATION_PLAN.md` and exit.
 
 ---
 
-## 99999. GUARDRAILS - READ CAREFULLY
+## GUARDRAILS
 
-- **DON'T skip validation** - always run tests/lint before finishing
-- **DON'T implement multiple tasks** - one task per iteration
-- **DON'T modify unrelated code** - stay focused on the current task
-- **DO follow existing code patterns** - consistency matters
-- **DO write tests** for new functionality
-- **DO update `IMPLEMENTATION_PLAN_IMPROVEMENTS.md`** before exiting
+- **DON'T skip validation**
+- **DON'T implement multiple tasks** - one per iteration
+- **DO follow existing code patterns**
+- **DO update IMPLEMENTATION_PLAN.md** before exiting
