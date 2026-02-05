@@ -323,8 +323,10 @@ def _render_calendar_table(events: list[dict[str, Any]]) -> Table | Text:
     )
     table.add_column("Time", width=5, style="cyan", no_wrap=True)
     table.add_column("House", width=7, no_wrap=True)
-    table.add_column("Event", max_width=55, overflow="ellipsis")
-    table.add_column("Category", max_width=16, style="dim")
+    table.add_column("Event", max_width=50, overflow="ellipsis")
+    table.add_column("Type", max_width=16)
+    table.add_column("Location", max_width=20)
+    table.add_column("Category", max_width=14)
 
     for event in events:
         time_str = ""
@@ -352,13 +354,25 @@ def _render_calendar_table(events: list[dict[str, Any]]) -> Table | Text:
                 event_str = str(event[key])[:60]
                 break
 
+        type_str = ""
+        for key in ["Type", "type"]:
+            if key in event and event[key]:
+                type_str = str(event[key])
+                break
+
+        location_str = ""
+        for key in ["Location", "location"]:
+            if key in event and event[key]:
+                location_str = str(event[key])
+                break
+
         category_str = ""
-        for key in ["Category", "category", "Type", "type"]:
+        for key in ["Category", "category"]:
             if key in event and event[key]:
                 category_str = str(event[key])
                 break
 
-        table.add_row(time_str, house_str, event_str, category_str)
+        table.add_row(time_str, house_str, event_str, type_str, location_str, category_str)
 
     return table
 

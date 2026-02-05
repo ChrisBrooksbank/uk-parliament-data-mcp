@@ -393,21 +393,47 @@ class TestRenderCalendarTable:
                 "House": "Commons",
                 "Description": "Oral Questions",
                 "Category": "Questions",
+                "Type": "Oral evidence",
+                "Location": "Chamber",
             },
             {
                 "StartTime": "2024-01-15T14:00:00",
                 "House": "Lords",
                 "Title": "NHS Debate",
                 "Type": "General Debate",
+                "Location": "Westminster Hall",
             },
         ]
         result = _render_calendar_table(events)
         assert isinstance(result, Table)
+        # Should have 6 columns: Time, House, Event, Type, Location, Category
+        assert len(result.columns) == 6
+
+    def test_renders_location_and_type(self) -> None:
+        events = [
+            {
+                "StartTime": "2024-01-15T10:00:00",
+                "House": "Commons",
+                "Description": "Treasury Committee",
+                "Type": "Oral evidence",
+                "Location": "Westminster Hall",
+                "Category": "Committee",
+            },
+        ]
+        result = _render_calendar_table(events)
+        assert isinstance(result, Table)
+        assert len(result.columns) == 6
+        # Verify column headers
+        col_headers = [col.header for col in result.columns]
+        assert "Type" in [str(h) for h in col_headers]
+        assert "Location" in [str(h) for h in col_headers]
 
     def test_handles_missing_fields(self) -> None:
         events = [{"Description": "Test Event"}]
         result = _render_calendar_table(events)
         assert isinstance(result, Table)
+        # Still has 6 columns even with missing data
+        assert len(result.columns) == 6
 
 
 # ---------------------------------------------------------------------------
