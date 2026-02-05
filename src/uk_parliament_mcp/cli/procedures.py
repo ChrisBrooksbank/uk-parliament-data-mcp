@@ -7,6 +7,7 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
+from uk_parliament_mcp.cli.pagination import ERSKINE_MAY_PAGINATION, paginate_request
 from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import ERSKINE_MAY_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
@@ -231,7 +232,7 @@ def browse_erskine_may_index(
             "take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, ERSKINE_MAY_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -290,7 +291,7 @@ def search_erskine_may_index(
             "take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, ERSKINE_MAY_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -324,5 +325,5 @@ def search_erskine_may_sections(
             "take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, ERSKINE_MAY_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))

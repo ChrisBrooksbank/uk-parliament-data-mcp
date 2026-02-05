@@ -7,6 +7,13 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
+from uk_parliament_mcp.cli.pagination import (
+    DAILY_REPORTS_PAGINATION,
+    ORAL_QUESTIONS_PAGINATION,
+    WRITTEN_QUESTIONS_PAGINATION,
+    WRITTEN_STATEMENTS_PAGINATION,
+    paginate_request,
+)
 from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import ORAL_QUESTIONS_API_BASE, WRITTEN_QUESTIONS_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
@@ -98,7 +105,7 @@ def search_early_day_motions(
             "parameters.take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -190,7 +197,7 @@ def search_oral_questions(
     params.append(f"parameters.take={take}")
     query = "&".join(params)
     url = f"{ORAL_QUESTIONS_API_BASE}/oralquestions/list?{query}"
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -242,7 +249,7 @@ def search_written_questions(
             "take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, WRITTEN_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -351,7 +358,7 @@ def search_written_statements(
             "take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, WRITTEN_STATEMENTS_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -452,5 +459,5 @@ def get_daily_reports(
             "take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, DAILY_REPORTS_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))

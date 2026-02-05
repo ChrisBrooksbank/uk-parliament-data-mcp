@@ -7,6 +7,7 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
+from uk_parliament_mcp.cli.pagination import BILLS_PAGINATION, paginate_request
 from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import BILLS_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
@@ -35,7 +36,7 @@ def get_recent_bills(
     Returns bill titles, stages, sponsors, dates, and current status.
     """
     url = f"{BILLS_API_BASE}/Bills?SortOrder=DateUpdatedDescending&skip=0&take={take}"
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=0))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -166,7 +167,7 @@ def get_stages(
         f"{BILLS_API_BASE}/Bills/{bill_id}/Stages",
         {"Skip": skip, "Take": take},
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -240,7 +241,7 @@ def get_amendments(
             "Take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -315,7 +316,7 @@ def get_ping_pong_items(
             "Take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -449,7 +450,7 @@ def get_news_articles(
         f"{BILLS_API_BASE}/Bills/{bill_id}/NewsArticles",
         {"Skip": skip, "Take": take},
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -575,7 +576,7 @@ def get_publication_types(
         f"{BILLS_API_BASE}/PublicationTypes",
         {"Skip": skip, "Take": take},
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -613,5 +614,5 @@ def get_sittings(
             "Take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))

@@ -315,7 +315,7 @@ class TestSearchAdvanced:
             """Mock async get_result."""
             return mock_advanced_search_response
 
-        with patch("uk_parliament_mcp.cli.members.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["members", "search-advanced"])
 
         assert result.exit_code == 0
@@ -334,7 +334,7 @@ class TestSearchAdvanced:
             """Mock async get_result."""
             return mock_advanced_search_response
 
-        with patch("uk_parliament_mcp.cli.members.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(
                 app,
                 ["members", "search-advanced", "--house", "1", "--is-current-member"]
@@ -467,7 +467,7 @@ class TestConstituencies:
             """Mock async get_result."""
             return mock_constituencies_response
 
-        with patch("uk_parliament_mcp.cli.members.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["members", "constituencies"])
 
         assert result.exit_code == 0
@@ -486,7 +486,7 @@ class TestConstituencies:
             """Mock async get_result."""
             return mock_constituencies_response
 
-        with patch("uk_parliament_mcp.cli.members.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["members", "constituencies", "--skip", "0", "--take", "20"])
 
         assert result.exit_code == 0

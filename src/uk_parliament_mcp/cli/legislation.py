@@ -7,6 +7,7 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
+from uk_parliament_mcp.cli.pagination import TREATIES_PAGINATION, paginate_request
 from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import STATUTORY_INSTRUMENTS_API_BASE, TREATIES_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
@@ -238,7 +239,7 @@ def search_treaties_advanced(
             "Take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, TREATIES_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 

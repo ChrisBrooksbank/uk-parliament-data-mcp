@@ -52,7 +52,7 @@ class TestRecent:
             """Mock async get_result."""
             return mock_recent_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "recent"])
 
         assert result.exit_code == 0
@@ -71,7 +71,7 @@ class TestRecent:
             """Mock async get_result."""
             return mock_recent_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "recent", "--take", "5"])
 
         assert result.exit_code == 0
@@ -280,7 +280,7 @@ class TestStages:
             """Mock async get_result."""
             return mock_stages_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "stages", "123"])
 
         assert result.exit_code == 0
@@ -299,7 +299,7 @@ class TestStages:
             """Mock async get_result."""
             return mock_stages_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "stages", "123", "--skip", "0", "--take", "10"])
 
         assert result.exit_code == 0
@@ -350,7 +350,7 @@ class TestAmendments:
             """Mock async get_result."""
             return mock_amendments_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "amendments", "123", "456"])
 
         assert result.exit_code == 0
@@ -369,7 +369,7 @@ class TestAmendments:
             """Mock async get_result."""
             return mock_amendments_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "amendments", "123", "456", "--search", "clause"])
 
         assert result.exit_code == 0
@@ -388,7 +388,7 @@ class TestAmendments:
             """Mock async get_result."""
             return mock_amendments_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(
                 app,
                 ["bills", "amendments", "123", "456", "--search", "clause", "--decision", "Agreed"]
@@ -730,7 +730,7 @@ class TestSittings:
             """Mock async get_result."""
             return mock_sittings_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "sittings"])
 
         assert result.exit_code == 0
@@ -749,7 +749,7 @@ class TestSittings:
             """Mock async get_result."""
             return mock_sittings_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(
                 app,
                 ["bills", "sittings", "--house", "Commons", "--from", "2024-01-01", "--to", "2024-12-31"]

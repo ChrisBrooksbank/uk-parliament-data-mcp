@@ -7,6 +7,11 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
+from uk_parliament_mcp.cli.pagination import (
+    HANSARD_MEMBER_SUMMARY_PAGINATION,
+    HANSARD_PAGINATION,
+    paginate_request,
+)
 from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import HANSARD_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
@@ -53,7 +58,7 @@ def search_hansard(
             "queryParameters.take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, HANSARD_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -272,7 +277,7 @@ def search_hansard_full(
             "queryParameters.take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, HANSARD_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -318,7 +323,7 @@ def search_hansard_contributions(
             "queryParameters.take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, HANSARD_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -362,7 +367,7 @@ def search_hansard_members(
             "queryParameters.take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, HANSARD_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -404,7 +409,7 @@ def search_hansard_divisions(
             "queryParameters.take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, HANSARD_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -438,7 +443,7 @@ def get_member_contribution_summary(
             "take": take,
         },
     )
-    result = run_async(get_result(url))
+    result = run_async(paginate_request(url, HANSARD_MEMBER_SUMMARY_PAGINATION, desired_total=take, start_skip=skip))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
