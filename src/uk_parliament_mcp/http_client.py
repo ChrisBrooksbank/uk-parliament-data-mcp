@@ -19,7 +19,7 @@ class SuccessResponse(TypedDict):
     """Response structure for successful API calls."""
 
     url: str
-    data: str
+    data: Any  # Parsed JSON data (dict, list, or string if non-JSON response)
 
 
 class ErrorResponse(TypedDict):
@@ -126,7 +126,12 @@ class ParliamentHTTPClient:
                 response = await client.get(url)
 
                 if response.is_success:
-                    data = response.text
+                    # Parse JSON to avoid double-encoding when wrapping
+                    try:
+                        data = response.json()
+                    except json.JSONDecodeError:
+                        # Fall back to text if not valid JSON
+                        data = response.text
                     logger.info("Successfully retrieved data from %s", url)
                     return json.dumps({"url": url, "data": data})
 

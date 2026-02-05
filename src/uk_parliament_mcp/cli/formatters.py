@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+import sys
 from enum import Enum
 from io import StringIO
 from typing import Any
 
 from rich.console import Console
+from rich.json import JSON
 from rich.table import Table
 
 
@@ -170,8 +172,20 @@ class CLIFormatter:
         return parsed
 
     def _format_json(self, data: Any) -> str:
-        """Format data as JSON."""
+        """Format data as JSON.
+
+        When pretty=True and outputting to a terminal, uses rich for
+        syntax highlighting. Falls back to plain indented JSON for
+        pipes/files to ensure valid JSON output.
+        """
         if self.pretty:
+            if sys.stdout.isatty():
+                # Use rich for colored output on terminal
+                string_io = StringIO()
+                console = Console(file=string_io, force_terminal=True)
+                console.print(JSON.from_data(data))
+                return string_io.getvalue().rstrip()
+            # Plain indented JSON for pipes/files
             return json.dumps(data, indent=2, ensure_ascii=False)
         return json.dumps(data, ensure_ascii=False)
 
