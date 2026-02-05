@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 120 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
+UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 125 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
 
 ## Installation
 
@@ -71,7 +71,7 @@ AI Assistant ──(MCP/stdio)──> uk_parliament_mcp ──(HTTP)──> UK P
   - URL building with parameter filtering (`build_url`)
   - Consistent response format: `{url, data}` or `{url, error, statusCode}`
 
-- **`tools/*.py`**: 16 tool modules (120 total tools) each targeting a specific Parliament API:
+- **`tools/*.py`**: 16 tool modules (125 total tools) each targeting a specific Parliament API:
   | Module | API Domain | Purpose |
   |--------|------------|---------|
   | composite.py | Multiple APIs | High-level tools combining multiple API calls |
@@ -204,7 +204,7 @@ Get comprehensive committee summary. Combines committee search + details + evide
 
 ## Agent Guidance Tools
 
-The server also includes guidance **tools** to help AI assistants navigate the 92 available tools:
+The server also includes guidance **tools** to help AI assistants navigate the 125 available tools:
 
 ### `hello_parliament()`
 Initialize a parliamentary research session (optional with server instructions). Returns:
@@ -221,14 +221,14 @@ Get detailed guidance for a specific domain. Available topics:
 - `members` - 25 tools for MPs, Lords, constituencies, parties
 - `bills` - 21 tools for legislation, amendments, stages
 - `votes` - 10 tools for Commons and Lords divisions
-- `committees` - 12 tools for committee info, meetings, evidence
-- `hansard` - Parliamentary record search
+- `committees` - 24 tools for committee info, meetings, evidence
+- `hansard` - 18 tools for parliamentary record search
 - `questions` - EDMs, oral questions
 - `interests` - Register of Interests
 - `live` - Current activity, calendar (now + whatson)
 - `legislation` - SIs, treaties
-- `procedures` - Erskine May, bill types, stage definitions
-- `all` - Condensed reference of all 120 tools
+- `procedures` - 13 tools for Erskine May, bill types, stage definitions
+- `all` - Condensed reference of all 125 tools
 - `conventions` - Date formats, house IDs, pagination
 - `workflows` - Overview of common research patterns
 
@@ -281,10 +281,10 @@ src/uk_parliament_mcp/
     ├── composite.py    # High-level composite tools (4 tools)
     ├── members.py      # Member tools (29 tools)
     ├── bills.py        # Bills tools (21 tools)
-    ├── committees.py   # Committees tools (12 tools)
+    ├── committees.py   # Committees tools (24 tools)
     ├── commons_votes.py    # Commons votes (5 tools)
     ├── lords_votes.py      # Lords votes (5 tools)
-    ├── hansard.py          # Hansard (7 tools)
+    ├── hansard.py          # Hansard (18 tools)
     ├── oral_questions.py   # EDMs & oral questions (5 tools)
     ├── written_questions.py # Written PQs & statements (7 tools)
     ├── interests.py        # Interests (3 tools)
@@ -292,5 +292,5 @@ src/uk_parliament_mcp/
     ├── whatson.py          # Calendar & procedural dates (7 tools)
     ├── statutory_instruments.py  # SIs & Acts (5 tools)
     ├── treaties.py         # Treaties (3 tools)
-    └── erskine_may.py      # Procedure (1 tool)
+    └── erskine_may.py      # Procedure (11 tools)
 ```

@@ -383,3 +383,279 @@ def register_tools(mcp: FastMCP) -> None:
             },
         )
         return await get_result(url)
+
+    @mcp.tool()
+    async def get_committee_business(
+        search_term: str | None = None,
+        committee_id: int | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+        business_type_id: int | None = None,
+        status: str | None = None,
+        currently_accepting_evidence: bool | None = None,
+        show_on_website_only: bool = True,
+        skip: int = 0,
+        take: int = 30,
+    ) -> str:
+        """Search for committee business (inquiries, investigations) | committee inquiries, investigations, call for evidence |
+        Use to find committee inquiries by topic, status, or whether accepting evidence.
+        Returns committee business items matching the criteria.
+
+        Args:
+            search_term: Optional: search term for business titles or content.
+            committee_id: Optional: committee ID to filter by.
+            date_from: Optional: start date in YYYY-MM-DD format.
+            date_to: Optional: end date in YYYY-MM-DD format.
+            business_type_id: Optional: business type ID (from get_committee_business_types).
+            status: Optional: status filter (e.g. 'Open', 'Closed').
+            currently_accepting_evidence: Optional: filter to inquiries accepting evidence.
+            show_on_website_only: Show only items visible on website.
+            skip: Number of records to skip (for pagination).
+            take: Number of records to return (default 30, max 100).
+
+        Returns:
+            Committee business items matching the criteria.
+        """
+        url = build_url(
+            f"{COMMITTEES_API_BASE}/CommitteeBusiness",
+            {
+                "SearchTerm": search_term,
+                "CommitteeId": committee_id,
+                "DateFrom": date_from,
+                "DateTo": date_to,
+                "BusinessTypeId": business_type_id,
+                "Status": status,
+                "CurrentlyAcceptingEvidence": currently_accepting_evidence,
+                "ShowOnWebsiteOnly": show_on_website_only,
+                "Skip": skip,
+                "Take": take,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_committee_business_by_id(
+        business_id: int,
+        show_on_website_only: bool = True,
+    ) -> str:
+        """Get detailed information about a specific committee business item | inquiry details, investigation details |
+        Use when you need complete details about a specific inquiry or investigation.
+        Returns full business details including evidence calls and reports.
+
+        Args:
+            business_id: Committee business ID.
+            show_on_website_only: Show only items visible on website.
+
+        Returns:
+            Detailed information about the committee business.
+        """
+        url = build_url(
+            f"{COMMITTEES_API_BASE}/CommitteeBusiness/{business_id}",
+            {"showOnWebsiteOnly": show_on_website_only},
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_committee_business_types() -> str:
+        """Get all types of committee business | business types, inquiry types |
+        Use to understand different types of committee work (inquiries, debates, etc.).
+        Returns list of business types with descriptions.
+
+        Returns:
+            All committee business types with descriptions.
+        """
+        url = f"{COMMITTEES_API_BASE}/CommitteeBusinessType"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_committees_next_events(
+        house: int | None = None,
+        event_from_date: str | None = None,
+        skip: int = 0,
+        take: int = 30,
+    ) -> str:
+        """Get upcoming events for all committees | next meetings, upcoming hearings |
+        Use to see what committee meetings are scheduled.
+        Returns list of committees with their next scheduled event.
+
+        Args:
+            house: Optional: filter by house (1 = Commons, 2 = Lords).
+            event_from_date: Optional: start date in YYYY-MM-DD format (default today).
+            skip: Number of records to skip (for pagination).
+            take: Number of records to return (default 30).
+
+        Returns:
+            Committees with their next scheduled events.
+        """
+        url = build_url(
+            f"{COMMITTEES_API_BASE}/Committees/NextEvent",
+            {
+                "House": house,
+                "EventFromDate": event_from_date,
+                "Skip": skip,
+                "Take": take,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_committee_staff(
+        committee_id: int,
+        membership_status: str | None = None,
+        show_on_website_only: bool = True,
+        skip: int = 0,
+        take: int = 30,
+    ) -> str:
+        """Get staff members of a committee | committee staff, clerks, advisers |
+        Use to find who supports a committee's work.
+        Returns staff members with their roles.
+
+        Args:
+            committee_id: Committee ID.
+            membership_status: Optional: filter by status (e.g. 'Current', 'Former').
+            show_on_website_only: Show only staff visible on website.
+            skip: Number of records to skip (for pagination).
+            take: Number of records to return (default 30).
+
+        Returns:
+            Staff members of the committee.
+        """
+        url = build_url(
+            f"{COMMITTEES_API_BASE}/Committees/{committee_id}/Staff",
+            {
+                "MembershipStatus": membership_status,
+                "ShowOnWebsiteOnly": show_on_website_only,
+                "Skip": skip,
+                "Take": take,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_committee_publications_summary(committee_id: int) -> str:
+        """Get summary of publications grouped by type | publication overview, report counts |
+        Use to get an overview of a committee's publication output.
+        Returns publication counts by type.
+
+        Args:
+            committee_id: Committee ID.
+
+        Returns:
+            Summary of publications grouped by type.
+        """
+        url = f"{COMMITTEES_API_BASE}/Committees/{committee_id}/Publications/Summary"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_event_activities(event_id: int) -> str:
+        """Get activities scheduled for an event | meeting agenda, event schedule |
+        Use to see what's on the agenda for a committee meeting.
+        Returns activities planned for the event.
+
+        Args:
+            event_id: Event ID.
+
+        Returns:
+            Activities scheduled for the event.
+        """
+        url = f"{COMMITTEES_API_BASE}/Events/{event_id}/Activities"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_event_attendance(event_id: int) -> str:
+        """Get attendance record for an event | who attended, meeting attendance |
+        Use to see which members attended a committee meeting.
+        Returns attendance list for the event.
+
+        Args:
+            event_id: Event ID.
+
+        Returns:
+            Attendance record for the event.
+        """
+        url = f"{COMMITTEES_API_BASE}/Events/{event_id}/Attendance"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_member_committee_memberships(
+        member_ids: str,
+        membership_status: str | None = None,
+        committee_category: str | None = None,
+    ) -> str:
+        """Get committee memberships for one or more members | member committees, MP committees |
+        Use to find which committees a member serves on.
+        Returns committee memberships for the specified members.
+
+        Args:
+            member_ids: Comma-separated list of member IDs (e.g. '4514' or '4514,172').
+            membership_status: Optional: filter by status (e.g. 'Current', 'Former').
+            committee_category: Optional: filter by committee category.
+
+        Returns:
+            Committee memberships for the members.
+        """
+        url = build_url(
+            f"{COMMITTEES_API_BASE}/Members",
+            {
+                "Members": member_ids,
+                "MembershipStatus": membership_status,
+                "CommitteeCategory": committee_category,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_oral_evidence_by_id(
+        evidence_id: int,
+        show_on_website_only: bool = True,
+    ) -> str:
+        """Get detailed oral evidence by ID | witness testimony details |
+        Use to get full details of a specific oral evidence session.
+        Returns complete oral evidence record.
+
+        Args:
+            evidence_id: Oral evidence ID.
+            show_on_website_only: Show only evidence visible on website.
+
+        Returns:
+            Detailed oral evidence record.
+        """
+        url = build_url(
+            f"{COMMITTEES_API_BASE}/OralEvidence/{evidence_id}",
+            {"showOnWebsiteOnly": show_on_website_only},
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_written_evidence_by_id(
+        evidence_id: int,
+        show_on_website_only: bool = True,
+    ) -> str:
+        """Get detailed written evidence by ID | written submission details |
+        Use to get full details of a specific written evidence submission.
+        Returns complete written evidence record.
+
+        Args:
+            evidence_id: Written evidence ID.
+            show_on_website_only: Show only evidence visible on website.
+
+        Returns:
+            Detailed written evidence record.
+        """
+        url = build_url(
+            f"{COMMITTEES_API_BASE}/WrittenEvidence/{evidence_id}",
+            {"showOnWebsiteOnly": show_on_website_only},
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_publication_types() -> str:
+        """Get all types of committee publications | report types, document types |
+        Use to understand different types of committee publications.
+        Returns list of publication types with descriptions.
+
+        Returns:
+            All committee publication types with descriptions.
+        """
+        url = f"{COMMITTEES_API_BASE}/PublicationType"
+        return await get_result(url)
