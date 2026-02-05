@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import format_output, run_async
 from uk_parliament_mcp.config import NOW_API_BASE, WHATSON_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
@@ -15,6 +16,9 @@ app = typer.Typer(help="Live activity and parliamentary calendar")
 def happening_now_in_commons(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get live information about what's currently happening in the House of Commons chamber.
@@ -24,13 +28,16 @@ def happening_now_in_commons(
     """
     url = f"{NOW_API_BASE}/Message/message/CommonsMain/current"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("lords-now")
 def happening_now_in_lords(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get live information about what's currently happening in the House of Lords chamber.
@@ -40,7 +47,7 @@ def happening_now_in_lords(
     """
     url = f"{NOW_API_BASE}/Message/message/LordsMain/current"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("calendar")
@@ -50,6 +57,9 @@ def search_calendar(
     end_date: str = typer.Argument(..., help="End date (YYYY-MM-DD)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Search parliamentary calendar for upcoming events and business in either chamber.
@@ -66,13 +76,16 @@ def search_calendar(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("sessions")
 def get_sessions(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get list of parliamentary sessions.
@@ -82,7 +95,7 @@ def get_sessions(
     """
     url = f"{WHATSON_API_BASE}/sessions/list.json"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("non-sitting-days")
@@ -92,6 +105,9 @@ def get_non_sitting_days(
     end_date: str = typer.Argument(..., help="End date (YYYY-MM-DD)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get periods when Parliament is not sitting (recesses, holidays).
@@ -108,7 +124,7 @@ def get_non_sitting_days(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("sitting-dates")
@@ -118,6 +134,9 @@ def get_sitting_dates(
     end_date: str = typer.Argument(..., help="End date (YYYY-MM-DD)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get sitting dates for a house within a date range.
@@ -130,7 +149,7 @@ def get_sitting_dates(
         {"startDate": start_date, "endDate": end_date},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("next-sitting-date")
@@ -142,6 +161,9 @@ def get_next_sitting_date(
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get the next sitting date after a specified date.
@@ -154,7 +176,7 @@ def get_next_sitting_date(
         {"dateToCheck": date_to_check},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("tabling-deadline")
@@ -165,6 +187,9 @@ def get_tabling_deadline(
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get the valid tabling date for a specified date (Commons only).
@@ -177,7 +202,7 @@ def get_tabling_deadline(
         {"requestedDate": requested_date},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("answer-deadline")
@@ -189,6 +214,9 @@ def get_answer_deadline(
     tabled_date: str = typer.Argument(..., help="Date the question was tabled (YYYY-MM-DD)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get the earliest answer date for a written question (Commons only).
@@ -201,7 +229,7 @@ def get_answer_deadline(
         {"questionType": question_type, "tabledDate": tabled_date},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("calendar-event")
@@ -209,6 +237,9 @@ def get_calendar_event(
     event_id: int = typer.Argument(..., help="The calendar event ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get calendar event by ID.
@@ -218,4 +249,4 @@ def get_calendar_event(
     """
     url = f"{WHATSON_API_BASE}/events/cal{event_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))

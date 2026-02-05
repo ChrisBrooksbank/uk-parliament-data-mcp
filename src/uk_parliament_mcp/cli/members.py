@@ -6,6 +6,7 @@ from urllib.parse import quote
 
 import typer
 
+from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import format_output, run_async
 from uk_parliament_mcp.config import MEMBERS_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
@@ -18,6 +19,9 @@ def search_member(
     name: str = typer.Argument(..., help="Full or partial name to search"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Search for MPs and Lords by name.
@@ -26,7 +30,7 @@ def search_member(
     """
     url = f"{MEMBERS_API_BASE}/Members/Search?Name={quote(name)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get")
@@ -34,6 +38,9 @@ def get_member(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get comprehensive member profile by ID.
@@ -42,7 +49,7 @@ def get_member(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("biography")
@@ -50,6 +57,9 @@ def get_biography(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get comprehensive member biography and personal history.
@@ -58,7 +68,7 @@ def get_biography(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Biography"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("contact")
@@ -66,6 +76,9 @@ def get_contact(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get member contact details and office information.
@@ -74,7 +87,7 @@ def get_contact(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Contact"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("experience")
@@ -82,6 +95,9 @@ def get_experience(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get professional experience and career background.
@@ -90,7 +106,7 @@ def get_experience(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Experience"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("focus")
@@ -98,6 +114,9 @@ def get_focus(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get areas of focus and policy interests.
@@ -106,7 +125,7 @@ def get_focus(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Focus"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("interests")
@@ -117,6 +136,9 @@ def get_registered_interests(
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get registered interests of a member.
@@ -128,7 +150,7 @@ def get_registered_interests(
         {"house": house},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("staff")
@@ -136,6 +158,9 @@ def get_staff(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get staff members working for a specific MP or Lord.
@@ -144,7 +169,7 @@ def get_staff(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Staff"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("synopsis")
@@ -152,6 +177,9 @@ def get_synopsis(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get a brief synopsis or summary about a member.
@@ -160,7 +188,7 @@ def get_synopsis(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Synopsis"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("voting")
@@ -170,6 +198,9 @@ def get_voting(
     page: int | None = typer.Option(None, "--page", help="Page number for pagination"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get voting records of a member.
@@ -181,7 +212,7 @@ def get_voting(
         {"house": house, "page": page},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("written-questions")
@@ -190,6 +221,9 @@ def get_written_questions(
     page: int | None = typer.Option(None, "--page", help="Page number for pagination"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get written questions submitted by a member.
@@ -201,7 +235,7 @@ def get_written_questions(
         {"page": page},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("edms")
@@ -209,6 +243,9 @@ def get_edms(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get all Early Day Motions signed by a member.
@@ -217,7 +254,7 @@ def get_edms(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Edms"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("contributions")
@@ -225,6 +262,9 @@ def get_contributions(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get summary of parliamentary contributions.
@@ -233,7 +273,7 @@ def get_contributions(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/ContributionSummary?page=1"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("history")
@@ -241,6 +281,9 @@ def get_history(
     member_ids: str = typer.Argument(..., help="Comma-separated member IDs (e.g., '123,456,789')"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get historical information for multiple members.
@@ -249,7 +292,7 @@ def get_history(
     """
     url = build_url(f"{MEMBERS_API_BASE}/Members/History", {"ids": member_ids})
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("latest-election")
@@ -257,6 +300,9 @@ def get_latest_election(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get the latest election result for a member.
@@ -265,7 +311,7 @@ def get_latest_election(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/LatestElectionResult"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("portrait")
@@ -273,6 +319,9 @@ def get_portrait_url(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get the portrait image URL for a member.
@@ -281,7 +330,7 @@ def get_portrait_url(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/PortraitUrl"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("thumbnail")
@@ -289,6 +338,9 @@ def get_thumbnail_url(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get the thumbnail image URL for a member.
@@ -297,7 +349,7 @@ def get_thumbnail_url(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/ThumbnailUrl"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-advanced")
@@ -345,6 +397,9 @@ def search_members_advanced(
     take: int = typer.Option(20, "--take", help="Number of records to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Advanced search for members with comprehensive filtering.
@@ -376,7 +431,7 @@ def search_members_advanced(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("constituencies")
@@ -385,6 +440,9 @@ def list_constituencies(
     take: int | None = typer.Option(None, "--take", help="Number to return (max 100)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get list of UK parliamentary constituencies.
@@ -396,7 +454,7 @@ def list_constituencies(
         {"skip": skip, "take": take},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("constituency-elections")
@@ -404,6 +462,9 @@ def get_constituency_elections(
     constituency_id: int = typer.Argument(..., help="Constituency ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get historical election results for a constituency.
@@ -412,7 +473,7 @@ def get_constituency_elections(
     """
     url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}/ElectionResults"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("parties")
@@ -420,6 +481,9 @@ def list_parties(
     house: int = typer.Argument(..., help="House number (1=Commons, 2=Lords)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get list of active political parties in a house.
@@ -428,7 +492,7 @@ def list_parties(
     """
     url = f"{MEMBERS_API_BASE}/Parties/GetActive/{house}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("party-state")
@@ -437,6 +501,9 @@ def get_party_state(
     for_date: str = typer.Argument(..., help="Date for composition (YYYY-MM-DD)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get party seat counts for a house on a specific date.
@@ -445,7 +512,7 @@ def get_party_state(
     """
     url = f"{MEMBERS_API_BASE}/Parties/StateOfTheParties/{house}/{for_date}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("lords-by-type")
@@ -453,6 +520,9 @@ def get_lords_by_type(
     for_date: str = typer.Argument(..., help="Date for composition (YYYY-MM-DD)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get Lords breakdown by peerage type.
@@ -461,7 +531,7 @@ def get_lords_by_type(
     """
     url = f"{MEMBERS_API_BASE}/Parties/LordsByType/{for_date}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("spokespersons")
@@ -469,6 +539,9 @@ def get_spokespersons(
     party_id: int = typer.Argument(..., help="Party ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get party spokespersons and their portfolios.
@@ -480,13 +553,16 @@ def get_spokespersons(
         {"partyId": party_id},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("government-posts")
 def get_government_posts(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get all current government ministerial positions.
@@ -495,13 +571,16 @@ def get_government_posts(
     """
     url = f"{MEMBERS_API_BASE}/Posts/GovernmentPosts"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("opposition-posts")
 def get_opposition_posts(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get all current opposition frontbench positions.
@@ -510,13 +589,16 @@ def get_opposition_posts(
     """
     url = f"{MEMBERS_API_BASE}/Posts/OppositionPosts"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("answering-bodies")
 def get_answering_bodies(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get government departments and parliamentary responsibilities.
@@ -525,13 +607,16 @@ def get_answering_bodies(
     """
     url = f"{MEMBERS_API_BASE}/Reference/AnsweringBodies"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("departments")
 def get_departments(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get list of all government departments.
@@ -540,13 +625,16 @@ def get_departments(
     """
     url = f"{MEMBERS_API_BASE}/Reference/Departments"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("policy-interests")
 def get_policy_interests(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get policy interest reference data.
@@ -555,7 +643,7 @@ def get_policy_interests(
     """
     url = f"{MEMBERS_API_BASE}/Reference/PolicyInterests"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("lords-staff-interests")
@@ -563,6 +651,9 @@ def search_lords_staff_interests(
     search_term: str = typer.Argument(..., help="Search term for staff names or interests"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Search staff interests declared by Lords.
@@ -571,4 +662,4 @@ def search_lords_staff_interests(
     """
     url = f"{MEMBERS_API_BASE}/LordsInterests/Staff?searchTerm={quote(search_term)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))

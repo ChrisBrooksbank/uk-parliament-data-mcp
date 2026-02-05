@@ -9,6 +9,7 @@ from urllib.parse import quote
 
 import typer
 
+from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import format_output, run_async
 from uk_parliament_mcp.config import (
     BILLS_API_BASE,
@@ -261,6 +262,9 @@ def mp_profile(
     name: str = typer.Argument(..., help="Full or partial name of MP or Lord"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get comprehensive MP/Lord profile in one call.
@@ -269,7 +273,7 @@ def mp_profile(
     Returns basic info, biography, registered interests, and recent votes.
     """
     result = run_async(_get_mp_profile_async(name))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("check-vote")
@@ -278,6 +282,9 @@ def check_vote(
     topic: str = typer.Argument(..., help="Topic or keyword to search divisions"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Check how an MP voted on a specific topic.
@@ -286,7 +293,7 @@ def check_vote(
     Returns MP info and divisions on the topic where they voted.
     """
     result = run_async(_check_mp_vote_async(mp_name, topic))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("bill-overview")
@@ -294,6 +301,9 @@ def bill_overview(
     search_term: str = typer.Argument(..., help="Search term for bill title or content"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get comprehensive bill overview in one call.
@@ -302,7 +312,7 @@ def bill_overview(
     Returns bill details, legislative stages, and associated documents.
     """
     result = run_async(_get_bill_overview_async(search_term))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("committee-summary")
@@ -310,6 +320,9 @@ def committee_summary(
     topic: str = typer.Argument(..., help="Search term for committee name or subject"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get comprehensive committee summary in one call.
@@ -318,4 +331,4 @@ def committee_summary(
     Returns committee info, witness testimonies, written submissions, and reports.
     """
     result = run_async(_get_committee_summary_async(topic))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))

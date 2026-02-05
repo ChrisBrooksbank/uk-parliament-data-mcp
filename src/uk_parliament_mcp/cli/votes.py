@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import format_output, run_async
 from uk_parliament_mcp.config import (
     COMMONS_VOTES_API_BASE,
@@ -38,6 +39,9 @@ def search_divisions(
     take: int = typer.Option(25, "--take", help="Number of records to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Search voting divisions in Commons or Lords.
@@ -75,7 +79,7 @@ def search_divisions(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get-division")
@@ -89,6 +93,9 @@ def get_division(
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get detailed information about a specific division.
@@ -104,7 +111,7 @@ def get_division(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("member-voting")
@@ -135,6 +142,9 @@ def get_member_voting_record(
     take: int = typer.Option(25, "--take", help="Number of records to return (Lords only)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get complete voting record for a member.
@@ -162,7 +172,7 @@ def get_member_voting_record(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("grouped-by-party")
@@ -187,6 +197,9 @@ def get_divisions_grouped_by_party(
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get divisions grouped by party voting patterns.
@@ -222,7 +235,7 @@ def get_divisions_grouped_by_party(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-count")
@@ -247,6 +260,9 @@ def get_divisions_search_count(
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get total count of divisions matching search criteria.
@@ -282,4 +298,4 @@ def get_divisions_search_count(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))

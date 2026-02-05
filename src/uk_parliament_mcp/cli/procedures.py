@@ -6,6 +6,7 @@ from urllib.parse import quote
 
 import typer
 
+from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import format_output, run_async
 from uk_parliament_mcp.config import ERSKINE_MAY_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
@@ -22,6 +23,9 @@ def search_erskine_may(
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Search Erskine May parliamentary procedure manual.
@@ -31,13 +35,16 @@ def search_erskine_may(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Search/ParagraphSearchResults/{quote(search_term)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("parts")
 def get_erskine_may_parts(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     List all parts of Erskine May procedure manual.
@@ -47,7 +54,7 @@ def get_erskine_may_parts(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Part"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("part")
@@ -55,6 +62,9 @@ def get_erskine_may_part(
     part_number: int = typer.Argument(..., help="Part number (1-6)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get a specific part of Erskine May with its chapters.
@@ -64,7 +74,7 @@ def get_erskine_may_part(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Part/{part_number}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("chapter")
@@ -72,6 +82,9 @@ def get_erskine_may_chapter(
     chapter_number: int = typer.Argument(..., help="Chapter number"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get a specific chapter of Erskine May with its sections.
@@ -81,7 +94,7 @@ def get_erskine_may_chapter(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Chapter/{chapter_number}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("section")
@@ -89,6 +102,9 @@ def get_erskine_may_section(
     section_id: int = typer.Argument(..., help="Section ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get full content of an Erskine May section.
@@ -98,7 +114,7 @@ def get_erskine_may_section(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Section/{section_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("section-relative")
@@ -107,6 +123,9 @@ def get_erskine_may_section_relative(
     step: int = typer.Argument(..., help="Step offset (e.g. 1 for next, -1 for previous)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Navigate to a section relative to current position.
@@ -116,7 +135,7 @@ def get_erskine_may_section_relative(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Section/{section_id},{step}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("paragraph")
@@ -124,6 +143,9 @@ def get_erskine_may_paragraph(
     reference: str = typer.Argument(..., help="Paragraph reference (e.g. '4.5', '12.3')"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Look up a specific paragraph by reference number.
@@ -133,7 +155,7 @@ def get_erskine_may_paragraph(
     """
     url = f"{ERSKINE_MAY_API_BASE}/Search/Paragraph/{quote(reference)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("browse-index")
@@ -143,6 +165,9 @@ def browse_erskine_may_index(
     take: int = typer.Option(30, "--take", help="Number of results to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Browse the Erskine May index alphabetically.
@@ -159,7 +184,7 @@ def browse_erskine_may_index(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("index-term")
@@ -167,6 +192,9 @@ def get_erskine_may_index_term(
     index_term_id: int = typer.Argument(..., help="Index term ID (from browse-index)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get details of an index term.
@@ -176,7 +204,7 @@ def get_erskine_may_index_term(
     """
     url = f"{ERSKINE_MAY_API_BASE}/IndexTerm/{index_term_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-index")
@@ -186,6 +214,9 @@ def search_erskine_may_index(
     take: int = typer.Option(30, "--take", help="Number of results to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Search the Erskine May index for terms.
@@ -200,7 +231,7 @@ def search_erskine_may_index(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search-sections")
@@ -210,6 +241,9 @@ def search_erskine_may_sections(
     take: int = typer.Option(30, "--take", help="Number of results to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Search Erskine May section titles.
@@ -225,4 +259,4 @@ def search_erskine_may_sections(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))

@@ -6,6 +6,7 @@ from urllib.parse import quote
 
 import typer
 
+from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import format_output, run_async
 from uk_parliament_mcp.config import BILLS_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
@@ -18,6 +19,9 @@ def get_recent_bills(
     take: int = typer.Option(10, "--take", "-t", help="Number of bills to return (default: 10)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get most recently updated bills and current legislative activity.
@@ -26,7 +30,7 @@ def get_recent_bills(
     """
     url = f"{BILLS_API_BASE}/Bills?SortOrder=DateUpdatedDescending&skip=0&take={take}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("search")
@@ -37,6 +41,9 @@ def search_bills(
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Search for parliamentary bills by title, subject, or keyword.
@@ -45,13 +52,16 @@ def search_bills(
     """
     url = f"{BILLS_API_BASE}/Bills?SearchTerm={quote(search_term)}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("types")
 def get_bill_types(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get all types of bills that can be introduced in Parliament.
@@ -60,13 +70,16 @@ def get_bill_types(
     """
     url = f"{BILLS_API_BASE}/BillTypes"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("stages-list")
 def get_bill_stages_list(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get all possible stages a bill can go through in its legislative journey.
@@ -75,7 +88,7 @@ def get_bill_stages_list(
     """
     url = f"{BILLS_API_BASE}/Stages"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("get")
@@ -83,6 +96,9 @@ def get_bill(
     bill_id: int = typer.Argument(..., help="Bill ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get detailed information about a specific bill by ID.
@@ -91,7 +107,7 @@ def get_bill(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("stages")
@@ -101,6 +117,9 @@ def get_stages(
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get all stages of a specific bill by bill ID.
@@ -112,7 +131,7 @@ def get_stages(
         {"Skip": skip, "Take": take},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("stage-details")
@@ -121,6 +140,9 @@ def get_stage_details(
     stage_id: int = typer.Argument(..., help="Bill stage ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get detailed information about a specific stage of a bill.
@@ -129,7 +151,7 @@ def get_stage_details(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("amendments")
@@ -150,6 +172,9 @@ def get_amendments(
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get all amendments for a specific bill stage.
@@ -168,7 +193,7 @@ def get_amendments(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("amendment")
@@ -178,6 +203,9 @@ def get_amendment(
     amendment_id: int = typer.Argument(..., help="Amendment ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get detailed information about a specific amendment.
@@ -186,7 +214,7 @@ def get_amendment(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}/Amendments/{amendment_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("ping-pong")
@@ -207,6 +235,9 @@ def get_ping_pong_items(
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get ping pong items (amendments and motions) for a bill stage.
@@ -225,7 +256,7 @@ def get_ping_pong_items(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("ping-pong-item")
@@ -235,6 +266,9 @@ def get_ping_pong_item(
     item_id: int = typer.Argument(..., help="Ping pong item ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get detailed information about a specific ping pong item.
@@ -243,7 +277,7 @@ def get_ping_pong_item(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}/PingPongItems/{item_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("publications")
@@ -251,6 +285,9 @@ def get_publications(
     bill_id: int = typer.Argument(..., help="Bill ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get all publications for a specific bill.
@@ -259,7 +296,7 @@ def get_publications(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Publications"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("stage-publications")
@@ -268,6 +305,9 @@ def get_stage_publications(
     stage_id: int = typer.Argument(..., help="Stage ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get publications for a specific bill stage.
@@ -276,7 +316,7 @@ def get_stage_publications(
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}/Publications"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("publication-document")
@@ -285,6 +325,9 @@ def get_publication_document(
     document_id: int = typer.Argument(..., help="Document ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get information about a specific publication document.
@@ -293,7 +336,7 @@ def get_publication_document(
     """
     url = f"{BILLS_API_BASE}/Publications/{publication_id}/Documents/{document_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("news")
@@ -303,6 +346,9 @@ def get_news_articles(
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get news articles related to a specific bill.
@@ -314,13 +360,16 @@ def get_news_articles(
         {"Skip": skip, "Take": take},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("rss-all")
 def get_all_bills_rss(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get RSS feed of all bills.
@@ -329,13 +378,16 @@ def get_all_bills_rss(
     """
     url = f"{BILLS_API_BASE}/Rss/allbills.rss"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("rss-public")
 def get_public_bills_rss(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get RSS feed of public bills only.
@@ -344,13 +396,16 @@ def get_public_bills_rss(
     """
     url = f"{BILLS_API_BASE}/Rss/publicbills.rss"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("rss-private")
 def get_private_bills_rss(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get RSS feed of private bills only.
@@ -359,7 +414,7 @@ def get_private_bills_rss(
     """
     url = f"{BILLS_API_BASE}/Rss/privatebills.rss"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("rss-bill")
@@ -367,6 +422,9 @@ def get_bill_rss(
     bill_id: int = typer.Argument(..., help="Bill ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get RSS feed for a specific bill by ID.
@@ -375,7 +433,7 @@ def get_bill_rss(
     """
     url = f"{BILLS_API_BASE}/Rss/Bills/{bill_id}.rss"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("publication-types")
@@ -384,6 +442,9 @@ def get_publication_types(
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get all publication types available for bills.
@@ -395,7 +456,7 @@ def get_publication_types(
         {"Skip": skip, "Take": take},
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("sittings")
@@ -407,6 +468,9 @@ def get_sittings(
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get parliamentary sittings with optional filtering by house and date range.
@@ -424,4 +488,4 @@ def get_sittings(
         },
     )
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import format_output, run_async
 from uk_parliament_mcp.config import INTERESTS_API_BASE
 from uk_parliament_mcp.http_client import get_result
@@ -16,6 +17,9 @@ def search_roi(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Search member's Register of Interests for financial and business declarations.
@@ -26,13 +30,16 @@ def search_roi(
     """
     url = f"{INTERESTS_API_BASE}/Interests/?MemberId={member_id}"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("categories")
 def interests_categories(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get categories of interests that MPs and Lords must declare.
@@ -42,13 +49,16 @@ def interests_categories(
     """
     url = f"{INTERESTS_API_BASE}/Categories"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))
 
 
 @app.command("registers")
 def get_registers_of_interests(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+    ),
 ) -> None:
     """
     Get list of published Registers of Interests.
@@ -58,4 +68,4 @@ def get_registers_of_interests(
     """
     url = f"{INTERESTS_API_BASE}/Registers"
     result = run_async(get_result(url))
-    typer.echo(format_output(result, pretty, data_only))
+    typer.echo(format_output(result, pretty, data_only, output_format))

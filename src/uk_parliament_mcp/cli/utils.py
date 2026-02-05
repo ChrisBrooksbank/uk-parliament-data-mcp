@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-import json
 from collections.abc import Coroutine
 from typing import Any
+
+from uk_parliament_mcp.cli.formatters import CLIFormatter, OutputFormat
 
 
 def run_async(coro: Coroutine[Any, Any, str]) -> str:
@@ -21,7 +22,12 @@ def run_async(coro: Coroutine[Any, Any, str]) -> str:
     return asyncio.run(coro)
 
 
-def format_output(result: str, pretty: bool = False, data_only: bool = False) -> str:
+def format_output(
+    result: str,
+    pretty: bool = False,
+    data_only: bool = False,
+    output_format: OutputFormat = OutputFormat.JSON,
+) -> str:
     """
     Format JSON output based on CLI flags.
 
@@ -29,30 +35,10 @@ def format_output(result: str, pretty: bool = False, data_only: bool = False) ->
         result: JSON string response from API (format: {"url": "...", "data": "..."})
         pretty: If True, pretty-print the JSON with indentation
         data_only: If True, extract only the "data" field from the wrapper
+        output_format: Output format (json, table, markdown)
 
     Returns:
-        Formatted JSON string ready for output
+        Formatted string ready for output
     """
-    try:
-        parsed = json.loads(result)
-
-        # If data_only flag is set, extract just the data field
-        if data_only and "data" in parsed:
-            # The data field itself is a JSON string, so parse it
-            data_content = parsed["data"]
-            try:
-                data_parsed = json.loads(data_content)
-                parsed = data_parsed
-            except (json.JSONDecodeError, TypeError):
-                # If data is not valid JSON, use it as-is
-                parsed = data_content
-
-        # Apply pretty formatting if requested
-        if pretty:
-            return json.dumps(parsed, indent=2, ensure_ascii=False)
-
-        return json.dumps(parsed, ensure_ascii=False)
-
-    except json.JSONDecodeError:
-        # If the result is not valid JSON, return it as-is
-        return result
+    formatter = CLIFormatter(output_format, pretty, data_only)
+    return formatter.format_output(result)
