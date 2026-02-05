@@ -63,8 +63,8 @@ class TestSearchLordsDivisions:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert f"{LORDS_VOTES_API_BASE}/divisions/search" in call_url
-            assert "queryParameters.searchTerm=brexit" in call_url
+            assert f"{LORDS_VOTES_API_BASE}/Divisions/search" in call_url
+            assert "SearchTerm=brexit" in call_url
 
     @pytest.mark.asyncio
     async def test_url_encodes_special_characters(self):
@@ -80,6 +80,25 @@ class TestSearchLordsDivisions:
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
             assert "tax%20%26%20spend" in call_url or "tax+%26+spend" in call_url
+
+    @pytest.mark.asyncio
+    async def test_builds_url_with_majority_comparator(self):
+        """search_lords_divisions builds URL with majority comparator params."""
+        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            lords_votes.register_tools(mcp)
+
+            await mcp.call_tool(
+                "search_lords_divisions",
+                {"majority_comparator": "LessThan", "majority_value": 10},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "Majority.Comparator=LessThan" in call_url
+            assert "Majority.ValueToCompare=10" in call_url
 
 
 class TestGetLordsVotingRecordForMember:

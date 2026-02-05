@@ -289,23 +289,8 @@ class TestGetLordsInterestsStaff:
     """Tests for get_lords_interests_staff tool."""
 
     @pytest.mark.asyncio
-    async def test_builds_url_with_default_search(self):
-        """get_lords_interests_staff builds URL with default search term."""
-        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
-            mock.return_value = '{"url": "test", "data": "{}"}'
-
-            mcp = FastMCP(name="test")
-            members.register_tools(mcp)
-
-            await mcp.call_tool("get_lords_interests_staff", {})
-
-            mock.assert_called_once()
-            call_url = mock.call_args[0][0]
-            assert call_url == f"{MEMBERS_API_BASE}/LordsInterests/Staff?searchTerm=richard"
-
-    @pytest.mark.asyncio
-    async def test_builds_url_with_custom_search(self):
-        """get_lords_interests_staff builds URL with custom search term."""
+    async def test_builds_url_with_search_term(self):
+        """get_lords_interests_staff builds URL with search term."""
         with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 

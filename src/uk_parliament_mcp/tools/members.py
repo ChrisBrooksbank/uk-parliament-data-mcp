@@ -130,11 +130,11 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def get_lords_interests_staff(search_term: str = "richard") -> str:
-        """Search for staff interests declared by Lords. Use when investigating potential conflicts of interest related to Lords' staff or understanding transparency requirements for parliamentary staff.
+    async def get_lords_interests_staff(search_term: str) -> str:
+        """Search staff interests declared by Lords | Lords staff, staff conflicts, staff interests | Use to investigate potential conflicts of interest related to Lords' staff | Returns staff interests matching the search term
 
         Args:
-            search_term: Search term for staff names or interests (default 'richard').
+            search_term: Search term for staff names or interests.
 
         Returns:
             Staff interests declared by Lords matching the search term.
@@ -462,4 +462,59 @@ def register_tools(mcp: FastMCP) -> None:
             Counts of Lords by peerage type.
         """
         url = f"{MEMBERS_API_BASE}/Parties/LordsByType/{for_date}"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def search_historical_members(
+        name: str | None = None,
+        house: int | None = None,
+        skip: int = 0,
+        take: int = 20,
+    ) -> str:
+        """Search historical/former MPs and Lords | deceased members, past MPs, historical politicians | Use to find former or deceased members of Parliament | Returns historical member records
+
+        Args:
+            name: Optional: full or partial name to search for.
+            house: Optional: house number (1=Commons, 2=Lords).
+            skip: Number of records to skip (for pagination).
+            take: Number of records to return (default 20).
+
+        Returns:
+            Historical member records matching the search criteria.
+        """
+        url = build_url(
+            f"{MEMBERS_API_BASE}/Members/SearchHistorical",
+            {
+                "Name": name,
+                "House": house,
+                "skip": skip,
+                "take": take,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_spokespersons(party_id: int | None = None) -> str:
+        """Get party spokespersons | shadow ministers, opposition frontbench, party speakers | Use to find who speaks for a party on specific policy areas | Returns spokespersons with their portfolios
+
+        Args:
+            party_id: Optional: filter by party ID.
+
+        Returns:
+            List of party spokespersons with their portfolios.
+        """
+        url = build_url(
+            f"{MEMBERS_API_BASE}/Posts/Spokespersons",
+            {"partyId": party_id},
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_policy_interests() -> str:
+        """Get policy interest reference data | policy areas, member interests categories | Use to get IDs for filtering member searches by policy interest | Returns list of policy interest categories
+
+        Returns:
+            List of policy interest categories with IDs for use in member searches.
+        """
+        url = f"{MEMBERS_API_BASE}/Reference/PolicyInterests"
         return await get_result(url)

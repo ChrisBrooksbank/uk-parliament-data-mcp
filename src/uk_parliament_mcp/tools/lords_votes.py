@@ -1,7 +1,5 @@
 """Lords Votes API tools for House of Lords divisions and voting records."""
 
-from urllib.parse import quote
-
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.config import LORDS_VOTES_API_BASE
@@ -12,16 +10,56 @@ def register_tools(mcp: FastMCP) -> None:
     """Register Lords votes tools with the MCP server."""
 
     @mcp.tool()
-    async def search_lords_divisions(search_term: str) -> str:
-        """Search House of Lords voting records (divisions). Use when you want to find how Lords voted on specific issues, bills, or amendments in the upper chamber.
+    async def search_lords_divisions(
+        search_term: str | None = None,
+        member_id: int | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        division_number: int | None = None,
+        include_when_member_was_teller: bool | None = None,
+        majority_comparator: str | None = None,
+        majority_value: int | None = None,
+        total_votes_comparator: str | None = None,
+        total_votes_value: int | None = None,
+        skip: int = 0,
+        take: int = 25,
+    ) -> str:
+        """Search Lords divisions | House of Lords votes, Lords voting records, close votes | Use to find how Lords voted on specific issues or find close/contested votes | Returns matching divisions with vote counts
 
         Args:
-            search_term: Search term for Lords division topics (e.g. 'brexit', 'climate', 'NHS').
+            search_term: Optional: search term for division topics (e.g. 'brexit', 'climate').
+            member_id: Optional: filter to divisions where member voted.
+            start_date: Optional: start date in YYYY-MM-DD format.
+            end_date: Optional: end date in YYYY-MM-DD format.
+            division_number: Optional: specific division number.
+            include_when_member_was_teller: Optional: include votes where member was a teller.
+            majority_comparator: Optional: compare majority - 'LessThan', 'LessThanOrEqualTo', 'EqualTo', 'GreaterThanOrEqualTo', 'GreaterThan'. Use with majority_value to find close votes.
+            majority_value: Optional: majority threshold to compare against (e.g., 10 to find votes with margin < 10).
+            total_votes_comparator: Optional: compare total votes - same options as majority_comparator.
+            total_votes_value: Optional: total votes threshold to compare against.
+            skip: Number of records to skip (for pagination).
+            take: Number of records to return (default 25).
 
         Returns:
-            Lords divisions matching the search term.
+            Lords divisions matching the search criteria.
         """
-        url = f"{LORDS_VOTES_API_BASE}/divisions/search?queryParameters.searchTerm={quote(search_term)}"
+        url = build_url(
+            f"{LORDS_VOTES_API_BASE}/Divisions/search",
+            {
+                "SearchTerm": search_term,
+                "MemberId": member_id,
+                "StartDate": start_date,
+                "EndDate": end_date,
+                "DivisionNumber": division_number,
+                "IncludeWhenMemberWasTeller": include_when_member_was_teller,
+                "Majority.Comparator": majority_comparator,
+                "Majority.ValueToCompare": majority_value,
+                "TotalVotesCast.Comparator": total_votes_comparator,
+                "TotalVotesCast.ValueToCompare": total_votes_value,
+                "skip": skip,
+                "take": take,
+            },
+        )
         return await get_result(url)
 
     @mcp.tool()

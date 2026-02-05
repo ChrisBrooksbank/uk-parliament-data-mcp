@@ -649,7 +649,7 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def get_publication_types() -> str:
+    async def get_committee_publication_types() -> str:
         """Get all types of committee publications | report types, document types |
         Use to understand different types of committee publications.
         Returns list of publication types with descriptions.
@@ -658,4 +658,58 @@ def register_tools(mcp: FastMCP) -> None:
             All committee publication types with descriptions.
         """
         url = f"{COMMITTEES_API_BASE}/PublicationType"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def search_bill_petitions(
+        committee_business_id: int | None = None,
+        committee_id: int | None = None,
+        search_term: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        show_on_website_only: bool = True,
+        skip: int = 0,
+        take: int = 30,
+    ) -> str:
+        """Search petitions on Private Bills | private bill petitions, public petitions | Use to find public petitions submitted on Private Bills | Returns petitions with details
+
+        Args:
+            committee_business_id: Optional: filter by committee business ID.
+            committee_id: Optional: filter by committee ID.
+            search_term: Optional: search term for petition content.
+            start_date: Optional: start date in YYYY-MM-DD format.
+            end_date: Optional: end date in YYYY-MM-DD format.
+            show_on_website_only: Show only petitions visible on website.
+            skip: Number of records to skip (for pagination).
+            take: Number of records to return (default 30).
+
+        Returns:
+            Bill petitions matching the criteria.
+        """
+        url = build_url(
+            f"{COMMITTEES_API_BASE}/BillPetitions",
+            {
+                "CommitteeBusinessId": committee_business_id,
+                "CommitteeId": committee_id,
+                "SearchTerm": search_term,
+                "StartDate": start_date,
+                "EndDate": end_date,
+                "ShowOnWebsiteOnly": show_on_website_only,
+                "Skip": skip,
+                "Take": take,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_committee_business_publications_summary(business_id: int) -> str:
+        """Get publication summary for an inquiry | inquiry publications, report groups | Use to see publication types for a committee business/inquiry | Returns publication groups with counts
+
+        Args:
+            business_id: Committee business ID.
+
+        Returns:
+            Summary of publications grouped by type for the inquiry.
+        """
+        url = f"{COMMITTEES_API_BASE}/CommitteeBusiness/{business_id}/Publications/Summary"
         return await get_result(url)

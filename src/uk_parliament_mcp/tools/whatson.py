@@ -156,3 +156,16 @@ def register_tools(mcp: FastMCP) -> None:
             {"questionType": question_type, "tabledDate": tabled_date},
         )
         return await get_result(url)
+
+    @mcp.tool()
+    async def get_calendar_event(event_id: int) -> str:
+        """Get calendar event by ID | specific event, event details | Use to get full details of a specific calendar event | Returns event details
+
+        Args:
+            event_id: The calendar event ID.
+
+        Returns:
+            Full details of the calendar event.
+        """
+        url = f"{WHATSON_API_BASE}/events/cal{event_id}"
+        return await get_result(url)

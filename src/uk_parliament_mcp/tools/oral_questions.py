@@ -5,7 +5,7 @@ from urllib.parse import quote
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.config import ORAL_QUESTIONS_API_BASE
-from uk_parliament_mcp.http_client import get_result
+from uk_parliament_mcp.http_client import build_url, get_result
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -25,16 +25,50 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def search_early_day_motions(search_term: str) -> str:
-        """Search Early Day Motions by topic or keyword. Use when researching MP opinions on specific issues or finding motions related to particular subjects. EDMs often reflect backbench MP concerns.
+    async def search_early_day_motions(
+        search_term: str | None = None,
+        member_id: int | None = None,
+        include_sponsored_by_member: bool | None = None,
+        statuses: str | None = None,
+        tabled_start_date: str | None = None,
+        tabled_end_date: str | None = None,
+        is_prayer: bool | None = None,
+        order_by: str | None = None,
+        skip: int = 0,
+        take: int = 25,
+    ) -> str:
+        """Search EDMs by topic | Early Day Motions, backbench motions, MP opinions, prayers against SIs | Use to find motions on specific issues, by member, or withdrawn motions | Returns EDMs with sponsors and signature counts
 
         Args:
-            search_term: Search term for EDM topics or content (e.g. 'climate change', 'NHS funding').
+            search_term: Optional: search term for EDM topics or content.
+            member_id: Optional: filter by member ID (tabled or sponsored by).
+            include_sponsored_by_member: Optional: include EDMs where member is a sponsor (not just primary).
+            statuses: Optional: filter by status - 'Published' or 'Withdrawn'.
+            tabled_start_date: Optional: EDMs tabled on or after this date (YYYY-MM-DD).
+            tabled_end_date: Optional: EDMs tabled on or before this date (YYYY-MM-DD).
+            is_prayer: Optional: filter to prayers against negative Statutory Instruments.
+            order_by: Optional: 'DateTabledAsc', 'DateTabledDesc', 'TitleAsc', 'TitleDesc', 'SignatureCountAsc', 'SignatureCountDesc'.
+            skip: Number of records to skip (for pagination).
+            take: Number of records to return (default 25, max 100).
 
         Returns:
-            EDMs matching the search term.
+            EDMs matching the search criteria with sponsors and signature counts.
         """
-        url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotions/list?parameters.searchTerm={quote(search_term)}"
+        url = build_url(
+            f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotions/list",
+            {
+                "parameters.searchTerm": search_term,
+                "parameters.memberId": member_id,
+                "parameters.includeSponsoredByMember": include_sponsored_by_member,
+                "parameters.statuses": statuses,
+                "parameters.tabledStartDate": tabled_start_date,
+                "parameters.tabledEndDate": tabled_end_date,
+                "parameters.isPrayer": is_prayer,
+                "parameters.orderBy": order_by,
+                "parameters.skip": skip,
+                "parameters.take": take,
+            },
+        )
         return await get_result(url)
 
     @mcp.tool()

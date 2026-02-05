@@ -479,3 +479,46 @@ def register_tools(mcp: FastMCP) -> None:
             },
         )
         return await get_result(url)
+
+    @mcp.tool()
+    async def search_historic_sitting_days(
+        house: str | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        has_sitting_sections: bool | None = None,
+    ) -> str:
+        """Search historic sitting days | historical Hansard, past sessions, sitting history | Use to find which days Parliament sat historically | Returns list of sitting days in date range
+
+        Args:
+            house: Optional: 'Commons' or 'Lords'.
+            start_date: Optional: start date in YYYY-MM-DD format.
+            end_date: Optional: end date in YYYY-MM-DD format.
+            has_sitting_sections: Optional: filter to days with available sitting sections.
+
+        Returns:
+            List of historic sitting days matching criteria.
+        """
+        url = build_url(
+            f"{HANSARD_API_BASE}/historicsittingdays",
+            {
+                "queryParams.house": house,
+                "queryParams.startDate": start_date,
+                "queryParams.endDate": end_date,
+                "queryParams.hasSittingSections": has_sitting_sections,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_historic_sitting_day(house: str, sitting_date: str) -> str:
+        """Get details of a historic sitting day | historical Hansard, past session details | Use to get details of a specific historic sitting day | Returns sitting day details with sections
+
+        Args:
+            house: House name: 'Commons' or 'Lords'.
+            sitting_date: Date in YYYY-MM-DD format.
+
+        Returns:
+            Details of the historic sitting day.
+        """
+        url = f"{HANSARD_API_BASE}/historicsittingdays/{house}/{sitting_date}"
+        return await get_result(url)

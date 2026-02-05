@@ -77,7 +77,8 @@ class TestSearchTreaties:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert "climate%20%26%20environment" in call_url
+            # Both %20 and + are valid encodings for space
+            assert "climate%20%26%20environment" in call_url or "climate+%26+environment" in call_url
 
     @pytest.mark.asyncio
     async def test_handles_single_quotes(self):
@@ -95,7 +96,8 @@ class TestSearchTreaties:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert "Queen%27s%20Commonwealth" in call_url
+            # Both %20 and + are valid encodings for space
+            assert "Queen%27s%20Commonwealth" in call_url or "Queen%27s+Commonwealth" in call_url
 
     @pytest.mark.asyncio
     async def test_handles_abbreviations(self):
@@ -132,4 +134,5 @@ class TestSearchTreaties:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert "international%20trade%20agreements" in call_url
+            # Both %20 and + are valid encodings for space
+            assert "international%20trade%20agreements" in call_url or "international+trade+agreements" in call_url
