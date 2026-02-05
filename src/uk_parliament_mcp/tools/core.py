@@ -1,8 +1,112 @@
 """Core tools for Parliament data assistant session management and guidance."""
 
+import json
+from dataclasses import asdict, dataclass, field
 from typing import Any
 
+import click
+import typer.main
 from mcp.server.fastmcp import FastMCP
+
+
+# Data classes for CLI command metadata (used by get_cli_reference tool)
+@dataclass
+class ParameterInfo:
+    """Information about a command parameter."""
+
+    name: str
+    param_type: str
+    required: bool
+    default: Any
+    flags: list[str]
+    help_text: str
+
+
+@dataclass
+class CommandInfo:
+    """Information about a CLI command."""
+
+    name: str
+    group: str
+    description: str
+    parameters: list[ParameterInfo] = field(default_factory=list)
+
+
+@dataclass
+class GroupInfo:
+    """Information about a command group."""
+
+    name: str
+    description: str
+    commands: list[CommandInfo] = field(default_factory=list)
+
+
+def _extract_cli_parameters(cmd: click.Command) -> list[ParameterInfo]:
+    """Extract parameter info from a Click command."""
+    params = []
+    for param in cmd.params:
+        if isinstance(param, click.Argument):
+            params.append(
+                ParameterInfo(
+                    name=param.name or "",
+                    param_type="argument",
+                    required=param.required,
+                    default=param.default,
+                    flags=[],
+                    help_text=getattr(param, "help", "") or "",
+                )
+            )
+        elif isinstance(param, click.Option):
+            params.append(
+                ParameterInfo(
+                    name=param.name or "",
+                    param_type="option",
+                    required=param.required,
+                    default=param.default if param.default != param.type else None,
+                    flags=list(param.opts),
+                    help_text=param.help or "",
+                )
+            )
+    return params
+
+
+def _get_cli_commands() -> list[GroupInfo]:
+    """Get all commands from the CLI app via introspection."""
+    # Import inside function to avoid circular imports
+    from uk_parliament_mcp.cli.main import app as main_app
+
+    click_app = typer.main.get_command(main_app)
+    groups: list[GroupInfo] = []
+
+    if not isinstance(click_app, click.Group):
+        return groups
+
+    for group_name, group_cmd in sorted(click_app.commands.items()):
+        if not isinstance(group_cmd, click.Group):
+            continue
+
+        group_help = group_cmd.help or ""
+        group_info = GroupInfo(name=group_name, description=group_help, commands=[])
+
+        for cmd_name, cmd in sorted(group_cmd.commands.items()):
+            if not isinstance(cmd, click.Command):
+                continue
+
+            cmd_help = cmd.help or ""
+            # Take first line of help as description
+            description = cmd_help.split("\n")[0].strip() if cmd_help else ""
+
+            cmd_info = CommandInfo(
+                name=cmd_name,
+                group=group_name,
+                description=description,
+                parameters=_extract_cli_parameters(cmd),
+            )
+            group_info.commands.append(cmd_info)
+
+        groups.append(group_info)
+
+    return groups
 
 SYSTEM_PROMPT = """You are a helpful assistant that answers questions using only data from UK Parliament MCP servers.
 When the session begins, introduce yourself with a brief message such as:
@@ -917,6 +1021,65 @@ def register_tools(mcp: FastMCP) -> None:
 
         # No match - provide general guidance
         return _suggest_general_approach(query)
+
+    @mcp.tool()
+    async def get_cli_reference(
+        group: str | None = None, search: str | None = None
+    ) -> str:
+        """Get comprehensive CLI command reference | cli commands, terminal, command line, parliament command | Use to discover available CLI commands and their parameters | Returns JSON with command groups, names, descriptions, and parameters
+
+        This tool helps LLMs understand what CLI commands are available in the
+        `parliament` command-line tool, complementing the MCP tools.
+
+        Args:
+            group: Optional group name to filter (e.g., 'members', 'bills', 'votes').
+                   If not specified, returns all groups.
+            search: Optional keyword to search across command names and descriptions.
+                    If specified, returns only matching commands.
+
+        Returns:
+            JSON with total_commands, total_groups, and groups array containing
+            command details with parameters.
+        """
+        groups = _get_cli_commands()
+
+        # Filter by search term if provided
+        if search:
+            search_lower = search.lower()
+            filtered_groups = []
+            for g in groups:
+                matching_cmds = []
+                for cmd in g.commands:
+                    searchable = f"{cmd.name} {cmd.description} {' '.join(p.name for p in cmd.parameters)}"
+                    if search_lower in searchable.lower():
+                        matching_cmds.append(cmd)
+                if matching_cmds:
+                    filtered_groups.append(
+                        GroupInfo(
+                            name=g.name, description=g.description, commands=matching_cmds
+                        )
+                    )
+            groups = filtered_groups
+
+        # Filter by group name if provided
+        elif group:
+            group_lower = group.lower()
+            groups = [g for g in groups if g.name.lower() == group_lower]
+            if not groups:
+                available = ", ".join(g.name for g in _get_cli_commands())
+                return json.dumps(
+                    {
+                        "error": f"Group '{group}' not found",
+                        "available_groups": available,
+                    }
+                )
+
+        output = {
+            "total_commands": sum(len(g.commands) for g in groups),
+            "total_groups": len(groups),
+            "groups": [asdict(g) for g in groups],
+        }
+        return json.dumps(output, indent=2, default=str)
 
 
 def register_prompts(mcp: FastMCP) -> None:
