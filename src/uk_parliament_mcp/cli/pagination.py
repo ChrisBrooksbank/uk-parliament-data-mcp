@@ -59,7 +59,7 @@ HANSARD_PAGINATION = PaginationConfig(
     skip_param="queryParameters.skip",
     take_param="queryParameters.take",
     items_key="Results",
-    total_key="TotalResults",
+    total_key="TotalResultCount",
     default_page_size=20,
 )
 
@@ -67,7 +67,7 @@ HANSARD_MEMBER_SUMMARY_PAGINATION = PaginationConfig(
     skip_param="skip",
     take_param="take",
     items_key="Results",
-    total_key="TotalResults",
+    total_key="TotalResultCount",
     default_page_size=20,
 )
 
@@ -106,9 +106,9 @@ TREATIES_PAGINATION = PaginationConfig(
 ERSKINE_MAY_PAGINATION = PaginationConfig(
     skip_param="skip",
     take_param="take",
-    items_key="items",
+    items_key="searchResults",
     total_key="totalResults",
-    default_page_size=30,
+    default_page_size=20,
 )
 
 DAILY_REPORTS_PAGINATION = PaginationConfig(

@@ -331,11 +331,11 @@ class TestPaginateRequestDifferentConfigs:
         responses = [
             json.dumps({
                 "url": "https://hansard-api.parliament.uk/search/debates.json?queryParameters.skip=0&queryParameters.take=20",
-                "data": {"Results": page1_items, "TotalResults": 100},
+                "data": {"Results": page1_items, "TotalResultCount": 100},
             }),
             json.dumps({
                 "url": "https://hansard-api.parliament.uk/search/debates.json?queryParameters.skip=20&queryParameters.take=20",
-                "data": {"Results": page2_items, "TotalResults": 100},
+                "data": {"Results": page2_items, "TotalResultCount": 100},
             }),
         ]
 

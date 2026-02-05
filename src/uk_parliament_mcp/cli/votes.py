@@ -5,7 +5,6 @@ from __future__ import annotations
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.pagination import LORDS_VOTES_PAGINATION, paginate_request
 from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import (
     COMMONS_VOTES_API_BASE,
@@ -85,10 +84,7 @@ def search_divisions(
         typer.echo(f"Invalid house value: {house}. Use 1 for Commons or 2 for Lords.")
         raise typer.Exit(code=1)
 
-    if house == HOUSE_LORDS:
-        result = run_async(paginate_request(url, LORDS_VOTES_PAGINATION, desired_total=take, start_skip=skip))
-    else:
-        result = run_async(get_result(url))
+    result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -193,10 +189,7 @@ def get_member_voting_record(
         typer.echo(f"Invalid house value: {house}. Use 1 for Commons or 2 for Lords.")
         raise typer.Exit(code=1)
 
-    if house == HOUSE_LORDS:
-        result = run_async(paginate_request(url, LORDS_VOTES_PAGINATION, desired_total=take, start_skip=skip))
-    else:
-        result = run_async(get_result(url))
+    result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
