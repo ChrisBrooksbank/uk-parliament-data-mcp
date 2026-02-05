@@ -10,6 +10,28 @@ from typing import Any
 from uk_parliament_mcp.cli.formatters import CLIFormatter, OutputFormat
 
 
+def should_render_rich(output_format: OutputFormat, raw: bool) -> bool:
+    """Determine whether to use rich rendering instead of JSON output.
+
+    Rich rendering is used when:
+    - raw mode is not enabled
+    - format is AUTO or TABLE
+    - stdout is a TTY (interactive terminal)
+
+    Args:
+        output_format: The requested output format.
+        raw: Whether --raw flag was specified.
+
+    Returns:
+        True if rich rendering should be used.
+    """
+    if raw:
+        return False
+    if output_format in (OutputFormat.AUTO, OutputFormat.TABLE):
+        return sys.stdout.isatty()
+    return False
+
+
 def run_async(coro: Coroutine[Any, Any, str]) -> str:
     """
     Run an async function synchronously for CLI use.

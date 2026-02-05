@@ -10,7 +10,13 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
+from uk_parliament_mcp.cli.renderers import (
+    render_bill_overview,
+    render_check_vote,
+    render_committee_summary,
+    render_mp_profile,
+)
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async, should_render_rich
 from uk_parliament_mcp.config import (
     BILLS_API_BASE,
     COMMITTEES_API_BASE,
@@ -279,7 +285,10 @@ def mp_profile(
     Returns basic info, biography, registered interests, and recent votes.
     """
     result = run_async(_get_mp_profile_async(name))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    if should_render_rich(output_format, raw):
+        render_mp_profile(result)
+    else:
+        echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("check-vote")
@@ -305,7 +314,10 @@ def check_vote(
     Returns MP info and divisions on the topic where they voted.
     """
     result = run_async(_check_mp_vote_async(mp_name, topic))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    if should_render_rich(output_format, raw):
+        render_check_vote(result)
+    else:
+        echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("bill-overview")
@@ -330,7 +342,10 @@ def bill_overview(
     Returns bill details, legislative stages, and associated documents.
     """
     result = run_async(_get_bill_overview_async(search_term))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    if should_render_rich(output_format, raw):
+        render_bill_overview(result)
+    else:
+        echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("committee-summary")
@@ -355,4 +370,7 @@ def committee_summary(
     Returns committee info, witness testimonies, written submissions, and reports.
     """
     result = run_async(_get_committee_summary_async(topic))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    if should_render_rich(output_format, raw):
+        render_committee_summary(result)
+    else:
+        echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))

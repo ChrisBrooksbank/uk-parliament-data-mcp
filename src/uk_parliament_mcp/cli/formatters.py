@@ -155,7 +155,7 @@ class CLIFormatter:
 
     def __init__(
         self,
-        output_format: OutputFormat = OutputFormat.JSON,
+        output_format: OutputFormat = OutputFormat.AUTO,
         pretty: bool = False,
         data_only: bool = False,
         fields: str | None = None,

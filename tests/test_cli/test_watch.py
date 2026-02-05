@@ -11,23 +11,24 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
+from uk_parliament_mcp.cli.renderers import (
+    _calendar_subtitle,
+    _format_slide_type_label,
+    _parse_api_response,
+    _render_calendar_table,
+    _render_chamber_panel,
+)
 from uk_parliament_mcp.cli.watch import (
-    MIN_INTERVAL,
     _CHAMBER_MAX_FRACTION,
     _CHAMBER_MIN_HEIGHT,
-    _calendar_subtitle,
+    MIN_INTERVAL,
     _estimate_chamber_height,
     _fetch_all_data,
     _fetch_calendar_today,
     _fetch_commons_now,
     _fetch_lords_now,
-    _format_slide_type_label,
-    _parse_api_response,
-    _render_calendar_table,
-    _render_chamber_panel,
     _render_dashboard,
 )
-
 
 # ---------------------------------------------------------------------------
 # Realistic MessageViewModel test data factories
@@ -741,6 +742,7 @@ class TestWatchCommand:
         mock_response = json.dumps({"url": "test", "data": msg})
 
         from typer.testing import CliRunner
+
         from uk_parliament_mcp.cli.watch import app
 
         runner = CliRunner()
@@ -757,6 +759,7 @@ class TestWatchCommand:
         mock_response = json.dumps({"url": "test", "data": msg})
 
         from typer.testing import CliRunner
+
         from uk_parliament_mcp.cli.watch import app
 
         runner = CliRunner()

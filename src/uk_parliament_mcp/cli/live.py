@@ -5,7 +5,8 @@ from __future__ import annotations
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
+from uk_parliament_mcp.cli.renderers import render_calendar, render_chamber_now
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async, should_render_rich
 from uk_parliament_mcp.config import NOW_API_BASE, WHATSON_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
 
@@ -34,7 +35,10 @@ def happening_now_in_commons(
     """
     url = f"{NOW_API_BASE}/Message/message/CommonsMain/current"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    if should_render_rich(output_format, raw):
+        render_chamber_now(result, "House of Commons")
+    else:
+        echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("lords-now")
@@ -59,7 +63,10 @@ def happening_now_in_lords(
     """
     url = f"{NOW_API_BASE}/Message/message/LordsMain/current"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    if should_render_rich(output_format, raw):
+        render_chamber_now(result, "House of Lords")
+    else:
+        echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("calendar")
@@ -94,7 +101,10 @@ def search_calendar(
         },
     )
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    if should_render_rich(output_format, raw):
+        render_calendar(result)
+    else:
+        echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("sessions")
