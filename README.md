@@ -29,11 +29,11 @@ Access official UK Parliament data through AI assistants. Query MPs, Lords, bill
 - Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
 - Or say **"Order Order"** (like the Speaker) to initialize the session
 
-This gives your AI assistant the context it needs to effectively use the 122 available tools.
+This gives your AI assistant the context it needs to effectively use the 161 available tools.
 
 ## Starting a Session
 
-Say **"Order Order"** to initialize your parliamentary research session. This gives Claude the context needed to effectively use the 122 available tools.
+Say **"Order Order"** to initialize your parliamentary research session. This gives Claude the context needed to effectively use the 161 available tools.
 
 If that doesn't work, copy and paste this system prompt:
 
