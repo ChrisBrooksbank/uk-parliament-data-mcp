@@ -5,183 +5,14 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/actions/workflows/ci.yml)
 
-Access official UK Parliament data through AI assistants or the command line. Query MPs, Lords, bills, votes, committees, debates, and more.
-
-## CLI Usage
-
-The `parliament` CLI provides terminal access to all 161 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
-
-### Quick Start
-
-```bash
-# Install from PyPI
-pip install uk-parliament-mcp
-
-# Search for an MP
-parliament members search "Keir Starmer"
-
-# Get comprehensive MP profile
-parliament composite mp-profile "Rishi Sunak" --pretty
-
-# Check how an MP voted on a topic
-parliament composite check-vote "Boris Johnson" "climate"
-
-# Track bill progress
-parliament bills search "Online Safety" --data-only | jq '.items[0]'
-
-# What's happening now in Parliament?
-parliament live commons-now --pretty
-```
-
-### Installation
-
-```bash
-# Install from PyPI (recommended)
-pip install uk-parliament-mcp
-
-# Or use pipx for isolated installation
-pipx install uk-parliament-mcp
-
-# Verify installation
-parliament --help
-```
-
-### Common Commands
-
-The CLI organizes 161 tools into 12 command groups:
-
-```bash
-# MP and Lords research
-parliament members search "Starmer"
-parliament members biography 4514
-parliament interests search "Starmer"
-
-# Bill tracking
-parliament bills search "education"
-parliament bills stages 123
-parliament bills amendments 123
-
-# Voting records
-parliament votes search "climate" --house 1
-parliament votes get-division 12345 --house 1
-
-# Committee research
-parliament committees search "Treasury"
-parliament committees oral-evidence 456
-
-# Parliamentary record
-parliament hansard search-debates "NHS" --house 1
-
-# Live activity
-parliament live commons-now
-parliament live calendar
-parliament live next-sitting-date --house 1
-
-# Questions and statements
-parliament questions search-edms "immigration"
-parliament questions search-written "healthcare"
-
-# Legislation and treaties
-parliament legislation search-si "education"
-parliament legislation search-treaties "trade"
-
-# Erskine May procedure rules
-parliament procedures search "closure"
-```
-
-**High-level composite tools** (combine multiple API calls):
-
-```bash
-# Get everything about an MP in one call
-parliament composite mp-profile "Keir Starmer" --pretty
-
-# Check how an MP voted on a topic
-parliament composite check-vote "Johnson" "climate" --pretty
-
-# Get comprehensive bill overview
-parliament composite bill-overview "Online Safety" --pretty
-
-# Get full committee summary
-parliament composite committee-summary "Treasury" --pretty
-```
-
-### Output Modes
-
-The CLI outputs JSON by default, making it easy to pipe to other tools:
-
-```bash
-# Default: compact JSON (for piping)
-parliament members search "Starmer" | jq '.data[0].id'
-
-# Pretty-printed JSON
-parliament members search "Starmer" --pretty
-
-# Just the data (strips url wrapper)
-parliament members search "Starmer" --data-only | jq '.items[0]'
-
-# Count results
-parliament bills search "education" | jq '.items | length'
-
-# Filter and extract
-parliament votes search "climate" --house 1 | jq '.data[] | select(.ayes > 300)'
-
-# Save to file
-parliament composite mp-profile "Sunak" --pretty > profile.json
-```
-
-**Global flags:**
-- `--pretty` / `-p` - Pretty-print JSON output
-- `--data-only` / `-d` - Return only the data field, not the {url, data} wrapper
-
-### Help System
-
-```bash
-# Show all command groups
-parliament --help
-
-# Show commands in a group
-parliament members --help
-
-# Show command details
-parliament members search --help
-
-# Get tool reference
-parliament guide tools
-
-# Get detailed domain guidance
-parliament guide topic members
-
-# Get research workflow
-parliament guide workflow "How did my MP vote on X?"
-```
-
-**Available help topics:**
-- `composite` - High-level tools combining multiple API calls
-- `members` - MPs, Lords, constituencies, parties
-- `bills` - Legislation, amendments, stages
-- `votes` - Commons and Lords divisions
-- `committees` - Committee info, meetings, evidence
-- `hansard` - Parliamentary record
-- `questions` - Oral questions, written questions, EDMs
-- `interests` - Register of interests
-- `live` - Current activity and calendar
-- `legislation` - SIs and treaties
-- `procedures` - Erskine May procedure rules
-
----
+An MCP (Model Context Protocol) server that gives AI assistants access to official UK Parliament data. Query MPs, Lords, bills, votes, committees, debates, and more through AI assistants like Claude Desktop and VS Code Copilot. Also includes a CLI for terminal access.
 
 ## MCP Server for AI Assistants
 
-The package also provides an MCP (Model Context Protocol) server for AI assistants like Claude Desktop and VS Code Copilot.
+Connect your AI assistant to 161 UK Parliament API tools for comprehensive parliamentary research.
 
 ## Table of Contents
 
-- [CLI Usage](#cli-usage)
-  - [Quick Start](#quick-start)
-  - [Installation](#installation)
-  - [Common Commands](#common-commands)
-  - [Output Modes](#output-modes)
-  - [Help System](#help-system)
 - [MCP Server for AI Assistants](#mcp-server-for-ai-assistants)
   - [Getting Started](#getting-started)
   - [Starting a Session](#starting-a-session)
@@ -192,6 +23,11 @@ The package also provides an MCP (Model Context Protocol) server for AI assistan
   - [Ending Your Session](#ending-your-session)
   - [Prompting Tips](#prompting-tips)
   - [Example Prompts](#example-prompts)
+- [CLI Usage](#cli-usage)
+  - [Quick Start](#quick-start)
+  - [Common Commands](#common-commands)
+  - [Output Modes](#output-modes)
+  - [Help System](#help-system)
 - [Alternative Installation Methods](#alternative-installation-methods)
 - [Final Thoughts](#final-thoughts)
 
@@ -519,6 +355,156 @@ Show me the JSON returned from the last MCP call.
 - Find committee meetings about climate change in the last few months
 
 </details>
+
+---
+
+## CLI Usage
+
+The package also includes a `parliament` CLI for terminal access to all 161 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
+
+### Quick Start
+
+```bash
+# Install from PyPI
+pip install uk-parliament-mcp
+
+# Search for an MP
+parliament members search "Keir Starmer"
+
+# Get comprehensive MP profile
+parliament composite mp-profile "Rishi Sunak" --pretty
+
+# Check how an MP voted on a topic
+parliament composite check-vote "Boris Johnson" "climate"
+
+# Track bill progress
+parliament bills search "Online Safety" --data-only | jq '.items[0]'
+
+# What's happening now in Parliament?
+parliament live commons-now --pretty
+```
+
+### Common Commands
+
+The CLI organizes 161 tools into 12 command groups:
+
+```bash
+# MP and Lords research
+parliament members search "Starmer"
+parliament members biography 4514
+parliament interests search "Starmer"
+
+# Bill tracking
+parliament bills search "education"
+parliament bills stages 123
+parliament bills amendments 123
+
+# Voting records
+parliament votes search "climate" --house 1
+parliament votes get-division 12345 --house 1
+
+# Committee research
+parliament committees search "Treasury"
+parliament committees oral-evidence 456
+
+# Parliamentary record
+parliament hansard search-debates "NHS" --house 1
+
+# Live activity
+parliament live commons-now
+parliament live calendar
+parliament live next-sitting-date --house 1
+
+# Questions and statements
+parliament questions search-edms "immigration"
+parliament questions search-written "healthcare"
+
+# Legislation and treaties
+parliament legislation search-si "education"
+parliament legislation search-treaties "trade"
+
+# Erskine May procedure rules
+parliament procedures search "closure"
+```
+
+**High-level composite tools** (combine multiple API calls):
+
+```bash
+# Get everything about an MP in one call
+parliament composite mp-profile "Keir Starmer" --pretty
+
+# Check how an MP voted on a topic
+parliament composite check-vote "Johnson" "climate" --pretty
+
+# Get comprehensive bill overview
+parliament composite bill-overview "Online Safety" --pretty
+
+# Get full committee summary
+parliament composite committee-summary "Treasury" --pretty
+```
+
+### Output Modes
+
+The CLI outputs JSON by default, making it easy to pipe to other tools:
+
+```bash
+# Default: compact JSON (for piping)
+parliament members search "Starmer" | jq '.data[0].id'
+
+# Pretty-printed JSON
+parliament members search "Starmer" --pretty
+
+# Just the data (strips url wrapper)
+parliament members search "Starmer" --data-only | jq '.items[0]'
+
+# Count results
+parliament bills search "education" | jq '.items | length'
+
+# Filter and extract
+parliament votes search "climate" --house 1 | jq '.data[] | select(.ayes > 300)'
+
+# Save to file
+parliament composite mp-profile "Sunak" --pretty > profile.json
+```
+
+**Global flags:**
+- `--pretty` / `-p` - Pretty-print JSON output
+- `--data-only` / `-d` - Return only the data field, not the {url, data} wrapper
+
+### Help System
+
+```bash
+# Show all command groups
+parliament --help
+
+# Show commands in a group
+parliament members --help
+
+# Show command details
+parliament members search --help
+
+# Get tool reference
+parliament guide tools
+
+# Get detailed domain guidance
+parliament guide topic members
+
+# Get research workflow
+parliament guide workflow "How did my MP vote on X?"
+```
+
+**Available help topics:**
+- `composite` - High-level tools combining multiple API calls
+- `members` - MPs, Lords, constituencies, parties
+- `bills` - Legislation, amendments, stages
+- `votes` - Commons and Lords divisions
+- `committees` - Committee info, meetings, evidence
+- `hansard` - Parliamentary record
+- `questions` - Oral questions, written questions, EDMs
+- `interests` - Register of interests
+- `live` - Current activity and calendar
+- `legislation` - SIs and treaties
+- `procedures` - Erskine May procedure rules
 
 ---
 
