@@ -465,40 +465,11 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def search_historical_members(
-        name: str | None = None,
-        house: int | None = None,
-        skip: int = 0,
-        take: int = 20,
-    ) -> str:
-        """Search historical/former MPs and Lords | deceased members, past MPs, historical politicians | Use to find former or deceased members of Parliament | Returns historical member records
-
-        Args:
-            name: Optional: full or partial name to search for.
-            house: Optional: house number (1=Commons, 2=Lords).
-            skip: Number of records to skip (for pagination).
-            take: Number of records to return (default 20).
-
-        Returns:
-            Historical member records matching the search criteria.
-        """
-        url = build_url(
-            f"{MEMBERS_API_BASE}/Members/SearchHistorical",
-            {
-                "Name": name,
-                "House": house,
-                "skip": skip,
-                "take": take,
-            },
-        )
-        return await get_result(url)
-
-    @mcp.tool()
-    async def get_spokespersons(party_id: int | None = None) -> str:
+    async def get_spokespersons(party_id: int) -> str:
         """Get party spokespersons | shadow ministers, opposition frontbench, party speakers | Use to find who speaks for a party on specific policy areas | Returns spokespersons with their portfolios
 
         Args:
-            party_id: Optional: filter by party ID.
+            party_id: Party ID (required). Get party IDs from parties_list_by_house.
 
         Returns:
             List of party spokespersons with their portfolios.
