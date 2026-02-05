@@ -108,11 +108,137 @@ def _parse_api_response(response_str: str) -> dict[str, Any] | None:
         return None
 
 
-def _render_chamber_panel(data: dict[str, Any] | None, house_name: str) -> Panel:
-    """Render a chamber status panel.
+_SLIDE_TYPE_LABELS: dict[str, tuple[str, str]] = {
+    "Debate": ("Debate", "bold cyan"),
+    "Division": ("DIVISION", "bold red"),
+    "PrimeMinistersQuestions": ("Prime Minister's Questions", "bold yellow"),
+    "OralQuestionTime": ("Oral Questions", "bold yellow"),
+    "UrgentQuestion": ("Urgent Question", "bold yellow"),
+    "Statement": ("Statement", "bold green"),
+    "Prayers": ("Prayers", "bold"),
+    "PointsOfOrder": ("Points of Order", "bold"),
+    "Generic": ("Business", "bold"),
+    "NotSitting": ("Not Sitting", "dim italic"),
+    "HouseRisen": ("House has risen", "dim italic"),
+}
+
+_ACTIVE_SLIDE_TYPES = {
+    "Debate",
+    "Division",
+    "PrimeMinistersQuestions",
+    "OralQuestionTime",
+    "UrgentQuestion",
+    "Statement",
+    "Prayers",
+    "PointsOfOrder",
+    "Generic",
+}
+
+
+def _format_slide_type_label(slide_type: str) -> tuple[str, str]:
+    """Map a SlideType string to a human-readable label and Rich style.
 
     Args:
-        data: Chamber activity data or None if not available.
+        slide_type: SlideType enum value from the Now API.
+
+    Returns:
+        Tuple of (label, rich_style).
+    """
+    return _SLIDE_TYPE_LABELS.get(slide_type, (slide_type, "bold"))
+
+
+def _render_member_line(member: dict[str, Any], text: Text) -> None:
+    """Render a MemberViewModel as formatted text lines.
+
+    Args:
+        member: MemberViewModel dict from the Now API.
+        text: Rich Text object to append to.
+    """
+    name = member.get("nameDisplayAs") or member.get("nameFullTitle") or ""
+    if not name:
+        return
+    text.append(f"  {name}", style="bold")
+    parts: list[str] = []
+    party = member.get("latestParty")
+    if party and party.get("name"):
+        parts.append(party["name"])
+    membership = member.get("latestHouseMembership")
+    if membership and membership.get("membershipFrom"):
+        parts.append(membership["membershipFrom"])
+    if parts:
+        text.append(f"\n  {' | '.join(parts)}", style="dim")
+
+
+def _render_slide_lines(lines: list[dict[str, Any]], text: Text) -> None:
+    """Render LineViewModel items into Rich Text.
+
+    Args:
+        lines: List of LineViewModel dicts, sorted by displayOrder.
+        text: Rich Text object to append to.
+    """
+    sorted_lines = sorted(lines, key=lambda ln: ln.get("displayOrder", 0))
+    for line in sorted_lines:
+        style = line.get("style", "")
+        content = line.get("content") or ""
+        member = line.get("member")
+
+        # Divider styles -> horizontal rules
+        if style in ("DividerSolid", "DividerDotted", "DividerDashed"):
+            char = "-" if style == "DividerSolid" else ("." if style == "DividerDotted" else "- ")
+            text.append(char * 20 + "\n", style="dim")
+            continue
+
+        if style == "EmptyLine":
+            text.append("\n")
+            continue
+
+        # Member line with embedded data
+        if member and (member.get("nameDisplayAs") or member.get("nameFullTitle")):
+            _render_member_line(member, text)
+            text.append("\n")
+            continue
+
+        # Content with style-based formatting
+        if content:
+            if style == "Footer":
+                text.append(content, style="dim")
+            elif style == "Division":
+                text.append(content, style="bold red")
+            else:
+                text.append(content)
+            text.append("\n")
+
+
+def _render_scrolling_messages(
+    messages: list[dict[str, Any]], text: Text
+) -> None:
+    """Render ScrollingMessageViewModel items below slides.
+
+    Args:
+        messages: List of ScrollingMessageViewModel dicts.
+        text: Rich Text object to append to.
+    """
+    if not messages:
+        return
+    text.append("---\n", style="dim")
+    for msg in messages:
+        content = msg.get("content") or ""
+        if not content:
+            continue
+        alert_type = msg.get("alertType", "Standard")
+        if alert_type == "Alert":
+            text.append(f"! {content}\n", style="bold red")
+        elif alert_type == "SecondaryChamber":
+            text.append(f"  {content}\n", style="italic")
+        else:
+            text.append(f"  {content}\n", style="dim")
+
+
+def _render_chamber_panel(data: dict[str, Any] | None, house_name: str) -> Panel:
+    """Render a chamber status panel from MessageViewModel data.
+
+    Args:
+        data: MessageViewModel dict from the Now API, or None.
         house_name: "House of Commons" or "House of Lords".
 
     Returns:
@@ -122,49 +248,59 @@ def _render_chamber_panel(data: dict[str, Any] | None, house_name: str) -> Panel
         content = Text("Not currently sitting", style="dim italic")
         return Panel(content, title=f"[bold]{house_name}[/bold]", border_style="dim")
 
-    lines = Text()
+    # Check if annunciator is disabled
+    if data.get("annunciatorDisabled"):
+        content = Text("Annunciator offline", style="dim italic")
+        return Panel(content, title=f"[bold]{house_name}[/bold]", border_style="dim")
 
-    # Try to extract meaningful fields from the response
-    # The Now API returns various structures depending on activity
-    if isinstance(data, dict):
-        # Look for common fields in the Now API response
-        for key in ["Description", "description", "Title", "title"]:
-            if key in data and data[key]:
-                lines.append(str(data[key]), style="bold")
-                lines.append("\n")
-                break
+    text = Text()
+    is_active = False
 
-        for key in ["Category", "category", "Type", "type"]:
-            if key in data and data[key]:
-                lines.append(str(data[key]), style="cyan")
-                lines.append("\n")
-                break
+    # Division bell indicator
+    if data.get("showCommonsBell") or data.get("showLordsBell"):
+        text.append("DIVISION BELL\n", style="bold red")
+        is_active = True
 
-        for key in ["StartTime", "startTime", "Started", "started"]:
-            if key in data and data[key]:
-                lines.append(f"Started: {data[key]}", style="dim")
-                lines.append("\n")
-                break
+    # Render slides
+    slides = data.get("slides") or []
+    for slide in slides:
+        slide_type = slide.get("type", "")
 
-        # Check for division in progress
-        for key in ["DivisionInProgress", "divisionInProgress"]:
-            if data.get(key):
-                lines.append("DIVISION IN PROGRESS", style="bold red")
-                lines.append("\n")
-                break
+        # Skip blank slides
+        if slide_type == "BlankSlide":
+            continue
 
-        # If no specific fields found, show a summary
-        if not lines.plain:
-            # Show first few non-null fields
-            for k, v in list(data.items())[:5]:
-                if v is not None and v != "" and not k.startswith("_"):
-                    lines.append(f"{k}: {v}\n")
+        # Track if chamber is active
+        if slide_type in _ACTIVE_SLIDE_TYPES:
+            is_active = True
 
-    if not lines.plain:
-        lines.append("Activity data available", style="dim")
+        # Slide type label
+        label, style = _format_slide_type_label(slide_type)
+        text.append(label, style=style)
 
-    border_style = "green" if lines.plain and "not currently" not in lines.plain.lower() else "dim"
-    return Panel(lines, title=f"[bold]{house_name}[/bold]", border_style=border_style)
+        # Speaker time
+        speaker_time = slide.get("speakerTime")
+        if speaker_time and isinstance(speaker_time, str) and "T" in speaker_time:
+            time_part = speaker_time.split("T")[1][:5]
+            text.append(f"  {time_part}", style="dim")
+        text.append("\n")
+
+        # Slide lines
+        slide_lines = slide.get("lines") or []
+        if slide_lines:
+            _render_slide_lines(slide_lines, text)
+
+    # Scrolling messages
+    scrolling = data.get("scrollingMessages") or []
+    if scrolling:
+        _render_scrolling_messages(scrolling, text)
+
+    # Fallback if nothing rendered
+    if not text.plain.strip():
+        text.append("No current activity", style="dim italic")
+
+    border_style = "green" if is_active else "dim"
+    return Panel(text, title=f"[bold]{house_name}[/bold]", border_style=border_style)
 
 
 def _render_calendar_table(events: list[dict[str, Any]]) -> Table | Text:
@@ -179,11 +315,16 @@ def _render_calendar_table(events: list[dict[str, Any]]) -> Table | Text:
     if not events:
         return Text("No events scheduled for today", style="dim italic")
 
-    table = Table(show_header=True, header_style="bold", expand=True)
-    table.add_column("Time", width=8)
-    table.add_column("House", width=10)
-    table.add_column("Event", ratio=3)
-    table.add_column("Category", width=18)
+    table = Table(
+        show_header=True,
+        header_style="bold",
+        expand=False,
+        row_styles=["", "dim"],
+    )
+    table.add_column("Time", width=5, style="cyan", no_wrap=True)
+    table.add_column("House", width=7, no_wrap=True)
+    table.add_column("Event", max_width=55, overflow="ellipsis")
+    table.add_column("Category", max_width=16, style="dim")
 
     for event in events:
         time_str = ""
@@ -258,7 +399,7 @@ def _render_dashboard(data: dict[str, Any]) -> Layout:
 
     layout.split_column(
         Layout(Panel(header, style=""), size=3),
-        Layout(chambers, size=12),
+        Layout(chambers, ratio=1),
         Layout(calendar_panel),
     )
 
@@ -319,6 +460,17 @@ def watch(
         "-i",
         help="Refresh interval in seconds (minimum 10)",
     ),
+    raw: bool = typer.Option(
+        False,
+        "--raw",
+        help="Fetch data once, output raw JSON, and exit (no live dashboard)",
+    ),
+    pretty: bool = typer.Option(
+        False,
+        "--pretty",
+        "-p",
+        help="Pretty-print JSON output (only with --raw)",
+    ),
 ) -> None:
     """
     Live Parliament dashboard with auto-refresh.
@@ -331,6 +483,7 @@ def watch(
       parliament watch commons        # Commons only
       parliament watch lords          # Lords only
       parliament watch --interval 10  # Refresh every 10 seconds
+      parliament watch --raw --pretty # Dump raw JSON and exit
     """
     # Validate house argument
     if house is not None:
@@ -342,6 +495,12 @@ def watch(
         house = house_lower
     else:
         house = None
+
+    if raw:
+        data = asyncio.run(_fetch_all_data(house))
+        indent = 2 if pretty else None
+        print(json.dumps(data, indent=indent, default=str))
+        return
 
     # Enforce minimum interval
     if interval < MIN_INTERVAL:
