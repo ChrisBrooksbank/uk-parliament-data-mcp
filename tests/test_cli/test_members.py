@@ -63,8 +63,9 @@ class TestSearchMember:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 1
 
     def test_search_pretty_output(
         self,
@@ -149,8 +150,9 @@ class TestGetMember:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "value" in output
+        assert output["value"]["id"] == 4514
 
     def test_get_pretty_output(
         self,
@@ -217,8 +219,9 @@ class TestGetBiography:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "value" in output
+        assert output["value"]["nameDisplayAs"] == "Keir Starmer"
 
 
 class TestGetContact:
@@ -264,8 +267,9 @@ class TestGetContact:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "value" in output
+        assert output["value"]["id"] == 4514
 
 
 class TestSearchAdvanced:
@@ -316,8 +320,9 @@ class TestSearchAdvanced:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
     def test_search_advanced_with_filters(
         self,
@@ -337,8 +342,9 @@ class TestSearchAdvanced:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
 
 class TestParties:
@@ -394,8 +400,9 @@ class TestParties:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
     def test_parties_lords_success(
         self,
@@ -412,8 +419,9 @@ class TestParties:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
 
 class TestConstituencies:
@@ -464,8 +472,9 @@ class TestConstituencies:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
     def test_constituencies_with_pagination(
         self,
@@ -482,5 +491,6 @@ class TestConstituencies:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2

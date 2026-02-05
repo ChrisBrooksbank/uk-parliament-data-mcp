@@ -57,8 +57,9 @@ class TestRecent:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
     def test_recent_with_take_option(
         self,
@@ -75,8 +76,9 @@ class TestRecent:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
     def test_recent_pretty_output(
         self,
@@ -142,8 +144,9 @@ class TestSearch:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 1
 
     def test_search_data_only(
         self,
@@ -209,8 +212,9 @@ class TestGet:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "value" in output
+        assert output["value"]["billId"] == 123
 
     def test_get_pretty_output(
         self,
@@ -281,8 +285,9 @@ class TestStages:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
     def test_stages_with_pagination(
         self,
@@ -299,8 +304,9 @@ class TestStages:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
 
 class TestAmendments:
@@ -349,8 +355,9 @@ class TestAmendments:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 1
 
     def test_amendments_with_search(
         self,
@@ -367,8 +374,9 @@ class TestAmendments:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 1
 
     def test_amendments_with_multiple_filters(
         self,
@@ -388,8 +396,9 @@ class TestAmendments:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 1
 
 
 class TestPublications:
@@ -443,8 +452,9 @@ class TestPublications:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
     def test_publications_data_only(
         self,
@@ -511,8 +521,9 @@ class TestTypes:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
     def test_types_pretty_output(
         self,
@@ -578,8 +589,9 @@ class TestStagesList:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
 
 class TestRSS:
@@ -613,8 +625,9 @@ class TestRSS:
             result = cli_runner.invoke(app, ["bills", "rss-all"])
 
         assert result.exit_code == 0
+        # data_only=True by default, so wrapper is stripped and inner RSS data is returned
         output = json.loads(result.stdout)
-        assert "url" in output
+        assert "rss" in output
 
     def test_rss_public_success(
         self,
@@ -630,8 +643,9 @@ class TestRSS:
             result = cli_runner.invoke(app, ["bills", "rss-public"])
 
         assert result.exit_code == 0
+        # data_only=True by default, so wrapper is stripped and inner RSS data is returned
         output = json.loads(result.stdout)
-        assert "url" in output
+        assert "rss" in output
 
     def test_rss_private_success(
         self,
@@ -647,8 +661,9 @@ class TestRSS:
             result = cli_runner.invoke(app, ["bills", "rss-private"])
 
         assert result.exit_code == 0
+        # data_only=True by default, so wrapper is stripped and inner RSS data is returned
         output = json.loads(result.stdout)
-        assert "url" in output
+        assert "rss" in output
 
     def test_rss_bill_requires_id(self, cli_runner: CliRunner):
         """Test that rss-bill requires a bill_id argument."""
@@ -669,8 +684,9 @@ class TestRSS:
             result = cli_runner.invoke(app, ["bills", "rss-bill", "123"])
 
         assert result.exit_code == 0
+        # data_only=True by default, so wrapper is stripped and inner RSS data is returned
         output = json.loads(result.stdout)
-        assert "url" in output
+        assert "rss" in output
 
 
 class TestSittings:
@@ -719,8 +735,9 @@ class TestSittings:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
     def test_sittings_with_filters(
         self,
@@ -740,8 +757,9 @@ class TestSittings:
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
-        assert "url" in output
-        assert "data" in output
+        # data_only=True by default, so wrapper is stripped and inner data is returned
+        assert "items" in output
+        assert output["totalResults"] == 2
 
     def test_sittings_pretty_output(
         self,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -12,6 +13,8 @@ from uk_parliament_mcp.cli.formatters import (
     _detect_columns,
     _extract_items,
     _get_nested_value,
+    _parse_fields,
+    _resolve_format,
 )
 
 
@@ -130,6 +133,71 @@ class TestDetectColumns:
         assert any(col[0] == "nameDisplayAs" for col in columns)
 
 
+class TestParseFields:
+    """Tests for _parse_fields helper."""
+
+    def test_simple_fields(self) -> None:
+        """Test parsing simple field names."""
+        result = _parse_fields("id,name")
+        assert result == [("id", "Id"), ("name", "Name")]
+
+    def test_dotted_fields(self) -> None:
+        """Test parsing dotted field paths."""
+        result = _parse_fields("id,latestParty.name")
+        assert result[1] == ("latestParty.name", "Name")
+
+    def test_camel_case_headers(self) -> None:
+        """Test camelCase conversion to Title Case."""
+        result = _parse_fields("nameDisplayAs")
+        assert result[0] == ("nameDisplayAs", "Name Display As")
+
+    def test_whitespace_handling(self) -> None:
+        """Test whitespace around commas is stripped."""
+        result = _parse_fields("id , name , party")
+        assert len(result) == 3
+        assert result[0][0] == "id"
+        assert result[2][0] == "party"
+
+    def test_empty_fields_ignored(self) -> None:
+        """Test empty fields are ignored."""
+        result = _parse_fields("id,,name")
+        assert len(result) == 2
+
+
+class TestResolveFormat:
+    """Tests for _resolve_format helper."""
+
+    def test_non_auto_passes_through(self) -> None:
+        """Test non-AUTO formats pass through unchanged."""
+        assert _resolve_format(OutputFormat.JSON) == OutputFormat.JSON
+        assert _resolve_format(OutputFormat.TABLE) == OutputFormat.TABLE
+        assert _resolve_format(OutputFormat.CSV) == OutputFormat.CSV
+
+    @patch("uk_parliament_mcp.cli.formatters.sys")
+    def test_auto_tty_resolves_to_table(self, mock_sys: object) -> None:
+        """Test AUTO resolves to TABLE when stdout is a TTY."""
+        import uk_parliament_mcp.cli.formatters as fmt
+
+        original = fmt.sys
+        try:
+            fmt.sys = type("MockSys", (), {"stdout": type("Stdout", (), {"isatty": lambda self: True})()})()  # type: ignore[assignment]
+            assert _resolve_format(OutputFormat.AUTO) == OutputFormat.TABLE
+        finally:
+            fmt.sys = original  # type: ignore[assignment]
+
+    @patch("uk_parliament_mcp.cli.formatters.sys")
+    def test_auto_pipe_resolves_to_json(self, mock_sys: object) -> None:
+        """Test AUTO resolves to JSON when stdout is piped."""
+        import uk_parliament_mcp.cli.formatters as fmt
+
+        original = fmt.sys
+        try:
+            fmt.sys = type("MockSys", (), {"stdout": type("Stdout", (), {"isatty": lambda self: False})()})()  # type: ignore[assignment]
+            assert _resolve_format(OutputFormat.AUTO) == OutputFormat.JSON
+        finally:
+            fmt.sys = original  # type: ignore[assignment]
+
+
 class TestCLIFormatterJSON:
     """Tests for CLIFormatter JSON output."""
 
@@ -226,6 +294,16 @@ class TestCLIFormatterTable:
         # Single dict should still produce output
         assert len(result) > 0
 
+    def test_table_with_custom_fields(self) -> None:
+        """Test table format with custom fields parameter."""
+        response = json.dumps(
+            {"items": [{"id": 1, "name": "Test", "extra": "data"}]}
+        )
+        formatter = CLIFormatter(OutputFormat.TABLE, fields="id,name")
+        result = formatter.format_output(response)
+        assert "Test" in result
+        # extra field should not be shown (only id and name columns)
+
 
 class TestCLIFormatterMarkdown:
     """Tests for CLIFormatter markdown output."""
@@ -282,6 +360,74 @@ class TestCLIFormatterMarkdown:
         assert "\\|" in result
 
 
+class TestCLIFormatterCSV:
+    """Tests for CLIFormatter CSV output."""
+
+    def test_csv_format_produces_output(self) -> None:
+        """Test CSV format produces CSV with header and data."""
+        response = json.dumps(
+            {
+                "items": [
+                    {"billId": 123, "shortTitle": "Test Bill",
+                     "currentStage": {"description": "Second Reading"},
+                     "lastUpdate": "2024-01-15"},
+                ]
+            }
+        )
+        formatter = CLIFormatter(OutputFormat.CSV)
+        result = formatter.format_output(response)
+        lines = result.strip().split("\n")
+        assert len(lines) == 2  # Header + 1 data row
+        assert "ID" in lines[0]
+        assert "123" in lines[1]
+        assert "Test Bill" in lines[1]
+
+    def test_csv_format_empty_data(self) -> None:
+        """Test CSV format with empty data."""
+        response = json.dumps({"items": []})
+        formatter = CLIFormatter(OutputFormat.CSV)
+        result = formatter.format_output(response)
+        assert result == "(No data to display)"
+
+    def test_csv_format_multiple_rows(self) -> None:
+        """Test CSV with multiple rows."""
+        response = json.dumps(
+            {"items": [{"name": "Alice", "id": 1}, {"name": "Bob", "id": 2}]}
+        )
+        formatter = CLIFormatter(OutputFormat.CSV)
+        result = formatter.format_output(response)
+        lines = result.strip().split("\n")
+        assert len(lines) == 3  # Header + 2 data rows
+
+    def test_csv_escapes_commas(self) -> None:
+        """Test CSV properly handles values with commas."""
+        response = json.dumps({"items": [{"name": "Doe, John", "id": 1}]})
+        formatter = CLIFormatter(OutputFormat.CSV)
+        result = formatter.format_output(response)
+        # csv module wraps values with commas in quotes
+        assert '"Doe, John"' in result
+
+    def test_csv_with_custom_fields(self) -> None:
+        """Test CSV with custom fields selection."""
+        response = json.dumps(
+            {"items": [{"id": 1, "name": "Test", "extra": "data"}]}
+        )
+        formatter = CLIFormatter(OutputFormat.CSV, fields="id,name")
+        result = formatter.format_output(response)
+        lines = result.strip().split("\n")
+        assert "Id" in lines[0]
+        assert "Name" in lines[0]
+        # extra should not appear in header
+        assert "Extra" not in lines[0]
+
+    def test_csv_boolean_values(self) -> None:
+        """Test CSV formats booleans as Yes/No."""
+        response = json.dumps({"items": [{"name": "Test", "isActive": True}]})
+        formatter = CLIFormatter(OutputFormat.CSV)
+        result = formatter.format_output(response)
+        assert "Yes" in result
+
+
 class TestCLIFormatterBooleanValues:
     """Tests for boolean value formatting."""
 
@@ -308,6 +454,8 @@ class TestOutputFormatEnum:
         assert OutputFormat.JSON.value == "json"
         assert OutputFormat.TABLE.value == "table"
         assert OutputFormat.MARKDOWN.value == "markdown"
+        assert OutputFormat.CSV.value == "csv"
+        assert OutputFormat.AUTO.value == "auto"
 
     def test_enum_is_string(self) -> None:
         """Test enum inherits from str."""

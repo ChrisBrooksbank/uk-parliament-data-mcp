@@ -133,7 +133,10 @@ class ParliamentHTTPClient:
                         # Fall back to text if not valid JSON
                         data = response.text
                     logger.info("Successfully retrieved data from %s", url)
-                    return json.dumps({"url": url, "data": data})
+                    response_str = json.dumps({"url": url, "data": data})
+                    from uk_parliament_mcp.pruning import PRUNING_ENABLED, prune_response
+
+                    return prune_response(response_str) if PRUNING_ENABLED else response_str
 
                 if _is_retryable_status(response.status_code):
                     logger.warning(

@@ -261,9 +261,15 @@ async def _get_committee_summary_async(topic: str) -> str:
 def mp_profile(
     name: str = typer.Argument(..., help="Full or partial name of MP or Lord"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -273,7 +279,7 @@ def mp_profile(
     Returns basic info, biography, registered interests, and recent votes.
     """
     result = run_async(_get_mp_profile_async(name))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("check-vote")
@@ -281,9 +287,15 @@ def check_vote(
     mp_name: str = typer.Argument(..., help="Name of MP to look up"),
     topic: str = typer.Argument(..., help="Topic or keyword to search divisions"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -293,16 +305,22 @@ def check_vote(
     Returns MP info and divisions on the topic where they voted.
     """
     result = run_async(_check_mp_vote_async(mp_name, topic))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("bill-overview")
 def bill_overview(
     search_term: str = typer.Argument(..., help="Search term for bill title or content"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -312,16 +330,22 @@ def bill_overview(
     Returns bill details, legislative stages, and associated documents.
     """
     result = run_async(_get_bill_overview_async(search_term))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("committee-summary")
 def committee_summary(
     topic: str = typer.Argument(..., help="Search term for committee name or subject"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -331,4 +355,4 @@ def committee_summary(
     Returns committee info, witness testimonies, written submissions, and reports.
     """
     result = run_async(_get_committee_summary_async(topic))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))

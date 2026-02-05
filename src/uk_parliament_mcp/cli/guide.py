@@ -212,9 +212,7 @@ def _format_group_detail(group: GroupInfo, console: Console) -> None:
         console.print()
 
 
-def _format_search_results(
-    groups: list[GroupInfo], search_term: str, console: Console
-) -> None:
+def _format_search_results(groups: list[GroupInfo], search_term: str, console: Console) -> None:
     """Format search results matching a keyword."""
     search_lower = search_term.lower()
     matches: list[CommandInfo] = []
@@ -262,6 +260,7 @@ def _format_json_output(groups: list[GroupInfo]) -> str:
         "groups": [asdict(g) for g in groups],
     }
     return json.dumps(output, indent=2, default=str)
+
 
 app = typer.Typer(help="Help and guidance for UK Parliament research")
 

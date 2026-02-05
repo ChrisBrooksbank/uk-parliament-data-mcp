@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 import typer
 from rich.console import Console
 
@@ -18,6 +20,7 @@ from uk_parliament_mcp.cli import (
     procedures,
     questions,
     votes,
+    watch,
 )
 from uk_parliament_mcp.cli.utils import echo_utf8
 
@@ -40,6 +43,7 @@ app.add_typer(live.app, name="live")
 app.add_typer(legislation.app, name="legislation")
 app.add_typer(procedures.app, name="procedures")
 app.add_typer(guide.app, name="guide")
+app.add_typer(watch.app, name="watch")
 
 
 # Top-level reference command for easy discoverability
@@ -100,14 +104,38 @@ def reference(
 
 
 @app.callback()
-def callback() -> None:
+def callback(
+    raw: Optional[bool] = typer.Option(  # noqa: UP007
+        None,
+        "--raw",
+        help="Output full wrapper JSON (url + data), disabling auto-formatting",
+        is_eager=True,
+    ),
+    fields: Optional[str] = typer.Option(  # noqa: UP007
+        None,
+        "--fields",
+        help="Comma-separated field paths for column selection (e.g., 'id,nameDisplayAs')",
+        is_eager=True,
+    ),
+) -> None:
     """
     UK Parliament CLI - query Parliament APIs from the terminal.
 
     Access MPs, bills, votes, committees, Hansard, and more.
     All data sourced from official parliament.uk APIs.
     """
-    pass
+    # Store global flags in typer context for subcommands to access
+    ctx = typer.Context
+    # We use module-level variables since typer callbacks don't propagate context easily
+    import uk_parliament_mcp.cli.main as _self
+
+    _self._global_raw = raw or False
+    _self._global_fields = fields
+
+
+# Module-level globals for callback-set flags
+_global_raw: bool = False
+_global_fields: str | None = None
 
 
 def main() -> None:

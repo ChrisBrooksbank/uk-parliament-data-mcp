@@ -2,6 +2,7 @@
 
 from mcp.server.fastmcp import FastMCP
 
+from uk_parliament_mcp import resources
 from uk_parliament_mcp.tools import (
     bills,
     committees,
@@ -47,5 +48,8 @@ def create_server() -> FastMCP:
 
     # Register prompts (agent skills)
     core.register_prompts(mcp)
+
+    # Register MCP resources
+    resources.register_resources(mcp)
 
     return mcp

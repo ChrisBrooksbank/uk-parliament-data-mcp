@@ -18,9 +18,15 @@ app = typer.Typer(help="MP and Lords member tools")
 def search_member(
     name: str = typer.Argument(..., help="Full or partial name to search"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -30,16 +36,22 @@ def search_member(
     """
     url = f"{MEMBERS_API_BASE}/Members/Search?Name={quote(name)}"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("get")
 def get_member(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -49,16 +61,22 @@ def get_member(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("biography")
 def get_biography(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -68,16 +86,22 @@ def get_biography(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Biography"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("contact")
 def get_contact(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -87,16 +111,22 @@ def get_contact(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Contact"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("experience")
 def get_experience(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -106,16 +136,22 @@ def get_experience(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Experience"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("focus")
 def get_focus(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -125,7 +161,7 @@ def get_focus(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Focus"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("interests")
@@ -135,9 +171,15 @@ def get_registered_interests(
         None, "--house", "-h", help="House number (1=Commons, 2=Lords)"
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -150,16 +192,22 @@ def get_registered_interests(
         {"house": house},
     )
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("staff")
 def get_staff(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -169,16 +217,22 @@ def get_staff(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Staff"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("synopsis")
 def get_synopsis(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -188,7 +242,7 @@ def get_synopsis(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Synopsis"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("voting")
@@ -197,9 +251,15 @@ def get_voting(
     house: int = typer.Option(..., "--house", "-h", help="House number (1=Commons, 2=Lords)"),
     page: int | None = typer.Option(None, "--page", help="Page number for pagination"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -212,7 +272,7 @@ def get_voting(
         {"house": house, "page": page},
     )
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("written-questions")
@@ -220,9 +280,15 @@ def get_written_questions(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     page: int | None = typer.Option(None, "--page", help="Page number for pagination"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -235,16 +301,22 @@ def get_written_questions(
         {"page": page},
     )
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("edms")
 def get_edms(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -254,16 +326,22 @@ def get_edms(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/Edms"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("contributions")
 def get_contributions(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -273,16 +351,22 @@ def get_contributions(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/ContributionSummary?page=1"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("history")
 def get_history(
     member_ids: str = typer.Argument(..., help="Comma-separated member IDs (e.g., '123,456,789')"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -292,16 +376,22 @@ def get_history(
     """
     url = build_url(f"{MEMBERS_API_BASE}/Members/History", {"ids": member_ids})
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("latest-election")
 def get_latest_election(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -311,16 +401,22 @@ def get_latest_election(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/LatestElectionResult"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("portrait")
 def get_portrait_url(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -330,16 +426,22 @@ def get_portrait_url(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/PortraitUrl"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("thumbnail")
 def get_thumbnail_url(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -349,7 +451,7 @@ def get_thumbnail_url(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/ThumbnailUrl"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("search-advanced")
@@ -396,9 +498,15 @@ def search_members_advanced(
     skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
     take: int = typer.Option(20, "--take", help="Number of records to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -431,7 +539,7 @@ def search_members_advanced(
         },
     )
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("constituencies")
@@ -439,9 +547,15 @@ def list_constituencies(
     skip: int | None = typer.Option(None, "--skip", help="Number to skip (pagination)"),
     take: int | None = typer.Option(None, "--take", help="Number to return (max 100)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -454,16 +568,22 @@ def list_constituencies(
         {"skip": skip, "take": take},
     )
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("constituency-elections")
 def get_constituency_elections(
     constituency_id: int = typer.Argument(..., help="Constituency ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -473,16 +593,22 @@ def get_constituency_elections(
     """
     url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}/ElectionResults"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("parties")
 def list_parties(
     house: int = typer.Argument(..., help="House number (1=Commons, 2=Lords)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -492,7 +618,7 @@ def list_parties(
     """
     url = f"{MEMBERS_API_BASE}/Parties/GetActive/{house}"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("party-state")
@@ -500,9 +626,15 @@ def get_party_state(
     house: int = typer.Argument(..., help="House number (1=Commons, 2=Lords)"),
     for_date: str = typer.Argument(..., help="Date for composition (YYYY-MM-DD)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -512,16 +644,22 @@ def get_party_state(
     """
     url = f"{MEMBERS_API_BASE}/Parties/StateOfTheParties/{house}/{for_date}"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("lords-by-type")
 def get_lords_by_type(
     for_date: str = typer.Argument(..., help="Date for composition (YYYY-MM-DD)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -531,16 +669,22 @@ def get_lords_by_type(
     """
     url = f"{MEMBERS_API_BASE}/Parties/LordsByType/{for_date}"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("spokespersons")
 def get_spokespersons(
     party_id: int = typer.Argument(..., help="Party ID"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -553,15 +697,21 @@ def get_spokespersons(
         {"partyId": party_id},
     )
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("government-posts")
 def get_government_posts(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -571,15 +721,21 @@ def get_government_posts(
     """
     url = f"{MEMBERS_API_BASE}/Posts/GovernmentPosts"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("opposition-posts")
 def get_opposition_posts(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -589,15 +745,21 @@ def get_opposition_posts(
     """
     url = f"{MEMBERS_API_BASE}/Posts/OppositionPosts"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("answering-bodies")
 def get_answering_bodies(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -607,15 +769,21 @@ def get_answering_bodies(
     """
     url = f"{MEMBERS_API_BASE}/Reference/AnsweringBodies"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("departments")
 def get_departments(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -625,15 +793,21 @@ def get_departments(
     """
     url = f"{MEMBERS_API_BASE}/Reference/Departments"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("policy-interests")
 def get_policy_interests(
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -643,16 +817,22 @@ def get_policy_interests(
     """
     url = f"{MEMBERS_API_BASE}/Reference/PolicyInterests"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("lords-staff-interests")
 def search_lords_staff_interests(
     search_term: str = typer.Argument(..., help="Search term for staff names or interests"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -662,4 +842,4 @@ def search_lords_staff_interests(
     """
     url = f"{MEMBERS_API_BASE}/LordsInterests/Staff?searchTerm={quote(search_term)}"
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))

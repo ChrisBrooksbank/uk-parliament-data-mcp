@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import json
 import sys
 from enum import Enum
@@ -19,6 +20,8 @@ class OutputFormat(str, Enum):
     JSON = "json"
     TABLE = "table"
     MARKDOWN = "markdown"
+    CSV = "csv"
+    AUTO = "auto"
 
 
 # Column configurations for known response types
@@ -113,6 +116,40 @@ def _extract_items(data: Any) -> list[dict[str, Any]]:
     return []
 
 
+def _parse_fields(fields: str) -> list[tuple[str, str]]:
+    """Parse a comma-separated fields string into column tuples.
+
+    Args:
+        fields: Comma-separated field paths (e.g., "id,nameDisplayAs,latestParty.name").
+
+    Returns:
+        List of (path, header) tuples.
+    """
+    columns: list[tuple[str, str]] = []
+    for field in fields.split(","):
+        field = field.strip()
+        if field:
+            # Use last part of path as header, converting camelCase to Title Case
+            last_part = field.split(".")[-1]
+            header = "".join(" " + c if c.isupper() else c for c in last_part).strip().title()
+            columns.append((field, header))
+    return columns
+
+
+def _resolve_format(fmt: OutputFormat) -> OutputFormat:
+    """Resolve AUTO format based on whether stdout is a TTY.
+
+    Args:
+        fmt: The requested output format.
+
+    Returns:
+        Resolved format (TABLE for TTY, JSON for pipes).
+    """
+    if fmt == OutputFormat.AUTO:
+        return OutputFormat.TABLE if sys.stdout.isatty() else OutputFormat.JSON
+    return fmt
+
+
 class CLIFormatter:
     """Formatter for CLI output in various formats."""
 
@@ -121,17 +158,20 @@ class CLIFormatter:
         output_format: OutputFormat = OutputFormat.JSON,
         pretty: bool = False,
         data_only: bool = False,
+        fields: str | None = None,
     ) -> None:
         """Initialize formatter.
 
         Args:
-            output_format: The output format (json, table, markdown)
+            output_format: The output format (json, table, markdown, csv, auto)
             pretty: Whether to pretty-print JSON
             data_only: Whether to extract only the data field
+            fields: Optional comma-separated field paths for column selection
         """
-        self.output_format = output_format
+        self.output_format = _resolve_format(output_format)
         self.pretty = pretty
         self.data_only = data_only
+        self.fields = fields
 
     def format_output(self, result: str) -> str:
         """Format the result according to the configured format.
@@ -156,6 +196,8 @@ class CLIFormatter:
             return self._format_table(data)
         elif self.output_format == OutputFormat.MARKDOWN:
             return self._format_markdown(data)
+        elif self.output_format == OutputFormat.CSV:
+            return self._format_csv(data)
 
         return self._format_json(data)
 
@@ -170,6 +212,12 @@ class CLIFormatter:
                     return data_content
             return data_content
         return parsed
+
+    def _get_columns(self, items: list[dict[str, Any]]) -> list[tuple[str, str]]:
+        """Get columns, using user-specified fields if set."""
+        if self.fields:
+            return _parse_fields(self.fields)
+        return _detect_columns(items)
 
     def _format_json(self, data: Any) -> str:
         """Format data as JSON.
@@ -196,7 +244,7 @@ class CLIFormatter:
         if not items:
             return "(No data to display)"
 
-        columns = _detect_columns(items)
+        columns = self._get_columns(items)
         if not columns:
             return self._format_json(data)
 
@@ -236,7 +284,7 @@ class CLIFormatter:
         if not items:
             return "(No data to display)"
 
-        columns = _detect_columns(items)
+        columns = self._get_columns(items)
         if not columns:
             return self._format_json(data)
 
@@ -268,3 +316,39 @@ class CLIFormatter:
             lines.append("| " + " | ".join(row_values) + " |")
 
         return "\n".join(lines)
+
+    def _format_csv(self, data: Any) -> str:
+        """Format data as CSV."""
+        items = _extract_items(data)
+
+        if not items:
+            return "(No data to display)"
+
+        columns = self._get_columns(items)
+        if not columns:
+            return self._format_json(data)
+
+        output = StringIO()
+        writer = csv.writer(output)
+
+        # Header row
+        writer.writerow([header for _, header in columns])
+
+        # Data rows
+        for item in items:
+            # Handle nested value structure
+            if "value" in item and isinstance(item.get("value"), dict):
+                item = item["value"]
+
+            row_values: list[str] = []
+            for path, _ in columns:
+                value = _get_nested_value(item, path)
+                if value is None:
+                    row_values.append("")
+                elif isinstance(value, bool):
+                    row_values.append("Yes" if value else "No")
+                else:
+                    row_values.append(str(value))
+            writer.writerow(row_values)
+
+        return output.getvalue().rstrip()

@@ -38,9 +38,15 @@ def search_divisions(
     skip: int = typer.Option(0, "--skip", help="Number of records to skip (pagination)"),
     take: int = typer.Option(25, "--take", help="Number of records to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -79,7 +85,7 @@ def search_divisions(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("get-division")
@@ -92,9 +98,15 @@ def get_division(
         help="House to query (1=Commons, 2=Lords)",
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -111,7 +123,7 @@ def get_division(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("member-voting")
@@ -141,9 +153,15 @@ def get_member_voting_record(
     skip: int = typer.Option(0, "--skip", help="Number of records to skip (Lords only)"),
     take: int = typer.Option(25, "--take", help="Number of records to return (Lords only)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -172,7 +190,7 @@ def get_member_voting_record(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("grouped-by-party")
@@ -196,9 +214,15 @@ def get_divisions_grouped_by_party(
         None, "--include-teller", help="Include when member was a teller"
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -235,7 +259,7 @@ def get_divisions_grouped_by_party(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("search-count")
@@ -259,9 +283,15 @@ def get_divisions_search_count(
         None, "--include-teller", help="Include when member was a teller"
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(False, "--data-only", "-d", help="Return data only"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
     output_format: OutputFormat = typer.Option(
-        OutputFormat.JSON, "--format", "-f", help="Output format: json, table, markdown"
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
     ),
 ) -> None:
     """
@@ -298,4 +328,4 @@ def get_divisions_search_count(
         raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))

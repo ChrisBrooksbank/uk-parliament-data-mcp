@@ -42,8 +42,10 @@ def echo_utf8(text: str) -> None:
 def format_output(
     result: str,
     pretty: bool = False,
-    data_only: bool = False,
-    output_format: OutputFormat = OutputFormat.JSON,
+    data_only: bool = True,
+    output_format: OutputFormat = OutputFormat.AUTO,
+    fields: str | None = None,
+    raw: bool = False,
 ) -> str:
     """
     Format JSON output based on CLI flags.
@@ -52,10 +54,15 @@ def format_output(
         result: JSON string response from API (format: {"url": "...", "data": "..."})
         pretty: If True, pretty-print the JSON with indentation
         data_only: If True, extract only the "data" field from the wrapper
-        output_format: Output format (json, table, markdown)
+        output_format: Output format (json, table, markdown, csv, auto)
+        fields: Optional comma-separated field paths for column selection
+        raw: If True, output full wrapper JSON (overrides data_only and format)
 
     Returns:
         Formatted string ready for output
     """
-    formatter = CLIFormatter(output_format, pretty, data_only)
+    if raw:
+        data_only = False
+        output_format = OutputFormat.JSON
+    formatter = CLIFormatter(output_format, pretty, data_only, fields)
     return formatter.format_output(result)

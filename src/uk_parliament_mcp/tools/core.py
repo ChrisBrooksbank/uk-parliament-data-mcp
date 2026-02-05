@@ -108,6 +108,7 @@ def _get_cli_commands() -> list[GroupInfo]:
 
     return groups
 
+
 SYSTEM_PROMPT = """You are a helpful assistant that answers questions using only data from UK Parliament MCP servers.
 When the session begins, introduce yourself with a brief message such as:
 "Hello! I'm a parliamentary data assistant. I can help answer questions using official data from the UK Parliament MCP APIs. Just ask me something, and I'll fetch what I can - and I'll always show you which sources I used."
@@ -1023,9 +1024,7 @@ def register_tools(mcp: FastMCP) -> None:
         return _suggest_general_approach(query)
 
     @mcp.tool()
-    async def get_cli_reference(
-        group: str | None = None, search: str | None = None
-    ) -> str:
+    async def get_cli_reference(group: str | None = None, search: str | None = None) -> str:
         """Get comprehensive CLI command reference | cli commands, terminal, command line, parliament command | Use to discover available CLI commands and their parameters | Returns JSON with command groups, names, descriptions, and parameters
 
         This tool helps LLMs understand what CLI commands are available in the
@@ -1050,14 +1049,14 @@ def register_tools(mcp: FastMCP) -> None:
             for g in groups:
                 matching_cmds = []
                 for cmd in g.commands:
-                    searchable = f"{cmd.name} {cmd.description} {' '.join(p.name for p in cmd.parameters)}"
+                    searchable = (
+                        f"{cmd.name} {cmd.description} {' '.join(p.name for p in cmd.parameters)}"
+                    )
                     if search_lower in searchable.lower():
                         matching_cmds.append(cmd)
                 if matching_cmds:
                     filtered_groups.append(
-                        GroupInfo(
-                            name=g.name, description=g.description, commands=matching_cmds
-                        )
+                        GroupInfo(name=g.name, description=g.description, commands=matching_cmds)
                     )
             groups = filtered_groups
 
