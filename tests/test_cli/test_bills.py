@@ -139,7 +139,7 @@ class TestSearch:
             """Mock async get_result."""
             return mock_search_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "search", "Online Safety"])
 
         assert result.exit_code == 0
@@ -158,7 +158,7 @@ class TestSearch:
             """Mock async get_result."""
             return mock_search_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "search", "Test", "-d"])
 
         assert result.exit_code == 0

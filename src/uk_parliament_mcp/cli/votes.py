@@ -64,6 +64,9 @@ def search_divisions(
                 "queryParameters.startDate": start_date,
                 "queryParameters.endDate": end_date,
                 "queryParameters.divisionNumber": division_number,
+                "queryParameters.includeWhenMemberWasTeller": include_when_member_was_teller,
+                "queryParameters.skip": skip,
+                "queryParameters.take": take,
             },
         )
     elif house == HOUSE_LORDS:
@@ -139,19 +142,15 @@ def get_member_voting_record(
         None, "--search-term", help="Search term to filter divisions"
     ),
     include_when_member_was_teller: bool | None = typer.Option(
-        None, "--include-teller", help="Include when member was a teller (Lords only)"
+        None, "--include-teller", help="Include when member was a teller"
     ),
-    start_date: str | None = typer.Option(
-        None, "--start-date", help="Start date (YYYY-MM-DD, Lords only)"
-    ),
-    end_date: str | None = typer.Option(
-        None, "--end-date", help="End date (YYYY-MM-DD, Lords only)"
-    ),
+    start_date: str | None = typer.Option(None, "--start-date", help="Start date (YYYY-MM-DD)"),
+    end_date: str | None = typer.Option(None, "--end-date", help="End date (YYYY-MM-DD)"),
     division_number: int | None = typer.Option(
-        None, "--division-number", help="Specific division number (Lords only)"
+        None, "--division-number", help="Specific division number"
     ),
-    skip: int = typer.Option(0, "--skip", help="Number of records to skip (Lords only)"),
-    take: int = typer.Option(25, "--take", help="Number of records to return (Lords only)"),
+    skip: int = typer.Option(0, "--skip", help="Number of records to skip (pagination)"),
+    take: int = typer.Option(25, "--take", help="Number of records to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(
         True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
@@ -170,7 +169,19 @@ def get_member_voting_record(
     Returns all votes cast by the specified member in Commons or Lords divisions.
     """
     if house == HOUSE_COMMONS:
-        url = f"{COMMONS_VOTES_API_BASE}/divisions.json/membervoting?queryParameters.memberId={member_id}"
+        url = build_url(
+            f"{COMMONS_VOTES_API_BASE}/divisions.json/membervoting",
+            {
+                "queryParameters.memberId": member_id,
+                "queryParameters.searchTerm": search_term,
+                "queryParameters.includeWhenMemberWasTeller": include_when_member_was_teller,
+                "queryParameters.startDate": start_date,
+                "queryParameters.endDate": end_date,
+                "queryParameters.divisionNumber": division_number,
+                "queryParameters.skip": skip,
+                "queryParameters.take": take,
+            },
+        )
     elif house == HOUSE_LORDS:
         url = build_url(
             f"{LORDS_VOTES_API_BASE}/Divisions/membervoting",

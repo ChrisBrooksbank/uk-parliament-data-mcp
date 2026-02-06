@@ -43,6 +43,9 @@ def search_member(
 @app.command("get")
 def get_member(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
+    details_for_date: str | None = typer.Option(
+        None, "--details-for-date", help="Populate details as of this date (YYYY-MM-DD)"
+    ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(
         True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
@@ -60,7 +63,10 @@ def get_member(
 
     Returns detailed member data including roles, constituency, party, and career information.
     """
-    url = f"{MEMBERS_API_BASE}/Members/{member_id}"
+    url = build_url(
+        f"{MEMBERS_API_BASE}/Members/{member_id}",
+        {"detailsForDate": details_for_date},
+    )
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
@@ -308,6 +314,7 @@ def get_written_questions(
 @app.command("edms")
 def get_edms(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
+    page: int | None = typer.Option(None, "--page", help="Page number for pagination"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(
         True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
@@ -325,7 +332,10 @@ def get_edms(
 
     Returns EDMs to see what issues a member has supported.
     """
-    url = f"{MEMBERS_API_BASE}/Members/{member_id}/Edms"
+    url = build_url(
+        f"{MEMBERS_API_BASE}/Members/{member_id}/Edms",
+        {"page": page},
+    )
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
@@ -333,6 +343,7 @@ def get_edms(
 @app.command("contributions")
 def get_contributions(
     member_id: int = typer.Argument(..., help="Parliament member ID"),
+    page: int = typer.Option(1, "--page", help="Page number for pagination"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(
         True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
@@ -350,7 +361,10 @@ def get_contributions(
 
     Returns speeches, questions, and interventions made by a member.
     """
-    url = f"{MEMBERS_API_BASE}/Members/{member_id}/ContributionSummary?page=1"
+    url = build_url(
+        f"{MEMBERS_API_BASE}/Members/{member_id}/ContributionSummary",
+        {"page": page},
+    )
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
@@ -475,6 +489,9 @@ def search_members_advanced(
     membership_ended_since: str | None = typer.Option(
         None, "--membership-ended-since", help="Membership ended since (YYYY-MM-DD)"
     ),
+    membership_end_reason_ids: str | None = typer.Option(
+        None, "--end-reason-ids", help="Comma-separated reason IDs for leaving"
+    ),
     was_member_on_or_after: str | None = typer.Option(
         None, "--was-member-on-or-after", help="Was member on or after (YYYY-MM-DD)"
     ),
@@ -528,6 +545,7 @@ def search_members_advanced(
             "Gender": gender,
             "MembershipStartedSince": membership_started_since,
             "MembershipEnded.MembershipEndedSince": membership_ended_since,
+            "MembershipEnded.MembershipEndReasonIds": membership_end_reason_ids,
             "MembershipInDateRange.WasMemberOnOrAfter": was_member_on_or_after,
             "MembershipInDateRange.WasMemberOnOrBefore": was_member_on_or_before,
             "MembershipInDateRange.WasMemberOfHouse": was_member_of_house,
@@ -539,12 +557,17 @@ def search_members_advanced(
             "take": take,
         },
     )
-    result = run_async(paginate_request(url, MEMBERS_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, MEMBERS_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("constituencies")
 def list_constituencies(
+    search_text: str | None = typer.Option(
+        None, "--search", "-s", help="Filter constituencies by name"
+    ),
     skip: int | None = typer.Option(None, "--skip", help="Number to skip (pagination)"),
     take: int | None = typer.Option(None, "--take", help="Number to return (max 100)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
@@ -566,9 +589,11 @@ def list_constituencies(
     """
     url = build_url(
         f"{MEMBERS_API_BASE}/Location/Constituency/Search",
-        {"skip": skip, "take": take},
+        {"searchText": search_text, "skip": skip, "take": take},
     )
-    result = run_async(paginate_request(url, MEMBERS_PAGINATION, desired_total=take, start_skip=skip or 0))
+    result = run_async(
+        paginate_request(url, MEMBERS_PAGINATION, desired_total=take, start_skip=skip or 0)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -769,9 +794,12 @@ def get_answering_bodies(
 
     Returns department names, abbreviations, and policy responsibilities.
     """
-    url = build_url(f"{MEMBERS_API_BASE}/Reference/AnsweringBodies", {
-        "nameContains": name,
-    })
+    url = build_url(
+        f"{MEMBERS_API_BASE}/Reference/AnsweringBodies",
+        {
+            "nameContains": name,
+        },
+    )
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
@@ -796,9 +824,12 @@ def get_departments(
 
     Returns government structure and department information.
     """
-    url = build_url(f"{MEMBERS_API_BASE}/Reference/Departments", {
-        "nameContains": name,
-    })
+    url = build_url(
+        f"{MEMBERS_API_BASE}/Reference/Departments",
+        {
+            "nameContains": name,
+        },
+    )
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
@@ -830,6 +861,7 @@ def get_policy_interests(
 @app.command("lords-staff-interests")
 def search_lords_staff_interests(
     search_term: str = typer.Argument(..., help="Search term for staff names or interests"),
+    page: int | None = typer.Option(None, "--page", help="Page number for pagination"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(
         True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
@@ -847,6 +879,9 @@ def search_lords_staff_interests(
 
     Returns staff interests matching the search term.
     """
-    url = f"{MEMBERS_API_BASE}/LordsInterests/Staff?searchTerm={quote(search_term)}"
+    url = build_url(
+        f"{MEMBERS_API_BASE}/LordsInterests/Staff",
+        {"searchTerm": search_term, "page": page},
+    )
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))

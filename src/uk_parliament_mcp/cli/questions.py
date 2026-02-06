@@ -58,6 +58,18 @@ def search_early_day_motions(
     statuses: str | None = typer.Option(
         None, "--status", help="Status: 'Published' or 'Withdrawn'"
     ),
+    edm_ids: str | None = typer.Option(
+        None, "--edm-ids", help="Comma-separated EDM IDs to filter by"
+    ),
+    uin_with_amendment_suffix: str | None = typer.Option(
+        None, "--uin", help="EDM UIN with optional amendment suffix"
+    ),
+    current_status_date_start: str | None = typer.Option(
+        None, "--status-date-from", help="Current status date from (YYYY-MM-DD)"
+    ),
+    current_status_date_end: str | None = typer.Option(
+        None, "--status-date-to", help="Current status date to (YYYY-MM-DD)"
+    ),
     tabled_start_date: str | None = typer.Option(
         None, "--tabled-from", help="Tabled on/after (YYYY-MM-DD)"
     ),
@@ -97,6 +109,10 @@ def search_early_day_motions(
             "parameters.memberId": member_id,
             "parameters.includeSponsoredByMember": include_sponsored_by_member,
             "parameters.statuses": statuses,
+            "parameters.edmIds": edm_ids,
+            "parameters.uINWithAmendmentSuffix": uin_with_amendment_suffix,
+            "parameters.currentStatusDateStart": current_status_date_start,
+            "parameters.currentStatusDateEnd": current_status_date_end,
             "parameters.tabledStartDate": tabled_start_date,
             "parameters.tabledEndDate": tabled_end_date,
             "parameters.isPrayer": is_prayer,
@@ -105,7 +121,9 @@ def search_early_day_motions(
             "parameters.take": take,
         },
     )
-    result = run_async(paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -139,6 +157,18 @@ def get_early_day_motion(
 def search_oral_question_times(
     answering_date_start: str = typer.Argument(..., help="Start date (YYYY-MM-DD)"),
     answering_date_end: str = typer.Argument(..., help="End date (YYYY-MM-DD)"),
+    deadline_date_start: str | None = typer.Option(
+        None, "--deadline-from", help="Deadline start date (YYYY-MM-DD)"
+    ),
+    deadline_date_end: str | None = typer.Option(
+        None, "--deadline-to", help="Deadline end date (YYYY-MM-DD)"
+    ),
+    oral_question_time_id: int | None = typer.Option(
+        None, "--question-time-id", help="Filter by oral question time ID"
+    ),
+    answering_body_ids: str | None = typer.Option(
+        None, "--body-ids", help="Comma-separated answering body IDs"
+    ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(
         True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
@@ -157,16 +187,40 @@ def search_oral_question_times(
     Use to know when specific departments will answer questions or when
     particular topics will be discussed.
     """
-    url = f"{ORAL_QUESTIONS_API_BASE}/oralquestiontimes/list?parameters.answeringDateStart={quote(answering_date_start)}&parameters.answeringDateEnd={quote(answering_date_end)}"
+    url = build_url(
+        f"{ORAL_QUESTIONS_API_BASE}/oralquestiontimes/list",
+        {
+            "parameters.answeringDateStart": answering_date_start,
+            "parameters.answeringDateEnd": answering_date_end,
+            "parameters.deadlineDateStart": deadline_date_start,
+            "parameters.deadlineDateEnd": deadline_date_end,
+            "parameters.oralQuestionTimeId": oral_question_time_id,
+            "parameters.answeringBodyIds": answering_body_ids,
+        },
+    )
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("search-oral")
 def search_oral_questions(
-    answering_body_id: int = typer.Option(0, "--body-id", help="Department/body answering (0=all)"),
-    asking_member_id: int = typer.Option(0, "--member-id", help="Member asking (0=all)"),
-    question_status: str = typer.Option("", "--status", help="Question status (empty=all)"),
+    answering_body_id: int | None = typer.Option(
+        None, "--body-id", help="Department/body answering"
+    ),
+    asking_member_id: int | None = typer.Option(None, "--member-id", help="Member asking"),
+    question_status: str | None = typer.Option(None, "--status", help="Question status"),
+    question_type: str | None = typer.Option(
+        None, "--question-type", help="Question type: Substantive or Topical"
+    ),
+    answering_date_start: str | None = typer.Option(
+        None, "--answering-from", help="Answering date from (YYYY-MM-DD)"
+    ),
+    answering_date_end: str | None = typer.Option(
+        None, "--answering-to", help="Answering date to (YYYY-MM-DD)"
+    ),
+    oral_question_time_id: int | None = typer.Option(
+        None, "--question-time-id", help="Filter by oral question time ID"
+    ),
     skip: int = typer.Option(0, "--skip", help="Results to skip (pagination)"),
     take: int = typer.Option(20, "--take", help="Results to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
@@ -186,18 +240,23 @@ def search_oral_questions(
 
     Use to find oral questions by department, member, or status.
     """
-    params = []
-    if answering_body_id:
-        params.append(f"parameters.answeringBodyId={answering_body_id}")
-    if asking_member_id:
-        params.append(f"parameters.askingMemberId={asking_member_id}")
-    if question_status:
-        params.append(f"parameters.questionStatus={quote(question_status)}")
-    params.append(f"parameters.skip={skip}")
-    params.append(f"parameters.take={take}")
-    query = "&".join(params)
-    url = f"{ORAL_QUESTIONS_API_BASE}/oralquestions/list?{query}"
-    result = run_async(paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip))
+    url = build_url(
+        f"{ORAL_QUESTIONS_API_BASE}/oralquestions/list",
+        {
+            "parameters.answeringBodyId": answering_body_id,
+            "parameters.askingMemberId": asking_member_id,
+            "parameters.questionStatus": question_status,
+            "parameters.questionType": question_type,
+            "parameters.answeringDateStart": answering_date_start,
+            "parameters.answeringDateEnd": answering_date_end,
+            "parameters.oralQuestionTimeId": oral_question_time_id,
+            "parameters.skip": skip,
+            "parameters.take": take,
+        },
+    )
+    result = run_async(
+        paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -208,12 +267,43 @@ def search_written_questions(
     asking_member_id: int | None = typer.Option(
         None, "--asking-member", help="Filter by asking member ID"
     ),
+    answering_member_id: int | None = typer.Option(
+        None, "--answering-member", help="Filter by answering member ID"
+    ),
     answering_body_id: int | None = typer.Option(
         None, "--answering-body", help="Filter by department"
     ),
     answered: str | None = typer.Option(None, "--answered", help="Any/Answered/Unanswered"),
+    question_status: str | None = typer.Option(
+        None,
+        "--question-status",
+        help="Status: Tabled/Answered/Withdrawn/AnswerCorrected/HoldingAnswer",
+    ),
+    include_withdrawn: bool | None = typer.Option(
+        None, "--include-withdrawn", help="Include withdrawn questions"
+    ),
+    expand_member: bool | None = typer.Option(
+        None, "--expand-member", help="Expand member details in results"
+    ),
     tabled_from: str | None = typer.Option(None, "--tabled-from", help="Tabled from (YYYY-MM-DD)"),
     tabled_to: str | None = typer.Option(None, "--tabled-to", help="Tabled to (YYYY-MM-DD)"),
+    date_for_answer_from: str | None = typer.Option(
+        None, "--answer-due-from", help="Answer due from (YYYY-MM-DD)"
+    ),
+    date_for_answer_to: str | None = typer.Option(
+        None, "--answer-due-to", help="Answer due to (YYYY-MM-DD)"
+    ),
+    answered_from: str | None = typer.Option(
+        None, "--answered-from", help="Answered from (YYYY-MM-DD)"
+    ),
+    answered_to: str | None = typer.Option(None, "--answered-to", help="Answered to (YYYY-MM-DD)"),
+    corrected_from: str | None = typer.Option(
+        None, "--corrected-from", help="Corrected from (YYYY-MM-DD)"
+    ),
+    corrected_to: str | None = typer.Option(
+        None, "--corrected-to", help="Corrected to (YYYY-MM-DD)"
+    ),
+    uin: str | None = typer.Option(None, "--uin", help="Unique Identification Number"),
     house: str | None = typer.Option(None, "--house", help="Commons/Lords/Bicameral"),
     skip: int = typer.Option(0, "--skip", help="Results to skip (pagination)"),
     take: int = typer.Option(20, "--take", help="Results to return"),
@@ -240,16 +330,29 @@ def search_written_questions(
         {
             "searchTerm": search_term,
             "askingMemberId": asking_member_id,
+            "answeringMemberId": answering_member_id,
             "answeringBodyId": answering_body_id,
             "answered": answered,
+            "questionStatus": question_status,
+            "includeWithdrawn": include_withdrawn,
+            "expandMember": expand_member,
             "tabledWhenFrom": tabled_from,
             "tabledWhenTo": tabled_to,
+            "dateForAnswerWhenFrom": date_for_answer_from,
+            "dateForAnswerWhenTo": date_for_answer_to,
+            "answeredWhenFrom": answered_from,
+            "answeredWhenTo": answered_to,
+            "correctedWhenFrom": corrected_from,
+            "correctedWhenTo": corrected_to,
+            "uIN": uin,
             "house": house,
             "skip": skip,
             "take": take,
         },
     )
-    result = run_async(paginate_request(url, WRITTEN_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, WRITTEN_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -358,7 +461,9 @@ def search_written_statements(
             "take": take,
         },
     )
-    result = run_async(paginate_request(url, WRITTEN_STATEMENTS_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, WRITTEN_STATEMENTS_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -459,5 +564,7 @@ def get_daily_reports(
             "take": take,
         },
     )
-    result = run_async(paginate_request(url, DAILY_REPORTS_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, DAILY_REPORTS_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
