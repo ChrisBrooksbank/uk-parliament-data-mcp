@@ -1,7 +1,7 @@
 [project]
 name = "uk-parliament-mcp"
 dynamic = ["version"]
-description = "UK Parliament MCP Server - bridges AI assistants with UK Parliament APIs"
+description = "(Unofficial) UK Parliament MCP Server - bridges AI assistants with UK Parliament APIs"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
@@ -16,6 +16,11 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
+
+[project.urls]
+Homepage = "https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab"
+Repository = "https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab"
+Issues = "https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/issues"
 
 dependencies = [
     "mcp>=1.0.0",

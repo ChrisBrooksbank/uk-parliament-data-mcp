@@ -119,10 +119,12 @@ def callback(
     ),
 ) -> None:
     """
-    UK Parliament CLI - query Parliament APIs from the terminal.
+    UK Parliament CLI (Unofficial) - query Parliament APIs from the terminal.
 
     Access MPs, bills, votes, committees, Hansard, and more.
-    All data sourced from official parliament.uk APIs.
+    Data sourced from publicly available parliament.uk APIs.
+    This tool is not affiliated with or endorsed by UK Parliament.
+    https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab
     """
     # Store global flags in typer context for subcommands to access
     ctx = typer.Context

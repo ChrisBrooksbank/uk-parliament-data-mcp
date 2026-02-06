@@ -5,7 +5,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![CI](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/actions/workflows/ci.yml)
 
-An MCP (Model Context Protocol) server that gives AI assistants access to official UK Parliament data. Query MPs, Lords, bills, votes, committees, debates, and more through AI assistants like Claude Desktop and VS Code Copilot. Also includes a CLI for terminal access.
+> **Disclaimer:** This is an unofficial, independent project. It is not created, endorsed, or supported by UK Parliament. All data is sourced from the publicly available [parliament.uk APIs](https://developer.parliament.uk/).
+>
+> GitHub: [ChrisBrooksbank/uk-parliament-mcp-lab](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab)
+
+An MCP (Model Context Protocol) server that gives AI assistants access to UK Parliament data. Query MPs, Lords, bills, votes, committees, debates, and more through AI assistants like Claude Desktop and VS Code Copilot. Also includes a CLI for terminal access.
 
 ## MCP Server for AI Assistants
 

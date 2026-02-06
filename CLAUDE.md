@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-UK Parliament MCP Server - A Model Context Protocol server that bridges AI assistants with official UK Parliament data APIs. Built with Python 3.11+, it provides 161 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
+UK Parliament MCP Server (Unofficial) - A community-built Model Context Protocol server that bridges AI assistants with UK Parliament data APIs. Not affiliated with or endorsed by UK Parliament. Built with Python 3.11+, it provides 161 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
 
 ## Installation
 
