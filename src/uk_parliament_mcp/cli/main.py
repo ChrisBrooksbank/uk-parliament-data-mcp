@@ -24,7 +24,8 @@ from uk_parliament_mcp.cli import (
     votes,
     watch,
 )
-from uk_parliament_mcp.cli.utils import echo_utf8
+from uk_parliament_mcp.cli.formatters import OutputFormat
+from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async, should_render_rich
 
 app = typer.Typer(
     name="parliament",
@@ -103,6 +104,44 @@ def reference(
         return
 
     _format_overview(groups, console)
+
+
+@app.command("my-mp")
+def my_mp(
+    postcode: str = typer.Argument(..., help="UK postcode (e.g., 'SW1A 1AA', 'N1 9GU')"),
+    votes: str | None = typer.Option(None, "--votes", "-v", help="Filter votes by topic keyword"),
+    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
+    data_only: bool = typer.Option(
+        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+    ),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
+    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
+    fields: str | None = typer.Option(
+        None, "--fields", help="Comma-separated field paths for columns"
+    ),
+) -> None:
+    """
+    Find your MP by postcode.
+
+    Looks up your constituency from a UK postcode, finds the current MP,
+    and shows their biography, registered interests, latest election result,
+    and recent votes. Use --votes to filter votes by topic.
+
+    Examples:
+      parliament my-mp "SW1A 1AA"
+      parliament my-mp "N1 9GU" --votes climate
+      parliament my-mp "SW1A 1AA" --format json | jq '.basic_info'
+    """
+    from uk_parliament_mcp.cli.composite import _get_my_mp_async
+    from uk_parliament_mcp.cli.renderers import render_my_mp
+
+    result = run_async(_get_my_mp_async(postcode, votes))
+    if should_render_rich(output_format, raw):
+        render_my_mp(result)
+    else:
+        echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.callback()

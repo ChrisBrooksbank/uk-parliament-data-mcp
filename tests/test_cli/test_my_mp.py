@@ -73,13 +73,13 @@ class TestMyMp:
                             "name": "Nickie Aiken",
                             "party": {"name": "Conservative"},
                             "votes": 12345,
-                            "voteShare": 35.2,
+                            "voteShare": 0.352,
                         },
                         {
                             "name": "Other Candidate",
                             "party": {"name": "Labour"},
                             "votes": 8392,
-                            "voteShare": 23.9,
+                            "voteShare": 0.239,
                         },
                     ],
                 }
