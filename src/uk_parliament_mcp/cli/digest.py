@@ -16,7 +16,6 @@ from uk_parliament_mcp.cli.pagination import (
     HANSARD_PAGINATION,
     LORDS_VOTES_PAGINATION,
     ORAL_QUESTIONS_PAGINATION,
-    WRITTEN_QUESTIONS_PAGINATION,
     WRITTEN_STATEMENTS_PAGINATION,
     paginate_request,
 )
@@ -261,12 +260,17 @@ async def _fetch_edms(
 async def _fetch_written_qs(
     start_date: str, end_date: str
 ) -> dict[str, Any]:
-    """Fetch written questions for the date range."""
+    """Fetch written questions for the date range.
+
+    Uses a higher cap than other sections because the digest groups by
+    department (not individual rows), so we need all items for accurate counts.
+    A busy day can have 200+ written questions.
+    """
     url = build_url(
         f"{WRITTEN_QUESTIONS_API_BASE}/writtenquestions/questions",
-        {"tabledWhenFrom": start_date, "tabledWhenTo": end_date},
+        {"tabledWhenFrom": start_date, "tabledWhenTo": end_date, "take": 500},
     )
-    data = _parse_api_response(await paginate_request(url, WRITTEN_QUESTIONS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
+    data = _parse_api_response(await get_result(url))
     return data if data is not None else {}
 
 

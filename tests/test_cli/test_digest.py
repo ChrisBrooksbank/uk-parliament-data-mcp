@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import json
 from datetime import date
+from io import StringIO
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from rich.console import Console
 from rich.panel import Panel
 
 from uk_parliament_mcp.cli.digest import (
@@ -245,7 +247,7 @@ class TestFetchers:
         """_fetch_written_qs returns parsed written questions."""
         wqs = {"results": [{"questionText": "What steps...", "dateAnswered": "2025-01-15"}]}
         mock_resp = _mock_api_response(wqs)
-        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_written_qs("2025-01-15", "2025-01-15")
             assert "results" in result
 
@@ -540,45 +542,66 @@ class TestEdmsSectionRenderer:
 
 
 class TestWrittenQsSectionRenderer:
-    """Tests for _render_written_qs_section."""
+    """Tests for _render_written_qs_section (grouped by department)."""
 
     def test_no_data(self) -> None:
         assert _render_written_qs_section(None) is None
 
-    def test_with_questions(self) -> None:
+    def test_groups_by_department(self) -> None:
+        """Questions are grouped by answeringBodyName with correct counts."""
         data = {"results": [
-            {"uin": "12345", "questionText": "Q1", "dateAnswered": "2025-01-15", "answeringBodyName": "Treasury", "id": 1},
-            {"uin": "12346", "questionText": "Q2", "dateAnswered": None, "answeringBodyName": "Home Office", "id": 2},
-            {"uin": "12347", "questionText": "Q3", "dateAnswered": "2025-01-16", "answeringBodyName": "MoD", "id": 3},
+            {"uin": "12345", "questionText": "Q1", "dateAnswered": "2025-01-15", "answeringBodyName": "Treasury", "answeringBodyId": 14, "id": 1},
+            {"uin": "12346", "questionText": "Q2", "dateAnswered": None, "answeringBodyName": "Home Office", "answeringBodyId": 11, "id": 2},
+            {"uin": "12347", "questionText": "Q3", "dateAnswered": "2025-01-16", "answeringBodyName": "Treasury", "answeringBodyId": 14, "id": 3},
+            {"uin": "12348", "questionText": "Q4", "dateAnswered": None, "answeringBodyName": "Treasury", "answeringBodyId": 14, "id": 4},
         ]}
-        panel = _render_written_qs_section(data)
+        panel = _render_written_qs_section(data, start_date="2025-01-15", end_date="2025-01-15")
         assert isinstance(panel, Panel)
+        # Treasury has 3 questions (1 tabled, 2 answered), Home Office has 1 (1 tabled)
+        # Subtitle should mention 4 total, 2 answered, 2 departments
+        assert "4 total" in str(panel.subtitle)
+        assert "2 answered" in str(panel.subtitle)
+        assert "2 departments" in str(panel.subtitle)
 
-    def test_detail_table_with_value_wrapper(self) -> None:
-        """Written questions wrapped in 'value' objects are rendered correctly."""
+    def test_value_wrapper(self) -> None:
+        """Written questions wrapped in 'value' objects are grouped correctly."""
         data = {"results": [
-            {"value": {"uin": "900001", "questionText": "What steps...", "dateAnswered": "2025-01-15", "answeringBodyName": "Treasury", "id": 1234}},
-            {"value": {"uin": "900002", "questionText": "Will the minister...", "dateAnswered": None, "answeringBodyName": "MoD", "id": 5678}},
+            {"value": {"uin": "900001", "questionText": "What steps...", "dateAnswered": "2025-01-15", "answeringBodyName": "Treasury", "answeringBodyId": 14, "id": 1234}},
+            {"value": {"uin": "900002", "questionText": "Will the minister...", "dateAnswered": None, "answeringBodyName": "MoD", "answeringBodyId": 10, "id": 5678}},
         ]}
         panel = _render_written_qs_section(data)
         assert isinstance(panel, Panel)
+        assert "2 departments" in str(panel.subtitle)
 
-    def test_boilerplate_stripped(self) -> None:
-        """'To ask the X,' boilerplate is stripped from question text."""
+    def test_sorted_by_total_descending(self) -> None:
+        """Departments are sorted by total count descending."""
         data = {"results": [
-            {"uin": "900001", "questionText": "To ask the Chancellor of the Exchequer, what steps she has taken", "answeringBodyName": "Treasury", "id": 1},
+            {"uin": "1", "answeringBodyName": "Small", "answeringBodyId": 1, "id": 1},
+            {"uin": "2", "answeringBodyName": "Big", "answeringBodyId": 2, "id": 2},
+            {"uin": "3", "answeringBodyName": "Big", "answeringBodyId": 2, "id": 3},
+            {"uin": "4", "answeringBodyName": "Big", "answeringBodyId": 2, "id": 4},
         ]}
         panel = _render_written_qs_section(data)
         assert isinstance(panel, Panel)
+        # Render to string to check ordering
+        buf = StringIO()
+        Console(file=buf, force_terminal=False, width=80).print(panel)
+        rendered = buf.getvalue()
+        big_pos = rendered.find("Big")
+        small_pos = rendered.find("Small")
+        assert big_pos < small_pos
 
-    def test_long_question_text_truncated(self) -> None:
-        """Long question text is truncated."""
-        long_text = "A" * 200
-        data = {"results": [
-            {"uin": "900001", "questionText": long_text, "dateAnswered": None, "answeringBodyName": "Y", "id": 1},
-        ]}
+    def test_api_total_in_subtitle(self) -> None:
+        """totalResults from API is used in subtitle when available."""
+        data = {
+            "results": [
+                {"uin": "1", "answeringBodyName": "Treasury", "answeringBodyId": 14, "id": 1},
+            ],
+            "totalResults": 157,
+        }
         panel = _render_written_qs_section(data)
         assert isinstance(panel, Panel)
+        assert "157 total" in str(panel.subtitle)
 
 
 class TestRenderDigest:
