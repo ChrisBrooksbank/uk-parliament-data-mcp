@@ -144,6 +144,11 @@ _global_fields: str | None = None
 
 def main() -> None:
     """Entry point for the CLI application."""
+    # Disable response pruning — it's for MCP context windows, CLI users want full data
+    from uk_parliament_mcp.pruning import disable_pruning
+
+    disable_pruning()
+
     try:
         rv = app(standalone_mode=False)
         sys.exit(rv or 0)

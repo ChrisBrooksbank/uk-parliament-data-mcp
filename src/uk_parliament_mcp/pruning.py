@@ -15,6 +15,20 @@ from typing import Any
 PRUNING_ENABLED = os.environ.get("PARLIAMENT_PRUNING", "true").lower() != "false"
 MAX_ARRAY_SIZE = int(os.environ.get("PARLIAMENT_MAX_ARRAY", "20"))
 
+# Runtime override — set to True to disable pruning (used by CLI)
+_force_disabled = False
+
+
+def is_pruning_enabled() -> bool:
+    """Check if pruning is enabled, respecting runtime overrides."""
+    return PRUNING_ENABLED and not _force_disabled
+
+
+def disable_pruning() -> None:
+    """Disable pruning at runtime (e.g. for CLI usage)."""
+    global _force_disabled  # noqa: PLW0603
+    _force_disabled = True
+
 
 def prune_response(response_str: str) -> str:
     """Prune a JSON response string to reduce size.

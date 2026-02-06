@@ -134,9 +134,9 @@ class ParliamentHTTPClient:
                         data = response.text
                     logger.info("Successfully retrieved data from %s", url)
                     response_str = json.dumps({"url": url, "data": data})
-                    from uk_parliament_mcp.pruning import PRUNING_ENABLED, prune_response
+                    from uk_parliament_mcp.pruning import is_pruning_enabled, prune_response
 
-                    return prune_response(response_str) if PRUNING_ENABLED else response_str
+                    return prune_response(response_str) if is_pruning_enabled() else response_str
 
                 if _is_retryable_status(response.status_code):
                     logger.warning(
