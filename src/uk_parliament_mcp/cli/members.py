@@ -751,6 +751,7 @@ def get_opposition_posts(
 
 @app.command("answering-bodies")
 def get_answering_bodies(
+    name: str | None = typer.Option(None, "--name", "-n", help="Filter by name (partial match)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(
         True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
@@ -768,13 +769,16 @@ def get_answering_bodies(
 
     Returns department names, abbreviations, and policy responsibilities.
     """
-    url = f"{MEMBERS_API_BASE}/Reference/AnsweringBodies"
+    url = build_url(f"{MEMBERS_API_BASE}/Reference/AnsweringBodies", {
+        "nameContains": name,
+    })
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("departments")
 def get_departments(
+    name: str | None = typer.Option(None, "--name", "-n", help="Filter by name (partial match)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(
         True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
@@ -792,7 +796,9 @@ def get_departments(
 
     Returns government structure and department information.
     """
-    url = f"{MEMBERS_API_BASE}/Reference/Departments"
+    url = build_url(f"{MEMBERS_API_BASE}/Reference/Departments", {
+        "nameContains": name,
+    })
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 

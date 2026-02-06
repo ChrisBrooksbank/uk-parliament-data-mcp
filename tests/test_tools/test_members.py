@@ -120,6 +120,21 @@ class TestGetAnsweringBodies:
             call_url = mock.call_args[0][0]
             assert call_url == f"{MEMBERS_API_BASE}/Reference/AnsweringBodies"
 
+    @pytest.mark.asyncio
+    async def test_with_name_contains(self):
+        """get_answering_bodies includes nameContains param when provided."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool("get_answering_bodies", {"name_contains": "Treasury"})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "nameContains=Treasury" in call_url
+
 
 class TestGetMemberById:
     """Tests for get_member_by_id tool."""
@@ -210,6 +225,21 @@ class TestGetDepartments:
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
             assert call_url == f"{MEMBERS_API_BASE}/Reference/Departments"
+
+    @pytest.mark.asyncio
+    async def test_with_name_contains(self):
+        """get_departments includes nameContains param when provided."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool("get_departments", {"name_contains": "Treasury"})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "nameContains=Treasury" in call_url
 
 
 class TestGetContributions:

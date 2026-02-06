@@ -25,13 +25,20 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def get_answering_bodies() -> str:
+    async def get_answering_bodies(
+        name_contains: str | None = None,
+    ) -> str:
         """Get government departments and their parliamentary responsibilities | government departments, ministries, answering bodies, policy areas, department structure, who answers questions | Use for understanding government structure, finding responsible departments, or determining who answers questions on specific topics | Returns department names, abbreviations, and policy responsibilities
+
+        Args:
+            name_contains: Filter by partial name match. Example: 'Treasury', 'Health'.
 
         Returns:
             Department names, abbreviations, and policy responsibilities.
         """
-        url = f"{MEMBERS_API_BASE}/Reference/AnsweringBodies"
+        url = build_url(f"{MEMBERS_API_BASE}/Reference/AnsweringBodies", {
+            "nameContains": name_contains,
+        })
         return await get_result(url)
 
     @mcp.tool()
@@ -74,13 +81,20 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def get_departments() -> str:
+    async def get_departments(
+        name_contains: str | None = None,
+    ) -> str:
         """Get list of all government departments. Use when you need to know the structure of government or which department handles specific policy areas.
+
+        Args:
+            name_contains: Filter by partial name match. Example: 'Treasury', 'Health'.
 
         Returns:
             List of all government departments.
         """
-        url = f"{MEMBERS_API_BASE}/Reference/Departments"
+        url = build_url(f"{MEMBERS_API_BASE}/Reference/Departments", {
+            "nameContains": name_contains,
+        })
         return await get_result(url)
 
     @mcp.tool()
