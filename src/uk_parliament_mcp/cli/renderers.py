@@ -609,7 +609,7 @@ def render_mp_profile(result_json: str) -> None:
         vote_items = voting.get("items", [])
         if vote_items and isinstance(vote_items, list):
             table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
-            table.add_column("Division", style="cyan", no_wrap=True)
+            table.add_column("Div ID", style="cyan", no_wrap=True)
             table.add_column("Title", ratio=1)
             table.add_column("Date", width=10)
             table.add_column("Vote", width=10)
@@ -617,7 +617,7 @@ def render_mp_profile(result_json: str) -> None:
                 if isinstance(item, dict):
                     value = item.get("value", item)
                     if isinstance(value, dict):
-                        div_num = value.get("divisionNumber", value.get("id", value.get("divisionId", "")))
+                        div_num = value.get("id", value.get("divisionId", value.get("divisionNumber", "")))
                         div_id = value.get("id", value.get("divisionId", ""))
                         title = str(value.get("title", value.get("Title", "")))
                         date = str(value.get("date", value.get("Date", "")))[:10]
@@ -1088,7 +1088,7 @@ def render_my_mp(result_json: str) -> None:
         vote_items = voting.get("items", [])
         if vote_items and isinstance(vote_items, list):
             table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
-            table.add_column("Division", style="cyan", no_wrap=True)
+            table.add_column("Div ID", style="cyan", no_wrap=True)
             table.add_column("Title", ratio=1)
             table.add_column("Date", width=10)
             table.add_column("Vote", width=10)
@@ -1096,7 +1096,7 @@ def render_my_mp(result_json: str) -> None:
                 if isinstance(item, dict):
                     value = item.get("value", item)
                     if isinstance(value, dict):
-                        div_num = value.get("divisionNumber", value.get("id", value.get("divisionId", "")))
+                        div_num = value.get("id", value.get("divisionId", value.get("divisionNumber", "")))
                         div_id = value.get("id", value.get("divisionId", ""))
                         title = str(value.get("title", value.get("Title", "")))
                         date = str(value.get("date", value.get("Date", "")))[:10]
