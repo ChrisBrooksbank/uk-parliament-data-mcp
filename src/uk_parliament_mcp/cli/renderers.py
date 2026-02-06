@@ -1637,11 +1637,17 @@ def _render_edms_section(data: Any) -> Panel | None:
     return Panel(table, title="[bold]Early Day Motions[/bold]", border_style="dim")
 
 
-def _render_written_qs_section(data: Any) -> Panel | None:
-    """Render written questions with detail table.
+def _render_written_qs_section(
+    data: Any,
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> Panel | None:
+    """Render written questions grouped by answering body.
 
     Args:
         data: Parsed written questions response.
+        start_date: Start date (YYYY-MM-DD) for Parliament website links.
+        end_date: End date (YYYY-MM-DD) for Parliament website links.
 
     Returns:
         Rich Panel, or None if no data.
@@ -1653,47 +1659,72 @@ def _render_written_qs_section(data: Any) -> Panel | None:
     if not items:
         return None
 
-    # Count tabled vs answered — items may be wrapped in "value"
-    total = len(items)
-    answered = 0
+    # Group by answering body — items may be wrapped in "value"
+    bodies: dict[str, dict[str, Any]] = {}
+    total_answered = 0
     for q in items:
-        if isinstance(q, dict):
-            val = q.get("value", q)
-            if (isinstance(val, dict) and val.get("dateAnswered")) or q.get("dateAnswered"):
-                answered += 1
+        if not isinstance(q, dict):
+            continue
+        val = q.get("value", q)
+        if not isinstance(val, dict):
+            val = q
+        body_name = str(val.get("answeringBodyName", "Unknown"))
+        body_id = val.get("answeringBodyId", "")
+        is_answered = bool(val.get("dateAnswered"))
+        if is_answered:
+            total_answered += 1
+        if body_name not in bodies:
+            bodies[body_name] = {"id": body_id, "tabled": 0, "answered": 0}
+        if is_answered:
+            bodies[body_name]["answered"] += 1
+        else:
+            bodies[body_name]["tabled"] += 1
 
-    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
-    table.add_column("UIN", width=8, style="cyan", no_wrap=True)
-    table.add_column("To", ratio=1)
-    table.add_column("Question", ratio=3)
-    table.add_column("Status", width=10)
-
-    for item in items[:20]:
-        if isinstance(item, dict):
-            val = item.get("value", item)
-            if not isinstance(val, dict):
-                val = item
-            uin = str(val.get("uin", val.get("UIN", "")))
-            body = str(val.get("answeringBodyName", ""))
-            question = str(val.get("questionText", val.get("heading", "")))
-            # Strip "To ask the X," boilerplate prefix
-            question = re.sub(r"^To ask the .+?,\s*", "", question, count=1)
-            # Truncate long questions
-            if len(question) > 120:
-                question = question[:117] + "..."
-            q_id = val.get("id", val.get("Id", ""))
-            uin_text = Text(uin)
-            if q_id:
-                uin_text.stylize(
-                    f"link https://questions-statements.parliament.uk/written-questions/detail/{q_id}"
-                )
-            status = "Answered" if val.get("dateAnswered") else "Tabled"
-            table.add_row(uin_text, body, question, status)
-
-    if table.row_count == 0:
+    if not bodies:
         return None
 
-    subtitle = f"[dim]{total} tabled | {answered} answered[/dim]"
+    # Sort by total count descending
+    sorted_bodies = sorted(
+        bodies.items(),
+        key=lambda x: x[1]["tabled"] + x[1]["answered"],
+        reverse=True,
+    )
+
+    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+    table.add_column("Department", ratio=3)
+    table.add_column("Tabled", width=7, justify="right")
+    table.add_column("Ans'd", width=7, justify="right")
+    table.add_column("Total", width=7, justify="right", style="bold")
+
+    for body_name, info in sorted_bodies:
+        dept_total = info["tabled"] + info["answered"]
+        dept_text = Text(body_name)
+        if info["id"] and start_date:
+            # Convert YYYY-MM-DD to DD/MM/YYYY for Parliament website
+            def _uk_date(iso: str) -> str:
+                parts = iso.split("-")
+                return f"{parts[2]}%2F{parts[1]}%2F{parts[0]}" if len(parts) == 3 else iso
+
+            d_from = _uk_date(start_date)
+            d_to = _uk_date(end_date or start_date)
+            link = (
+                f"https://questions-statements.parliament.uk/written-questions"
+                f"?DateFrom={d_from}&DateTo={d_to}"
+                f"&AnsweringBodyId={info['id']}"
+                f"&House=Bicameral&Answered=Any&Expanded=true"
+            )
+            dept_text.stylize(f"link {link}")
+        table.add_row(dept_text, str(info["tabled"]), str(info["answered"]), str(dept_total))
+
+    # Use API-reported total if available, else fall back to fetched count
+    api_total = len(items)
+    if isinstance(data, dict) and isinstance(data.get("totalResults"), int):
+        api_total = data["totalResults"]
+
+    subtitle = (
+        f"[dim]{api_total} total | {total_answered} answered"
+        f" | {len(bodies)} departments[/dim]"
+    )
     return Panel(table, title="[bold]Written Questions[/bold]", subtitle=subtitle, border_style="dim")
 
 
@@ -1756,7 +1787,11 @@ def render_digest(result_json: str) -> None:
         console.print(panel)
 
     # Written questions
-    panel = _render_written_qs_section(data.get("written_questions"))
+    panel = _render_written_qs_section(
+        data.get("written_questions"),
+        start_date=data.get("start_date"),
+        end_date=data.get("end_date"),
+    )
     if panel:
         console.print(panel)
 
@@ -1769,269 +1804,3 @@ def render_digest(result_json: str) -> None:
     has_any = any(_section_has_data(data.get(s)) for s in sections)
     if not has_any:
         console.print("[dim]No parliamentary activity found for this date/period.[/dim]")
-
-
-# ---------------------------------------------------------------------------
-# Universal search renderers
-# ---------------------------------------------------------------------------
-
-
-def _render_search_source_table(
-    source_name: str, items: list[dict[str, Any]]
-) -> Table | None:
-    """Build a Rich Table for a single search source's items.
-
-    Args:
-        source_name: The source key (e.g. "members", "bills").
-        items: List of item dicts from the source.
-
-    Returns:
-        Rich Table, or None if items is empty.
-    """
-    if not items:
-        return None
-
-    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
-
-    if source_name == "members":
-        table.add_column("Name", ratio=2)
-        table.add_column("Party", ratio=1)
-        table.add_column("Constituency", ratio=1)
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            name = str(item.get("nameDisplayAs", item.get("nameFullTitle", "")))
-            party = ""
-            party_info = item.get("latestParty")
-            if isinstance(party_info, dict):
-                party = party_info.get("name", "")
-            constituency = ""
-            membership = item.get("latestHouseMembership")
-            if isinstance(membership, dict):
-                constituency = membership.get("membershipFrom", "")
-            table.add_row(name, party, constituency)
-
-    elif source_name == "bills":
-        table.add_column("Title", ratio=2)
-        table.add_column("Stage", ratio=1)
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            title = str(item.get("shortTitle", item.get("longTitle", "")))
-            stage = ""
-            stage_info = item.get("currentStage")
-            if isinstance(stage_info, dict):
-                stage = stage_info.get("description", stage_info.get("stageName", ""))
-            elif isinstance(stage_info, str):
-                stage = stage_info
-            table.add_row(title, stage)
-
-    elif source_name in ("commons-votes", "lords-votes"):
-        table.add_column("Title", ratio=2)
-        table.add_column("Date", width=10)
-        table.add_column("Ayes", width=6, justify="right")
-        table.add_column("Noes", width=6, justify="right")
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            title = str(item.get("Title", item.get("title", "")))
-            dt = str(item.get("Date", item.get("date", "")))[:10]
-            ayes = str(item.get("AyeCount", item.get("ayeCount", item.get("AuthorityCount", ""))))
-            noes = str(item.get("NoCount", item.get("noCount", item.get("NonAuthorityCount", ""))))
-            table.add_row(title, dt, ayes, noes)
-
-    elif source_name == "hansard":
-        table.add_column("Title", ratio=2)
-        table.add_column("House", width=8)
-        table.add_column("Date", width=10)
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            title = str(item.get("Title", item.get("title", "")))
-            house = str(item.get("House", item.get("house", "")))
-            dt = str(item.get("SittingDate", item.get("MemberFieldsSittingDate", "")))[:10]
-            table.add_row(title, house, dt)
-
-    elif source_name in ("written-questions", "written-statements"):
-        table.add_column("Title", ratio=2)
-        table.add_column("Member", ratio=1)
-        table.add_column("Body", ratio=1)
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            val = item.get("value", item) if isinstance(item, dict) else item
-            if not isinstance(val, dict):
-                val = item
-            title = str(val.get("title", val.get("heading", "")))
-            member = str(val.get("askingMemberName", val.get("memberName", val.get("dateMade", ""))))
-            body = str(val.get("answeringBodyName", ""))
-            table.add_row(title, member, body)
-
-    elif source_name == "edms":
-        table.add_column("Title", ratio=2)
-        table.add_column("Sponsor", ratio=1)
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            title = str(item.get("Title", item.get("title", "")))
-            sponsor = ""
-            ps = item.get("PrimarySponsor", item.get("primarySponsor"))
-            if isinstance(ps, dict):
-                sponsor = ps.get("Name", ps.get("name", ""))
-            elif isinstance(ps, str):
-                sponsor = ps
-            table.add_row(title, sponsor)
-
-    elif source_name == "committees":
-        table.add_column("Name", ratio=2)
-        table.add_column("House", width=8)
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            name = str(item.get("name", item.get("Name", "")))
-            house = ""
-            if item.get("isCommons") is True:
-                house = "Commons"
-            elif item.get("isCommons") is False:
-                house = "Lords"
-            table.add_row(name, house)
-
-    elif source_name == "treaties":
-        table.add_column("Name", ratio=2)
-        table.add_column("Status", ratio=1)
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            name = str(item.get("Name", item.get("name", "")))
-            status = str(item.get("LayingBodyDepartment", item.get("status", "")))
-            table.add_row(name, status)
-
-    elif source_name == "statutory-instruments":
-        table.add_column("Name", ratio=2)
-        table.add_column("Type", ratio=1)
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            name = str(item.get("Name", item.get("name", "")))
-            si_type = str(item.get("StatutoryInstrumentType", item.get("type", "")))
-            table.add_row(name, si_type)
-
-    elif source_name == "erskine-may":
-        table.add_column("Title", ratio=2)
-        table.add_column("Section", ratio=1)
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            title = str(item.get("Title", item.get("title", "")))
-            section = str(item.get("SectionTitle", item.get("sectionTitle", "")))
-            table.add_row(title, section)
-
-    else:
-        # Fallback: show raw keys
-        table.add_column("Item", ratio=1)
-        for item in items:
-            table.add_row(str(item)[:120])
-
-    return table if table.row_count > 0 else None
-
-
-def render_search(result_json: str, counts_only: bool = False) -> None:
-    """Render universal search results with rich formatting.
-
-    Args:
-        result_json: JSON string from _universal_search_async.
-        counts_only: If True, only show summary counts.
-    """
-    try:
-        data = json.loads(result_json)
-    except (json.JSONDecodeError, TypeError):
-        Console().print("[red]Failed to parse search data[/red]")
-        return
-
-    console = Console()
-
-    query = data.get("query", "")
-    sources_queried = data.get("sources_queried", 0)
-    summary = data.get("summary", {})
-
-    # Compute total results across all sources
-    total_results = sum(
-        (s.get("total") or s.get("returned", 0)) for s in summary.values()
-    )
-
-    # Header panel
-    header_text = Text()
-    header_text.append(f'Parliament Search: "{query}"', style="bold white")
-    header_text.append(
-        f"\n{sources_queried} sources queried | {total_results} total results",
-        style="dim",
-    )
-    console.print(Panel(header_text, title="[bold]Universal Search[/bold]", border_style="blue"))
-
-    if counts_only:
-        # Summary table
-        table = Table(show_header=True, header_style="bold", expand=True)
-        table.add_column("Source", ratio=2)
-        table.add_column("Results", width=10, justify="right")
-        table.add_column("Status", ratio=1)
-        for name, info in summary.items():
-            total = info.get("total")
-            returned = info.get("returned", 0)
-            error = info.get("error")
-            count_str = str(total if total is not None else returned)
-            if error:
-                status = Text(str(error), style="red")
-            elif total is not None and total > 0:
-                status = Text("OK", style="green")
-            else:
-                status = Text("0 results", style="dim")
-            table.add_row(name, count_str, status)
-        console.print(Panel(table, title="[bold]Summary[/bold]", border_style="dim"))
-        return
-
-    # Per-source panels
-    results = data.get("results", {})
-    sources_with_results: list[str] = []
-    sources_without_results: list[str] = []
-    sources_with_errors: list[tuple[str, str]] = []
-
-    for name, result in results.items():
-        items = result.get("items", [])
-        error = result.get("error")
-        display_name = result.get("display_name", name)
-
-        if error:
-            sources_with_errors.append((display_name, error))
-            continue
-
-        if not items:
-            sources_without_results.append(display_name)
-            continue
-
-        sources_with_results.append(name)
-        total = result.get("total")
-        subtitle = f"[dim]{total} total[/dim]" if total and total > len(items) else None
-
-        table = _render_search_source_table(name, items)
-        if table:
-            console.print(
-                Panel(
-                    table,
-                    title=f"[bold]{display_name}[/bold]",
-                    subtitle=subtitle,
-                    border_style="dim",
-                )
-            )
-
-    # Footer: sources with no results
-    if sources_without_results:
-        console.print(
-            Text(
-                "No results: " + ", ".join(sources_without_results),
-                style="dim",
-            )
-        )
-
-    # Errors
-    for display_name, error in sources_with_errors:
-        console.print(Text(f"Error ({display_name}): {error}", style="red"))
