@@ -13,7 +13,8 @@ from uk_parliament_mcp.config import STATUTORY_INSTRUMENTS_API_BASE, TREATIES_AP
 from uk_parliament_mcp.http_client import build_url, get_result
 
 app = typer.Typer(
-    help="Statutory Instruments and Treaties - secondary legislation and international agreements"
+    help="Statutory Instruments and Treaties - secondary legislation and international agreements",
+    no_args_is_help=True,
 )
 
 

@@ -262,7 +262,7 @@ def _format_json_output(groups: list[GroupInfo]) -> str:
     return json.dumps(output, indent=2, default=str)
 
 
-app = typer.Typer(help="Help and guidance for UK Parliament research")
+app = typer.Typer(help="Help and guidance for UK Parliament research", no_args_is_help=True)
 
 
 async def _order_order_async() -> str:

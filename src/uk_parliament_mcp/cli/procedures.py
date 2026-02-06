@@ -13,7 +13,8 @@ from uk_parliament_mcp.config import ERSKINE_MAY_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
 
 app = typer.Typer(
-    help="Parliamentary procedure and Erskine May - rules, precedents, and procedure manual"
+    help="Parliamentary procedure and Erskine May - rules, precedents, and procedure manual",
+    no_args_is_help=True,
 )
 
 

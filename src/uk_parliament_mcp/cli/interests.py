@@ -9,7 +9,7 @@ from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import INTERESTS_API_BASE
 from uk_parliament_mcp.http_client import get_result
 
-app = typer.Typer(help="Register of Interests - financial declarations and conflicts")
+app = typer.Typer(help="Register of Interests - financial declarations and conflicts", no_args_is_help=True)
 
 
 @app.command("search")

@@ -18,7 +18,7 @@ from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import ORAL_QUESTIONS_API_BASE, WRITTEN_QUESTIONS_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
 
-app = typer.Typer(help="Parliamentary questions, EDMs, and statements")
+app = typer.Typer(help="Parliamentary questions, EDMs, and statements", no_args_is_help=True)
 
 
 # EDM Commands (Early Day Motions)

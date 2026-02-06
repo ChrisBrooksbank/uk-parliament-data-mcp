@@ -12,7 +12,7 @@ from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
 from uk_parliament_mcp.config import MEMBERS_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
 
-app = typer.Typer(help="MP and Lords member tools")
+app = typer.Typer(help="MP and Lords member tools", no_args_is_help=True)
 
 
 @app.command("search")

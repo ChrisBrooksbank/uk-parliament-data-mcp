@@ -14,7 +14,7 @@ from uk_parliament_mcp.config import (
 )
 from uk_parliament_mcp.http_client import build_url, get_result
 
-app = typer.Typer(help="Commons and Lords voting records and divisions")
+app = typer.Typer(help="Commons and Lords voting records and divisions", no_args_is_help=True)
 
 
 @app.command("search")
