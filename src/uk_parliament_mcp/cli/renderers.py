@@ -7,6 +7,7 @@ renderers for live and composite commands.
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime
 from typing import Any
 
@@ -1306,7 +1307,7 @@ def _render_divisions_section(
 
 
 def _render_hansard_section(data: Any) -> Panel | None:
-    """Render Hansard debate sections.
+    """Render Hansard debate sections as a table with clickable IDs.
 
     Args:
         data: Parsed Hansard search/debates.json response.
@@ -1316,8 +1317,6 @@ def _render_hansard_section(data: Any) -> Panel | None:
     """
     if not _section_has_data(data):
         return None
-
-    text = Text()
 
     # search/debates.json returns {"Results": [...], "TotalResultCount": N}
     sections: list[Any] = []
@@ -1333,30 +1332,35 @@ def _render_hansard_section(data: Any) -> Panel | None:
     if isinstance(data, dict):
         total = data.get("TotalResultCount", data.get("totalResultCount", 0))
 
+    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+    table.add_column("ID", width=10, style="cyan", no_wrap=True)
+    table.add_column("House", width=8)
+    table.add_column("Section", width=16, style="dim italic")
+    table.add_column("Title", ratio=1)
+
     for section in sections[:15]:
         if isinstance(section, dict):
             title = section.get("Title", section.get("title", ""))
-            house_name = section.get("House", section.get("house", ""))
-            debate_section = section.get("DebateSection", section.get("debateSection", ""))
-            external_id = section.get("ExternalId", section.get("externalId", ""))
-            if title:
-                text.append("  ")
-                if house_name:
-                    color = _house_color(str(house_name))
-                    text.append(house_name, style=color)
-                    text.append(" ")
-                if debate_section:
-                    text.append(f"({debate_section}) ", style="dim italic")
-                title_text = Text(str(title))
-                if external_id:
-                    title_text.stylize(f"link https://hansard.parliament.uk/debates/{external_id}")
-                text.append_text(title_text)
-                text.append("\n")
+            if not title:
+                continue
+            house_name = str(section.get("House", section.get("house", "")))
+            debate_section = str(section.get("DebateSection", section.get("debateSection", "")))
+            ext_id = section.get(
+                "DebateSectionExtId",
+                section.get("ExternalId", section.get("externalId", "")),
+            )
+            # Short display ID (first 8 chars of UUID)
+            id_display = str(ext_id)[:8] if ext_id else ""
+            id_text = Text(id_display)
+            if ext_id:
+                id_text.stylize(f"link https://hansard.parliament.uk/debates/{ext_id}")
+            house_text = Text(house_name, style=_house_color(house_name))
+            table.add_row(id_text, house_text, debate_section, str(title))
 
-    if not text.plain.strip():
+    if table.row_count == 0:
         return None
     subtitle = f"[dim]{total} debates total[/dim]" if total > len(sections) else None
-    return Panel(text, title="[bold]Hansard Debates[/bold]", subtitle=subtitle, border_style="dim")
+    return Panel(table, title="[bold]Hansard Debates[/bold]", subtitle=subtitle, border_style="dim")
 
 
 def _render_bills_section(data: Any) -> Panel | None:
@@ -1631,7 +1635,7 @@ def _render_edms_section(data: Any) -> Panel | None:
 
 
 def _render_written_qs_section(data: Any) -> Panel | None:
-    """Render written questions summary.
+    """Render written questions with detail table.
 
     Args:
         data: Parsed written questions response.
@@ -1654,13 +1658,40 @@ def _render_written_qs_section(data: Any) -> Panel | None:
             val = q.get("value", q)
             if (isinstance(val, dict) and val.get("dateAnswered")) or q.get("dateAnswered"):
                 answered += 1
-    tabled = total
 
-    text = Text()
-    text.append(f"  {tabled} tabled", style="bold")
-    text.append(f"  |  {answered} answered", style="dim")
+    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+    table.add_column("UIN", width=8, style="cyan", no_wrap=True)
+    table.add_column("To", ratio=1)
+    table.add_column("Question", ratio=3)
+    table.add_column("Status", width=10)
 
-    return Panel(text, title="[bold]Written Questions[/bold]", border_style="dim")
+    for item in items[:20]:
+        if isinstance(item, dict):
+            val = item.get("value", item)
+            if not isinstance(val, dict):
+                val = item
+            uin = str(val.get("uin", val.get("UIN", "")))
+            body = str(val.get("answeringBodyName", ""))
+            question = str(val.get("questionText", val.get("heading", "")))
+            # Strip "To ask the X," boilerplate prefix
+            question = re.sub(r"^To ask the .+?,\s*", "", question, count=1)
+            # Truncate long questions
+            if len(question) > 120:
+                question = question[:117] + "..."
+            q_id = val.get("id", val.get("Id", ""))
+            uin_text = Text(uin)
+            if q_id:
+                uin_text.stylize(
+                    f"link https://questions-statements.parliament.uk/written-questions/detail/{q_id}"
+                )
+            status = "Answered" if val.get("dateAnswered") else "Tabled"
+            table.add_row(uin_text, body, question, status)
+
+    if table.row_count == 0:
+        return None
+
+    subtitle = f"[dim]{total} tabled | {answered} answered[/dim]"
+    return Panel(table, title="[bold]Written Questions[/bold]", subtitle=subtitle, border_style="dim")
 
 
 def render_digest(result_json: str) -> None:

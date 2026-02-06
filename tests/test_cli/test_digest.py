@@ -108,6 +108,12 @@ class TestDateHelpers:
         assert end == today
 
 
+# Mock target constants — paginated fetchers go through pagination module,
+# while direct get_result callers (commons_votes, bill_detail) use digest module.
+_PAGINATION_GET_RESULT = "uk_parliament_mcp.cli.pagination.get_result"
+_DIGEST_GET_RESULT = "uk_parliament_mcp.cli.digest.get_result"
+
+
 # ---------------------------------------------------------------------------
 # Fetcher tests
 # ---------------------------------------------------------------------------
@@ -126,7 +132,7 @@ class TestFetchers:
             "TotalResultCount": 1,
         }
         mock_resp = _mock_api_response(data)
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_hansard("2025-01-15", "2025-01-15", None)
             assert isinstance(result, dict)
             assert result["Results"][0]["Title"] == "Debate on NHS"
@@ -135,7 +141,7 @@ class TestFetchers:
     async def test_fetch_hansard_error(self) -> None:
         """_fetch_hansard returns empty dict on error."""
         mock_resp = _mock_error_response()
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_hansard("2025-01-15", "2025-01-15", None)
             assert result == {}
 
@@ -144,7 +150,7 @@ class TestFetchers:
         """_fetch_commons_votes returns list of divisions."""
         divisions = [{"DivisionId": 1, "Title": "Test Division", "AyeCount": 300, "NoCount": 200}]
         mock_resp = _mock_api_response(divisions)
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_commons_votes("2025-01-15", "2025-01-15")
             assert isinstance(result, list)
             assert len(result) == 1
@@ -155,7 +161,7 @@ class TestFetchers:
         """_fetch_commons_votes handles dict with items key."""
         data = {"items": [{"DivisionId": 1, "Title": "Test"}]}
         mock_resp = _mock_api_response(data)
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_commons_votes("2025-01-15", "2025-01-15")
             assert len(result) == 1
 
@@ -164,7 +170,7 @@ class TestFetchers:
         """_fetch_lords_votes returns list of divisions."""
         divisions = [{"Title": "Lords Division", "AuthorityCount": 150, "NonAuthorityCount": 100}]
         mock_resp = _mock_api_response(divisions)
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_lords_votes("2025-01-15", "2025-01-15")
             assert isinstance(result, list)
             assert result[0]["Title"] == "Lords Division"
@@ -176,11 +182,14 @@ class TestFetchers:
         bill_detail = {"shortTitle": "Test Bill", "currentStage": {"description": "2nd reading"}}
 
         async def mock_get(url: str) -> str:
+            """Mock for both pagination and direct get_result calls."""
             if "/Bills/42" in url:
                 return json.dumps({"url": url, "data": bill_detail})
             return json.dumps({"url": url, "data": bills_data})
 
-        with patch("uk_parliament_mcp.cli.digest.get_result", side_effect=mock_get):
+        # Bills paginate the Sittings call, then use direct get_result for detail
+        with patch(_PAGINATION_GET_RESULT, side_effect=mock_get), \
+             patch(_DIGEST_GET_RESULT, side_effect=mock_get):
             result = await _fetch_bills("2025-01-15", "2025-01-15", None)
             assert "items" in result
             assert "_bill_details" in result
@@ -190,7 +199,7 @@ class TestFetchers:
     async def test_fetch_bills_house_filter(self) -> None:
         """_fetch_bills passes house filter."""
         mock_resp = _mock_api_response({"items": []})
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp) as mock:
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp) as mock:
             await _fetch_bills("2025-01-15", "2025-01-15", 1)
             call_url = mock.call_args[0][0]
             assert "House=Commons" in call_url
@@ -200,7 +209,7 @@ class TestFetchers:
         """_fetch_committees returns parsed events."""
         events = {"items": [{"committee": {"name": "Treasury"}, "description": "Inquiry"}]}
         mock_resp = _mock_api_response(events)
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_committees("2025-01-15", "2025-01-15")
             assert "items" in result
 
@@ -209,7 +218,7 @@ class TestFetchers:
         """_fetch_statements returns parsed statements."""
         stmts = {"results": [{"title": "Statement on X", "answeringBodyName": "Treasury"}]}
         mock_resp = _mock_api_response(stmts)
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_statements("2025-01-15", "2025-01-15")
             assert "results" in result
 
@@ -218,7 +227,7 @@ class TestFetchers:
         """_fetch_oral_qs returns parsed oral question times."""
         oqs = {"Response": [{"AnsweringBodyName": "Home Office"}]}
         mock_resp = _mock_api_response(oqs)
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_oral_qs("2025-01-15", "2025-01-15")
             assert "Response" in result
 
@@ -227,7 +236,7 @@ class TestFetchers:
         """_fetch_edms returns parsed EDMs."""
         edms = {"Response": [{"Title": "EDM on NHS", "UIN": 123}]}
         mock_resp = _mock_api_response(edms)
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_edms("2025-01-15", "2025-01-15")
             assert "Response" in result
 
@@ -236,7 +245,7 @@ class TestFetchers:
         """_fetch_written_qs returns parsed written questions."""
         wqs = {"results": [{"questionText": "What steps...", "dateAnswered": "2025-01-15"}]}
         mock_resp = _mock_api_response(wqs)
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_written_qs("2025-01-15", "2025-01-15")
             assert "results" in result
 
@@ -253,7 +262,8 @@ class TestAggregator:
     async def test_fetch_digest_data_all(self) -> None:
         """_fetch_digest_data returns all 9 sections."""
         mock_resp = _mock_api_response({})
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
+             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_digest_data("2025-01-15", "2025-01-15", None)
             assert "hansard" in result
             assert "commons_divisions" in result
@@ -269,7 +279,8 @@ class TestAggregator:
     async def test_fetch_digest_data_commons_only(self) -> None:
         """_fetch_digest_data with house=1 excludes lords divisions."""
         mock_resp = _mock_api_response({})
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
+             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_digest_data("2025-01-15", "2025-01-15", 1)
             assert "commons_divisions" in result
             assert "lords_divisions" not in result
@@ -278,7 +289,8 @@ class TestAggregator:
     async def test_fetch_digest_data_lords_only(self) -> None:
         """_fetch_digest_data with house=2 excludes commons divisions."""
         mock_resp = _mock_api_response({})
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
+             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _fetch_digest_data("2025-01-15", "2025-01-15", 2)
             assert "lords_divisions" in result
             assert "commons_divisions" not in result
@@ -289,7 +301,8 @@ class TestAggregator:
         async def _fail(*args, **kwargs):
             raise ConnectionError("Network down")
 
-        with patch("uk_parliament_mcp.cli.digest.get_result", side_effect=_fail):
+        with patch(_PAGINATION_GET_RESULT, side_effect=_fail), \
+             patch(_DIGEST_GET_RESULT, side_effect=_fail):
             result = await _fetch_digest_data("2025-01-15", "2025-01-15", None)
             # At least some sections should have error dicts
             errors = [v for v in result.values() if isinstance(v, dict) and "error" in v]
@@ -308,7 +321,8 @@ class TestGetDigestAsync:
     async def test_returns_json(self) -> None:
         """_get_digest_async returns valid JSON."""
         mock_resp = _mock_api_response({})
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
+             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _get_digest_async("2025-01-15", "day", None)
             data = json.loads(result)
             assert data["date"] == "2025-01-15"
@@ -319,7 +333,8 @@ class TestGetDigestAsync:
     async def test_week_period(self) -> None:
         """_get_digest_async sets correct dates for week period."""
         mock_resp = _mock_api_response({})
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
+             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _get_digest_async("2025-01-15", "week", None)
             data = json.loads(result)
             assert data["start_date"] == "2025-01-13"
@@ -330,7 +345,8 @@ class TestGetDigestAsync:
     async def test_house_label(self) -> None:
         """_get_digest_async sets house label."""
         mock_resp = _mock_api_response({})
-        with patch("uk_parliament_mcp.cli.digest.get_result", new_callable=AsyncMock, return_value=mock_resp):
+        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
+             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
             result = await _get_digest_async("2025-01-15", "day", 1)
             data = json.loads(result)
             assert data["house"] == "Commons"
@@ -438,8 +454,8 @@ class TestHansardSectionRenderer:
     def test_results_from_debates_json(self) -> None:
         data = {
             "Results": [
-                {"Title": "Debate on NHS", "House": "Commons", "DebateSection": "Commons Chamber"},
-                {"Title": "Lords debate", "House": "Lords", "DebateSection": "Lords Chamber"},
+                {"Title": "Debate on NHS", "House": "Commons", "DebateSection": "Commons Chamber", "DebateSectionExtId": "ABC12345-1234-1234-1234-123456789012"},
+                {"Title": "Lords debate", "House": "Lords", "DebateSection": "Lords Chamber", "DebateSectionExtId": "DEF12345-1234-1234-1234-123456789012"},
             ],
             "TotalResultCount": 2,
         }
@@ -531,9 +547,35 @@ class TestWrittenQsSectionRenderer:
 
     def test_with_questions(self) -> None:
         data = {"results": [
-            {"questionText": "Q1", "dateAnswered": "2025-01-15"},
-            {"questionText": "Q2", "dateAnswered": None},
-            {"questionText": "Q3", "dateAnswered": "2025-01-16"},
+            {"uin": "12345", "questionText": "Q1", "dateAnswered": "2025-01-15", "answeringBodyName": "Treasury", "id": 1},
+            {"uin": "12346", "questionText": "Q2", "dateAnswered": None, "answeringBodyName": "Home Office", "id": 2},
+            {"uin": "12347", "questionText": "Q3", "dateAnswered": "2025-01-16", "answeringBodyName": "MoD", "id": 3},
+        ]}
+        panel = _render_written_qs_section(data)
+        assert isinstance(panel, Panel)
+
+    def test_detail_table_with_value_wrapper(self) -> None:
+        """Written questions wrapped in 'value' objects are rendered correctly."""
+        data = {"results": [
+            {"value": {"uin": "900001", "questionText": "What steps...", "dateAnswered": "2025-01-15", "answeringBodyName": "Treasury", "id": 1234}},
+            {"value": {"uin": "900002", "questionText": "Will the minister...", "dateAnswered": None, "answeringBodyName": "MoD", "id": 5678}},
+        ]}
+        panel = _render_written_qs_section(data)
+        assert isinstance(panel, Panel)
+
+    def test_boilerplate_stripped(self) -> None:
+        """'To ask the X,' boilerplate is stripped from question text."""
+        data = {"results": [
+            {"uin": "900001", "questionText": "To ask the Chancellor of the Exchequer, what steps she has taken", "answeringBodyName": "Treasury", "id": 1},
+        ]}
+        panel = _render_written_qs_section(data)
+        assert isinstance(panel, Panel)
+
+    def test_long_question_text_truncated(self) -> None:
+        """Long question text is truncated."""
+        long_text = "A" * 200
+        data = {"results": [
+            {"uin": "900001", "questionText": long_text, "dateAnswered": None, "answeringBodyName": "Y", "id": 1},
         ]}
         panel = _render_written_qs_section(data)
         assert isinstance(panel, Panel)
@@ -577,6 +619,6 @@ class TestRenderDigest:
             "written_statements": {"results": [{"title": "Statement Z", "answeringBodyName": "DHSC"}]},
             "oral_questions": {"Response": [{"AnsweringBodyName": "MoD", "AnswerDate": "2025-01-15"}]},
             "edms": {"Response": [{"UIN": 42, "Title": "EDM on X", "PrimarySponsor": {"Name": "MP Name"}}]},
-            "written_questions": {"results": [{"questionText": "Q", "dateAnswered": "2025-01-15"}]},
+            "written_questions": {"results": [{"uin": "12345", "questionText": "Q", "dateAnswered": "2025-01-15", "answeringBodyName": "Treasury", "id": 1}]},
         }
         render_digest(json.dumps(data))

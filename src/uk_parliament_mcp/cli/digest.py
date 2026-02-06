@@ -10,6 +10,16 @@ from typing import Any
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
+from uk_parliament_mcp.cli.pagination import (
+    BILLS_PAGINATION,
+    COMMITTEES_PAGINATION,
+    HANSARD_PAGINATION,
+    LORDS_VOTES_PAGINATION,
+    ORAL_QUESTIONS_PAGINATION,
+    WRITTEN_QUESTIONS_PAGINATION,
+    WRITTEN_STATEMENTS_PAGINATION,
+    paginate_request,
+)
 from uk_parliament_mcp.cli.renderers import _parse_api_response
 from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async, should_render_rich
 from uk_parliament_mcp.config import (
@@ -22,6 +32,10 @@ from uk_parliament_mcp.config import (
     WRITTEN_QUESTIONS_API_BASE,
 )
 from uk_parliament_mcp.http_client import build_url, get_result
+
+# Digest-specific cap: a single day rarely exceeds 100 items per section.
+# Keep low to avoid 50+ sequential HTTP requests per API source.
+_DIGEST_MAX_ITEMS = 100
 
 app = typer.Typer(
     help="Daily/weekly parliamentary digest — debates, votes, bills, committees, questions, and more",
@@ -79,14 +93,13 @@ async def _fetch_hansard(
 ) -> dict[str, Any]:
     """Fetch Hansard debates for the date range."""
     params: dict[str, Any] = {
-        "startDate": start_date,
-        "endDate": end_date,
-        "take": 20,
+        "queryParameters.startDate": start_date,
+        "queryParameters.endDate": end_date,
     }
     if house is not None:
-        params["house"] = "Commons" if house == 1 else "Lords"
+        params["queryParameters.house"] = "Commons" if house == 1 else "Lords"
     url = build_url(f"{HANSARD_API_BASE}/search/debates.json", params)
-    data = _parse_api_response(await get_result(url))
+    data = _parse_api_response(await paginate_request(url, HANSARD_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
     return data if data is not None else {}
 
 
@@ -119,7 +132,7 @@ async def _fetch_lords_votes(
         f"{LORDS_VOTES_API_BASE}/Divisions/search",
         {"StartDate": start_date, "EndDate": end_date},
     )
-    data = _parse_api_response(await get_result(url))
+    data = _parse_api_response(await paginate_request(url, LORDS_VOTES_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
     if isinstance(data, list):
         return data
     if isinstance(data, dict):
@@ -148,7 +161,7 @@ async def _fetch_bills(
     elif house == 2:
         params["House"] = "Lords"
     url = build_url(f"{BILLS_API_BASE}/Sittings", params)
-    data = _parse_api_response(await get_result(url))
+    data = _parse_api_response(await paginate_request(url, BILLS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
     if data is None:
         return {}
 
@@ -199,7 +212,7 @@ async def _fetch_committees(
             "ExcludeCancelledEvents": True,
         },
     )
-    data = _parse_api_response(await get_result(url))
+    data = _parse_api_response(await paginate_request(url, COMMITTEES_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
     return data if data is not None else {}
 
 
@@ -211,7 +224,7 @@ async def _fetch_statements(
         f"{WRITTEN_QUESTIONS_API_BASE}/writtenstatements/statements",
         {"madeWhenFrom": start_date, "madeWhenTo": end_date},
     )
-    data = _parse_api_response(await get_result(url))
+    data = _parse_api_response(await paginate_request(url, WRITTEN_STATEMENTS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
     return data if data is not None else {}
 
 
@@ -226,7 +239,7 @@ async def _fetch_oral_qs(
             "parameters.answeringDateEnd": end_date,
         },
     )
-    data = _parse_api_response(await get_result(url))
+    data = _parse_api_response(await paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
     return data if data is not None else {}
 
 
@@ -241,7 +254,7 @@ async def _fetch_edms(
             "parameters.tabledEndDate": end_date,
         },
     )
-    data = _parse_api_response(await get_result(url))
+    data = _parse_api_response(await paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
     return data if data is not None else {}
 
 
@@ -253,7 +266,7 @@ async def _fetch_written_qs(
         f"{WRITTEN_QUESTIONS_API_BASE}/writtenquestions/questions",
         {"tabledWhenFrom": start_date, "tabledWhenTo": end_date},
     )
-    data = _parse_api_response(await get_result(url))
+    data = _parse_api_response(await paginate_request(url, WRITTEN_QUESTIONS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
     return data if data is not None else {}
 
 
