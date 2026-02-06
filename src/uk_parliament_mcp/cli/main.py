@@ -22,6 +22,7 @@ from uk_parliament_mcp.cli import (
     members,
     procedures,
     questions,
+    search,
     votes,
     watch,
 )
@@ -49,6 +50,10 @@ app.add_typer(procedures.app, name="procedures")
 app.add_typer(guide.app, name="guide")
 app.add_typer(watch.app, name="watch")
 app.add_typer(digest.app, name="digest")
+
+# Register search as a top-level command (not a sub-Typer) since it takes
+# a positional argument which conflicts with Typer sub-app resolution.
+app.command("search")(search.search_command)
 
 
 # Top-level reference command for easy discoverability

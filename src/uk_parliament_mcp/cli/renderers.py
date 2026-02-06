@@ -1735,3 +1735,269 @@ def render_digest(result_json: str) -> None:
     has_any = any(_section_has_data(data.get(s)) for s in sections)
     if not has_any:
         console.print("[dim]No parliamentary activity found for this date/period.[/dim]")
+
+
+# ---------------------------------------------------------------------------
+# Universal search renderers
+# ---------------------------------------------------------------------------
+
+
+def _render_search_source_table(
+    source_name: str, items: list[dict[str, Any]]
+) -> Table | None:
+    """Build a Rich Table for a single search source's items.
+
+    Args:
+        source_name: The source key (e.g. "members", "bills").
+        items: List of item dicts from the source.
+
+    Returns:
+        Rich Table, or None if items is empty.
+    """
+    if not items:
+        return None
+
+    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+
+    if source_name == "members":
+        table.add_column("Name", ratio=2)
+        table.add_column("Party", ratio=1)
+        table.add_column("Constituency", ratio=1)
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("nameDisplayAs", item.get("nameFullTitle", "")))
+            party = ""
+            party_info = item.get("latestParty")
+            if isinstance(party_info, dict):
+                party = party_info.get("name", "")
+            constituency = ""
+            membership = item.get("latestHouseMembership")
+            if isinstance(membership, dict):
+                constituency = membership.get("membershipFrom", "")
+            table.add_row(name, party, constituency)
+
+    elif source_name == "bills":
+        table.add_column("Title", ratio=2)
+        table.add_column("Stage", ratio=1)
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("shortTitle", item.get("longTitle", "")))
+            stage = ""
+            stage_info = item.get("currentStage")
+            if isinstance(stage_info, dict):
+                stage = stage_info.get("description", stage_info.get("stageName", ""))
+            elif isinstance(stage_info, str):
+                stage = stage_info
+            table.add_row(title, stage)
+
+    elif source_name in ("commons-votes", "lords-votes"):
+        table.add_column("Title", ratio=2)
+        table.add_column("Date", width=10)
+        table.add_column("Ayes", width=6, justify="right")
+        table.add_column("Noes", width=6, justify="right")
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("Title", item.get("title", "")))
+            dt = str(item.get("Date", item.get("date", "")))[:10]
+            ayes = str(item.get("AyeCount", item.get("ayeCount", item.get("AuthorityCount", ""))))
+            noes = str(item.get("NoCount", item.get("noCount", item.get("NonAuthorityCount", ""))))
+            table.add_row(title, dt, ayes, noes)
+
+    elif source_name == "hansard":
+        table.add_column("Title", ratio=2)
+        table.add_column("House", width=8)
+        table.add_column("Date", width=10)
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("Title", item.get("title", "")))
+            house = str(item.get("House", item.get("house", "")))
+            dt = str(item.get("SittingDate", item.get("MemberFieldsSittingDate", "")))[:10]
+            table.add_row(title, house, dt)
+
+    elif source_name in ("written-questions", "written-statements"):
+        table.add_column("Title", ratio=2)
+        table.add_column("Member", ratio=1)
+        table.add_column("Body", ratio=1)
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            val = item.get("value", item) if isinstance(item, dict) else item
+            if not isinstance(val, dict):
+                val = item
+            title = str(val.get("title", val.get("heading", "")))
+            member = str(val.get("askingMemberName", val.get("memberName", val.get("dateMade", ""))))
+            body = str(val.get("answeringBodyName", ""))
+            table.add_row(title, member, body)
+
+    elif source_name == "edms":
+        table.add_column("Title", ratio=2)
+        table.add_column("Sponsor", ratio=1)
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("Title", item.get("title", "")))
+            sponsor = ""
+            ps = item.get("PrimarySponsor", item.get("primarySponsor"))
+            if isinstance(ps, dict):
+                sponsor = ps.get("Name", ps.get("name", ""))
+            elif isinstance(ps, str):
+                sponsor = ps
+            table.add_row(title, sponsor)
+
+    elif source_name == "committees":
+        table.add_column("Name", ratio=2)
+        table.add_column("House", width=8)
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("name", item.get("Name", "")))
+            house = ""
+            if item.get("isCommons") is True:
+                house = "Commons"
+            elif item.get("isCommons") is False:
+                house = "Lords"
+            table.add_row(name, house)
+
+    elif source_name == "treaties":
+        table.add_column("Name", ratio=2)
+        table.add_column("Status", ratio=1)
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("Name", item.get("name", "")))
+            status = str(item.get("LayingBodyDepartment", item.get("status", "")))
+            table.add_row(name, status)
+
+    elif source_name == "statutory-instruments":
+        table.add_column("Name", ratio=2)
+        table.add_column("Type", ratio=1)
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            name = str(item.get("Name", item.get("name", "")))
+            si_type = str(item.get("StatutoryInstrumentType", item.get("type", "")))
+            table.add_row(name, si_type)
+
+    elif source_name == "erskine-may":
+        table.add_column("Title", ratio=2)
+        table.add_column("Section", ratio=1)
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            title = str(item.get("Title", item.get("title", "")))
+            section = str(item.get("SectionTitle", item.get("sectionTitle", "")))
+            table.add_row(title, section)
+
+    else:
+        # Fallback: show raw keys
+        table.add_column("Item", ratio=1)
+        for item in items:
+            table.add_row(str(item)[:120])
+
+    return table if table.row_count > 0 else None
+
+
+def render_search(result_json: str, counts_only: bool = False) -> None:
+    """Render universal search results with rich formatting.
+
+    Args:
+        result_json: JSON string from _universal_search_async.
+        counts_only: If True, only show summary counts.
+    """
+    try:
+        data = json.loads(result_json)
+    except (json.JSONDecodeError, TypeError):
+        Console().print("[red]Failed to parse search data[/red]")
+        return
+
+    console = Console()
+
+    query = data.get("query", "")
+    sources_queried = data.get("sources_queried", 0)
+    summary = data.get("summary", {})
+
+    # Compute total results across all sources
+    total_results = sum(
+        (s.get("total") or s.get("returned", 0)) for s in summary.values()
+    )
+
+    # Header panel
+    header_text = Text()
+    header_text.append(f'Parliament Search: "{query}"', style="bold white")
+    header_text.append(
+        f"\n{sources_queried} sources queried | {total_results} total results",
+        style="dim",
+    )
+    console.print(Panel(header_text, title="[bold]Universal Search[/bold]", border_style="blue"))
+
+    if counts_only:
+        # Summary table
+        table = Table(show_header=True, header_style="bold", expand=True)
+        table.add_column("Source", ratio=2)
+        table.add_column("Results", width=10, justify="right")
+        table.add_column("Status", ratio=1)
+        for name, info in summary.items():
+            total = info.get("total")
+            returned = info.get("returned", 0)
+            error = info.get("error")
+            count_str = str(total if total is not None else returned)
+            if error:
+                status = Text(str(error), style="red")
+            elif total is not None and total > 0:
+                status = Text("OK", style="green")
+            else:
+                status = Text("0 results", style="dim")
+            table.add_row(name, count_str, status)
+        console.print(Panel(table, title="[bold]Summary[/bold]", border_style="dim"))
+        return
+
+    # Per-source panels
+    results = data.get("results", {})
+    sources_with_results: list[str] = []
+    sources_without_results: list[str] = []
+    sources_with_errors: list[tuple[str, str]] = []
+
+    for name, result in results.items():
+        items = result.get("items", [])
+        error = result.get("error")
+        display_name = result.get("display_name", name)
+
+        if error:
+            sources_with_errors.append((display_name, error))
+            continue
+
+        if not items:
+            sources_without_results.append(display_name)
+            continue
+
+        sources_with_results.append(name)
+        total = result.get("total")
+        subtitle = f"[dim]{total} total[/dim]" if total and total > len(items) else None
+
+        table = _render_search_source_table(name, items)
+        if table:
+            console.print(
+                Panel(
+                    table,
+                    title=f"[bold]{display_name}[/bold]",
+                    subtitle=subtitle,
+                    border_style="dim",
+                )
+            )
+
+    # Footer: sources with no results
+    if sources_without_results:
+        console.print(
+            Text(
+                "No results: " + ", ".join(sources_without_results),
+                style="dim",
+            )
+        )
+
+    # Errors
+    for display_name, error in sources_with_errors:
+        console.print(Text(f"Error ({display_name}): {error}", style="red"))
