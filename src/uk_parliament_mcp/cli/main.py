@@ -26,7 +26,7 @@ from uk_parliament_mcp.cli.utils import echo_utf8
 
 app = typer.Typer(
     name="parliament",
-    help="UK Parliament data CLI - Access 161 Parliament API tools from the terminal.",
+    help="UK Parliament CLI (Unofficial) - not affiliated with UK Parliament.\n\nAccess 161 Parliament API tools from the terminal.\nData sourced from publicly available parliament.uk APIs.\nhttps://github.com/ChrisBrooksbank/uk-parliament-mcp-lab",
     no_args_is_help=True,
 )
 
