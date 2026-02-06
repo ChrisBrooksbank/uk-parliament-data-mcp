@@ -1353,7 +1353,10 @@ def _render_hansard_section(data: Any) -> Panel | None:
             id_display = str(ext_id)[:8] if ext_id else ""
             id_text = Text(id_display)
             if ext_id:
-                id_text.stylize(f"link https://hansard.parliament.uk/debates/{ext_id}")
+                sitting_date = str(section.get("SittingDate", section.get("sittingDate", "")))[:10]
+                slug = re.sub(r"[^A-Za-z0-9]", "", str(title))
+                house_lower = house_name.lower()
+                id_text.stylize(f"link https://hansard.parliament.uk/{house_lower}/{sitting_date}/debates/{ext_id}/{slug}")
             house_text = Text(house_name, style=_house_color(house_name))
             table.add_row(id_text, house_text, debate_section, str(title))
 
