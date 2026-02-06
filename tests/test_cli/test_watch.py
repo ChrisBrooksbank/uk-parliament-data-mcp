@@ -17,6 +17,7 @@ from uk_parliament_mcp.cli.renderers import (
     _extract_event_time,
     _format_slide_type_label,
     _house_color,
+    _parliament_tv_subtitle,
     _parse_api_response,
     _render_calendar_table,
     _render_chamber_panel,
@@ -894,3 +895,93 @@ class TestWatchCommand:
             assert "\n  " in result.output
             parsed = json.loads(result.output)
             assert "commons" in parsed
+
+
+# ---------------------------------------------------------------------------
+# _parliament_tv_subtitle helper
+# ---------------------------------------------------------------------------
+
+class TestParliamentTvSubtitle:
+    """Tests for _parliament_tv_subtitle helper."""
+
+    def test_commons_url(self) -> None:
+        result = _parliament_tv_subtitle("House of Commons")
+        assert isinstance(result, Text)
+        assert "parliamentlive.tv/Commons" in result.plain
+        assert "https://www.parliamentlive.tv/Commons" in str(result.style)
+
+    def test_lords_url(self) -> None:
+        result = _parliament_tv_subtitle("House of Lords")
+        assert isinstance(result, Text)
+        assert "parliamentlive.tv/Lords" in result.plain
+        assert "https://www.parliamentlive.tv/Lords" in str(result.style)
+
+    def test_case_insensitive(self) -> None:
+        assert "parliamentlive.tv/Commons" in _parliament_tv_subtitle("COMMONS").plain
+        assert "parliamentlive.tv/Lords" in _parliament_tv_subtitle("lords").plain
+
+    def test_fallback_url(self) -> None:
+        result = _parliament_tv_subtitle("Joint Committee")
+        assert "parliamentlive.tv" in result.plain
+        assert "Commons" not in result.plain
+        assert "Lords" not in result.plain
+
+    def test_display_strips_https_www(self) -> None:
+        result = _parliament_tv_subtitle("House of Commons")
+        # The display text should not contain "https://www."
+        assert "https://www." not in result.plain
+        # but the style should contain the full URL as a link
+        assert "https://www.parliamentlive.tv" in str(result.style)
+
+    def test_returns_text_with_styled_link(self) -> None:
+        result = _parliament_tv_subtitle("House of Commons")
+        assert isinstance(result, Text)
+        style_str = str(result.style)
+        assert "italic" in style_str
+        assert "cyan" in style_str
+
+
+# ---------------------------------------------------------------------------
+# Chamber panel Parliament TV subtitle
+# ---------------------------------------------------------------------------
+
+class TestChamberPanelSubtitle:
+    """Tests for Parliament TV subtitle on chamber panels."""
+
+    def test_commons_panel_has_subtitle(self) -> None:
+        msg = _make_message(slides=[_make_slide("Debate")])
+        panel = _render_chamber_panel(msg, "House of Commons")
+        assert panel.subtitle is not None
+        subtitle = panel.subtitle
+        assert isinstance(subtitle, Text)
+        assert "parliamentlive.tv/Commons" in subtitle.plain
+
+    def test_lords_panel_has_subtitle(self) -> None:
+        msg = _make_message(slides=[_make_slide("Debate")])
+        panel = _render_chamber_panel(msg, "House of Lords")
+        assert panel.subtitle is not None
+        subtitle = panel.subtitle
+        assert isinstance(subtitle, Text)
+        assert "parliamentlive.tv/Lords" in subtitle.plain
+
+    def test_none_data_panel_has_subtitle(self) -> None:
+        panel = _render_chamber_panel(None, "House of Commons")
+        assert panel.subtitle is not None
+        subtitle = panel.subtitle
+        assert isinstance(subtitle, Text)
+        assert "parliamentlive.tv/Commons" in subtitle.plain
+
+    def test_empty_data_panel_has_subtitle(self) -> None:
+        panel = _render_chamber_panel({}, "House of Lords")
+        assert panel.subtitle is not None
+        subtitle = panel.subtitle
+        assert isinstance(subtitle, Text)
+        assert "parliamentlive.tv/Lords" in subtitle.plain
+
+    def test_annunciator_disabled_has_subtitle(self) -> None:
+        msg = _make_message(annunciator_disabled=True)
+        panel = _render_chamber_panel(msg, "House of Commons")
+        assert panel.subtitle is not None
+        subtitle = panel.subtitle
+        assert isinstance(subtitle, Text)
+        assert "parliamentlive.tv/Commons" in subtitle.plain

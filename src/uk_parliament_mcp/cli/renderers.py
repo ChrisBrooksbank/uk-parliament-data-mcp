@@ -50,6 +50,32 @@ def _house_color(house_name: str) -> str:
     return "white"
 
 
+_PARLIAMENT_TV_URLS: dict[str, str] = {
+    "commons": "https://www.parliamentlive.tv/Commons",
+    "lords": "https://www.parliamentlive.tv/Lords",
+}
+
+
+def _parliament_tv_subtitle(house_name: str) -> Text:
+    """Return a Rich Text subtitle linking to Parliament TV for the given house.
+
+    Args:
+        house_name: House name string (e.g. "House of Commons", "Lords").
+
+    Returns:
+        Rich Text object with dim link to the appropriate Parliament TV URL.
+    """
+    lower = house_name.lower()
+    if "commons" in lower:
+        url = _PARLIAMENT_TV_URLS["commons"]
+    elif "lords" in lower:
+        url = _PARLIAMENT_TV_URLS["lords"]
+    else:
+        url = "https://www.parliamentlive.tv"
+    display = url.replace("https://www.", "")
+    return Text(display, style=f"italic cyan link {url}")
+
+
 _ACTIVE_SLIDE_TYPES = {
     "Debate",
     "Division",
@@ -184,12 +210,12 @@ def _render_chamber_panel(data: dict[str, Any] | None, house_name: str) -> Panel
     """
     if data is None or not data:
         content = Text("Not currently sitting", style="dim italic")
-        return Panel(content, title=f"[bold]{house_name}[/bold]", border_style="dim")
+        return Panel(content, title=f"[bold]{house_name}[/bold]", subtitle=_parliament_tv_subtitle(house_name), border_style="dim")
 
     # Check if annunciator is disabled
     if data.get("annunciatorDisabled"):
         content = Text("Annunciator offline", style="dim italic")
-        return Panel(content, title=f"[bold]{house_name}[/bold]", border_style="dim")
+        return Panel(content, title=f"[bold]{house_name}[/bold]", subtitle=_parliament_tv_subtitle(house_name), border_style="dim")
 
     text = Text()
     is_active = False
@@ -239,7 +265,7 @@ def _render_chamber_panel(data: dict[str, Any] | None, house_name: str) -> Panel
 
     color = _house_color(house_name)
     border_style = color if is_active else "dim"
-    return Panel(text, title=f"[bold {color}]{house_name}[/bold {color}]", border_style=border_style)
+    return Panel(text, title=f"[bold {color}]{house_name}[/bold {color}]", subtitle=_parliament_tv_subtitle(house_name), border_style=border_style)
 
 
 # ---------------------------------------------------------------------------
