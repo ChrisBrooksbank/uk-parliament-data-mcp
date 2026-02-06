@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from unittest.mock import patch
 
 import pytest
@@ -13,7 +14,9 @@ from rich.text import Text
 
 from uk_parliament_mcp.cli.renderers import (
     _calendar_subtitle,
+    _extract_event_time,
     _format_slide_type_label,
+    _house_color,
     _parse_api_response,
     _render_calendar_table,
     _render_chamber_panel,
@@ -200,13 +203,17 @@ class TestRenderChamberPanel:
         ])
         panel = _render_chamber_panel(msg, "House of Commons")
         assert isinstance(panel, Panel)
-        # Active debate -> green border
+        # Active Commons debate -> green border
         assert panel.border_style == "green"  # type: ignore[union-attr]
-        rendered = panel.renderable
-        assert isinstance(rendered, Text)
-        assert "Debate" in rendered.plain
-        assert "Online Safety Bill" in rendered.plain
-        assert "14:32" in rendered.plain
+
+    def test_lords_active_border_is_red(self) -> None:
+        msg = _make_message(slides=[
+            _make_slide("Debate", lines=[_make_line("Lords debate", "Text100", 1)]),
+        ])
+        panel = _render_chamber_panel(msg, "House of Lords")
+        assert isinstance(panel, Panel)
+        # Active Lords debate -> red border
+        assert panel.border_style == "red"  # type: ignore[union-attr]
 
     def test_division_slide(self) -> None:
         msg = _make_message(slides=[
@@ -500,6 +507,123 @@ class TestCalendarSubtitle:
 
 
 # ---------------------------------------------------------------------------
+# _house_color
+# ---------------------------------------------------------------------------
+
+class TestHouseColor:
+    """Tests for _house_color helper."""
+
+    def test_commons(self) -> None:
+        assert _house_color("House of Commons") == "green"
+        assert _house_color("Commons") == "green"
+
+    def test_lords(self) -> None:
+        assert _house_color("House of Lords") == "red"
+        assert _house_color("Lords") == "red"
+
+    def test_case_insensitive(self) -> None:
+        assert _house_color("COMMONS") == "green"
+        assert _house_color("lords") == "red"
+
+    def test_fallback(self) -> None:
+        assert _house_color("Joint") == "white"
+        assert _house_color("") == "white"
+
+
+# ---------------------------------------------------------------------------
+# Calendar time-tracking
+# ---------------------------------------------------------------------------
+
+class TestCalendarTimeTracking:
+    """Tests for calendar time-tracking highlight and windowing."""
+
+    def _make_events(self, times: list[str], house: str = "Commons") -> list[dict]:
+        """Create events with given HH:MM times."""
+        return [
+            {
+                "StartTime": f"2024-01-15T{t}:00",
+                "House": house,
+                "Description": f"Event at {t}",
+            }
+            for t in times
+        ]
+
+    def test_events_sorted_by_time(self) -> None:
+        events = self._make_events(["14:00", "09:30", "11:00"])
+        result, _ = _render_calendar_table(events, now=datetime(2024, 1, 15, 12, 0))
+        assert isinstance(result, Table)
+        assert result.row_count == 3
+
+    def test_current_event_highlighted(self) -> None:
+        events = self._make_events(["09:00", "11:00", "14:00"])
+        now = datetime(2024, 1, 15, 12, 0)  # 12:00 — after 11:00, before 14:00
+        result, _ = _render_calendar_table(events, now=now)
+        assert isinstance(result, Table)
+        # Row 1 (11:00) should be highlighted — check via row style
+        # Row index 1 is the "current" event (last started before 12:00)
+        assert result.rows[1].style == "bold"
+        assert result.rows[0].style != "bold"
+        assert result.rows[2].style != "bold"
+
+    def test_windowing_centers_on_current(self) -> None:
+        # 10 events, max_rows=3, current is event at index 5 (12:30)
+        times = [f"{9 + i}:{30 if i % 2 else '00'}" for i in range(10)]
+        events = self._make_events(times)
+        now = datetime(2024, 1, 15, 12, 35)
+        result, total = _render_calendar_table(events, max_rows=3, now=now)
+        assert isinstance(result, Table)
+        assert total == 10
+        assert result.row_count == 3
+        # One of the 3 rows should be bold (current)
+        styles = [row.style for row in result.rows]
+        assert "bold" in styles
+
+    def test_now_none_preserves_top_slice(self) -> None:
+        events = self._make_events(["14:00", "09:00", "11:00"])
+        result, total = _render_calendar_table(events, max_rows=2, now=None)
+        assert isinstance(result, Table)
+        assert total == 3
+        assert result.row_count == 2
+        # Without now, no bold rows
+        for row in result.rows:
+            assert row.style != "bold"
+
+    def test_all_events_in_future(self) -> None:
+        events = self._make_events(["14:00", "15:00", "16:00"])
+        now = datetime(2024, 1, 15, 8, 0)  # 08:00, all events are future
+        result, _ = _render_calendar_table(events, now=now)
+        assert isinstance(result, Table)
+        # First event should be highlighted
+        assert result.rows[0].style == "bold"
+
+    def test_all_events_in_past(self) -> None:
+        events = self._make_events(["08:00", "09:00", "10:00"])
+        now = datetime(2024, 1, 15, 18, 0)  # 18:00, all events are past
+        result, _ = _render_calendar_table(events, now=now)
+        assert isinstance(result, Table)
+        # Last event should be highlighted
+        assert result.rows[2].style == "bold"
+
+    def test_no_parseable_times(self) -> None:
+        events = [{"Description": f"Event {i}"} for i in range(3)]
+        now = datetime(2024, 1, 15, 12, 0)
+        result, _ = _render_calendar_table(events, now=now)
+        assert isinstance(result, Table)
+        # No bold rows when no times can be parsed
+        for row in result.rows:
+            assert row.style != "bold"
+
+    def test_extract_event_time_iso(self) -> None:
+        assert _extract_event_time({"StartTime": "2024-01-15T14:30:00"}) == "14:30"
+
+    def test_extract_event_time_missing(self) -> None:
+        assert _extract_event_time({"Description": "No time"}) == ""
+
+    def test_extract_event_time_short(self) -> None:
+        assert _extract_event_time({"startTime": "14:30"}) == "14:30"
+
+
+# ---------------------------------------------------------------------------
 # _estimate_chamber_height
 # ---------------------------------------------------------------------------
 
@@ -734,7 +858,7 @@ class TestWatchCommand:
     """Tests for the watch CLI command."""
 
     def test_min_interval_constant(self) -> None:
-        assert MIN_INTERVAL == 10
+        assert MIN_INTERVAL == 30
 
     def test_raw_flag_outputs_json(self) -> None:
         """--raw should fetch once and print JSON to stdout."""

@@ -28,7 +28,7 @@ from uk_parliament_mcp.http_client import build_url, get_result
 
 app = typer.Typer(help="Live Parliament dashboard with auto-refresh")
 
-MIN_INTERVAL = 10  # Minimum refresh interval in seconds
+MIN_INTERVAL = 30  # Minimum refresh interval in seconds
 
 
 async def _fetch_commons_now() -> dict[str, Any] | None:
@@ -164,7 +164,7 @@ def _render_dashboard(data: dict[str, Any]) -> Layout:
 
     calendar_events = data.get("calendar", [])
     calendar_content, total_count = _render_calendar_table(
-        calendar_events, max_rows=available_rows
+        calendar_events, max_rows=available_rows, now=datetime.now()
     )
     displayed = min(len(calendar_events), available_rows) if calendar_events else 0
     subtitle = _calendar_subtitle(displayed, total_count)
@@ -235,7 +235,7 @@ def watch(
         30,
         "--interval",
         "-i",
-        help="Refresh interval in seconds (minimum 10)",
+        help="Refresh interval in seconds (minimum 30)",
     ),
     raw: bool = typer.Option(
         False,

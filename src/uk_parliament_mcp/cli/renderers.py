@@ -7,6 +7,7 @@ renderers for live and composite commands.
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from typing import Any
 
 from rich.console import Console
@@ -31,6 +32,23 @@ _SLIDE_TYPE_LABELS: dict[str, tuple[str, str]] = {
     "NotSitting": ("Not Sitting", "dim italic"),
     "HouseRisen": ("House has risen", "dim italic"),
 }
+
+def _house_color(house_name: str) -> str:
+    """Return a Rich color for the given house name.
+
+    Args:
+        house_name: House name string (e.g. "House of Commons", "Commons", "Lords").
+
+    Returns:
+        Rich color string: "green" for Commons, "red" for Lords, "white" fallback.
+    """
+    lower = house_name.lower()
+    if "commons" in lower:
+        return "green"
+    if "lords" in lower:
+        return "red"
+    return "white"
+
 
 _ACTIVE_SLIDE_TYPES = {
     "Debate",
@@ -219,8 +237,9 @@ def _render_chamber_panel(data: dict[str, Any] | None, house_name: str) -> Panel
     if not text.plain.strip():
         text.append("No current activity", style="dim italic")
 
-    border_style = "green" if is_active else "dim"
-    return Panel(text, title=f"[bold]{house_name}[/bold]", border_style=border_style)
+    color = _house_color(house_name)
+    border_style = color if is_active else "dim"
+    return Panel(text, title=f"[bold {color}]{house_name}[/bold {color}]", border_style=border_style)
 
 
 # ---------------------------------------------------------------------------
@@ -244,14 +263,38 @@ def _calendar_subtitle(displayed: int, total: int) -> str | None:
     return f"[dim]showing {displayed} of {total} events ({hidden} more)[/dim]"
 
 
+def _extract_event_time(event: dict[str, Any]) -> str:
+    """Extract an "HH:MM" time string from an event dict.
+
+    Args:
+        event: Calendar event dict.
+
+    Returns:
+        Time string like "14:30", or "" if no parseable time found.
+    """
+    for key in ["StartTime", "startTime", "StartDate", "startDate"]:
+        if key in event and event[key]:
+            raw = str(event[key])
+            if "T" in raw:
+                return raw.split("T")[1][:5]
+            if len(raw) > 5:
+                return raw[:5]
+            return raw
+    return ""
+
+
 def _render_calendar_table(
-    events: list[dict[str, Any]], max_rows: int | None = None
+    events: list[dict[str, Any]],
+    max_rows: int | None = None,
+    now: datetime | None = None,
 ) -> tuple[Table | Text, int]:
     """Render today's business as a Rich table.
 
     Args:
         events: List of calendar event dicts.
         max_rows: Maximum number of rows to display. None means show all.
+        now: Current datetime for time-tracking highlight. None disables
+            sorting/highlighting (backward-compatible).
 
     Returns:
         Tuple of (Rich Table or Text if no events, total event count).
@@ -259,35 +302,62 @@ def _render_calendar_table(
     if not events:
         return Text("No events scheduled for today", style="dim italic"), 0
 
+    total_count = len(events)
+
+    # Sort by start time when time-tracking is enabled
+    if now is not None:
+        events = sorted(events, key=lambda e: _extract_event_time(e) or "99:99")
+
+    # Determine current-event index
+    current_idx: int | None = None
+    if now is not None:
+        now_hm = now.strftime("%H:%M")
+        last_started: int | None = None
+        first_future: int | None = None
+        for i, event in enumerate(events):
+            t = _extract_event_time(event)
+            if not t:
+                continue
+            if t <= now_hm:
+                last_started = i
+            elif first_future is None:
+                first_future = i
+        if last_started is not None:
+            current_idx = last_started
+        elif first_future is not None:
+            current_idx = first_future
+
+    # Window events around current index when truncating
+    if max_rows is not None and max_rows < total_count:
+        if now is not None and current_idx is not None:
+            half = max_rows // 2
+            start = max(0, current_idx - half)
+            end = start + max_rows
+            if end > total_count:
+                end = total_count
+                start = max(0, end - max_rows)
+            display_events = events[start:end]
+            # Adjust current_idx relative to the window
+            current_idx = current_idx - start
+        else:
+            display_events = events[:max_rows]
+    else:
+        display_events = events
+
     table = Table(
         show_header=True,
         header_style="bold",
         expand=True,
-        row_styles=["", "dim"],
     )
-    table.add_column("Time", width=5, style="cyan", no_wrap=True)
+    table.add_column("Time", width=7, style="cyan", no_wrap=True)
     table.add_column("House", width=7, no_wrap=True)
     table.add_column("Event", ratio=1, overflow="ellipsis")
     table.add_column("Type", max_width=16)
     table.add_column("Location", max_width=20)
     table.add_column("Category", max_width=14)
 
-    total_count = len(events)
-    display_events = events[:max_rows] if max_rows is not None else events
-
-    for event in display_events:
-        time_str = ""
-        for key in ["StartTime", "startTime", "StartDate", "startDate"]:
-            if key in event and event[key]:
-                raw = str(event[key])
-                # Try to extract just the time portion
-                if "T" in raw:
-                    time_str = raw.split("T")[1][:5]
-                elif len(raw) > 5:
-                    time_str = raw[:5]
-                else:
-                    time_str = raw
-                break
+    for row_idx, event in enumerate(display_events):
+        time_str = _extract_event_time(event)
 
         house_str = ""
         for key in ["House", "house"]:
@@ -319,7 +389,20 @@ def _render_calendar_table(
                 category_str = str(event[key])
                 break
 
-        table.add_row(time_str, house_str, event_str, type_str, location_str, category_str)
+        # Highlight current event
+        is_current = current_idx is not None and row_idx == current_idx
+        if is_current:
+            time_display = f"> {time_str}" if time_str else "> "
+            row_style = "bold"
+        else:
+            time_display = f"  {time_str}" if time_str else ""
+            row_style = "" if row_idx % 2 == 0 else "dim"
+
+        house_text = Text(house_str, style=_house_color(house_str))
+        table.add_row(
+            time_display, house_text, event_str, type_str, location_str, category_str,
+            style=row_style,
+        )
 
     return table, total_count
 
@@ -393,7 +476,7 @@ def render_calendar(result_json: str) -> None:
         if not events and isinstance(data, dict):
             events = [data]
 
-    table_content, total_count = _render_calendar_table(events)
+    table_content, total_count = _render_calendar_table(events, now=datetime.now())
     displayed = min(len(events), total_count)
     subtitle = _calendar_subtitle(displayed, total_count)
     panel = Panel(
