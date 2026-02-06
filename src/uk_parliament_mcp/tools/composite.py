@@ -291,3 +291,96 @@ def register_tools(mcp: FastMCP) -> None:
                 },
             }
         )
+
+    @mcp.tool()
+    async def get_my_mp(postcode: str, topic: str | None = None) -> str:
+        """Find your MP by postcode and get their full profile - combines postcode lookup, biography, interests, election result, and voting | who is my MP, postcode lookup, constituency MP, local representative | Use when someone wants to find their MP from a postcode | Returns MP profile with constituency, biography, interests, election results, and recent votes
+
+        Args:
+            postcode: UK postcode to look up (e.g., 'SW1A 1AA', 'N1 9GU').
+            topic: Optional topic keyword to filter votes (e.g., 'climate', 'NHS').
+
+        Returns:
+            Combined MP profile with constituency, biography, interests, election result, and voting data.
+        """
+        # Step 1: Search for MP by postcode (Location parameter)
+        search_url = build_url(
+            f"{MEMBERS_API_BASE}/Members/Search",
+            {
+                "Location": postcode,
+                "IsCurrentMember": "true",
+                "House": 1,
+            },
+        )
+        search_response = await get_result(search_url)
+        member_data = _parse_response(search_response)
+
+        member_id = _extract_member_id(member_data)
+        if not member_id:
+            return json.dumps(
+                {
+                    "error": f"No current MP found for postcode '{postcode}'",
+                    "search_result": member_data,
+                }
+            )
+
+        basic_info = member_data.get("items", [{}])[0].get("value", {})
+
+        # Step 2: Parallel detail fetches
+        biography_url = f"{MEMBERS_API_BASE}/Members/{member_id}/Biography"
+        interests_url = f"{INTERESTS_API_BASE}/Interests/?MemberId={member_id}"
+        election_url = f"{MEMBERS_API_BASE}/Members/{member_id}/LatestElectionResult"
+        voting_url = build_url(
+            f"{MEMBERS_API_BASE}/Members/{member_id}/Voting",
+            {"house": 1, "page": 1},
+        )
+
+        tasks = [
+            get_result(biography_url),
+            get_result(interests_url),
+            get_result(election_url),
+            get_result(voting_url),
+        ]
+
+        # Optionally search topic-specific votes
+        topic_votes_url = None
+        if topic:
+            topic_votes_url = build_url(
+                f"{COMMONS_VOTES_API_BASE}/divisions.json/search",
+                {
+                    "queryParameters.searchTerm": topic,
+                    "memberId": member_id,
+                },
+            )
+            tasks.append(get_result(topic_votes_url))
+
+        results = await asyncio.gather(*tasks)
+
+        biography_response = results[0]
+        interests_response = results[1]
+        election_response = results[2]
+        voting_response = results[3]
+
+        output: dict[str, Any] = {
+            "postcode": postcode,
+            "member_id": member_id,
+            "basic_info": basic_info,
+            "biography": _parse_response(biography_response),
+            "registered_interests": _parse_response(interests_response),
+            "latest_election": _parse_response(election_response),
+            "recent_voting": _parse_response(voting_response),
+            "sources": {
+                "search": search_url,
+                "biography": biography_url,
+                "interests": interests_url,
+                "election": election_url,
+                "voting": voting_url,
+            },
+        }
+
+        if topic and len(results) > 4:
+            output["topic_votes"] = _parse_response(results[4])
+            output["topic_searched"] = topic
+            output["sources"]["topic_votes"] = topic_votes_url
+
+        return json.dumps(output)

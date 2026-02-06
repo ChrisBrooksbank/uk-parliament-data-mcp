@@ -935,3 +935,192 @@ def render_committee_summary(result_json: str) -> None:
                     pub_text.append("\n")
         if pub_text.plain.strip():
             console.print(Panel(pub_text, title="[bold]Publications[/bold]", border_style="dim"))
+
+
+def render_my_mp(result_json: str) -> None:
+    """Render a 'my MP' profile with rich formatting.
+
+    Args:
+        result_json: JSON string from _get_my_mp_async.
+    """
+    try:
+        data = json.loads(result_json)
+    except (json.JSONDecodeError, TypeError):
+        Console().print("[red]Failed to parse MP data[/red]")
+        return
+
+    if "error" in data:
+        Console().print(f"[red]{data['error']}[/red]")
+        return
+
+    console = Console()
+
+    # --- Header panel: name, party, constituency, majority ---
+    basic = data.get("basic_info", {})
+    name = basic.get("nameDisplayAs", "Unknown")
+    party_name = ""
+    party_info = basic.get("latestParty")
+    if isinstance(party_info, dict):
+        party_name = party_info.get("name", "")
+    constituency = ""
+    membership_info = basic.get("latestHouseMembership")
+    if isinstance(membership_info, dict):
+        constituency = membership_info.get("membershipFrom", "")
+    member_id = data.get("member_id", "")
+    postcode = data.get("postcode", "")
+
+    header_text = Text()
+    header_text.append(name, style="bold white")
+    parts: list[str] = []
+    if party_name:
+        parts.append(party_name)
+    if constituency:
+        parts.append(constituency)
+    if member_id:
+        parts.append(f"Member ID: {member_id}")
+    if parts:
+        header_text.append(f"\n{' | '.join(parts)}", style="dim")
+
+    # Extract majority from election result
+    election = data.get("latest_election", {})
+    election_value = election.get("value", election) if isinstance(election, dict) else {}
+    if isinstance(election_value, dict):
+        majority = election_value.get("majority")
+        election_date = str(election_value.get("electionDate", ""))[:4]
+        if majority is not None:
+            maj_str = f"Majority: {majority:,}" if isinstance(majority, int) else f"Majority: {majority}"
+            if election_date:
+                maj_str += f" ({election_date})"
+            header_text.append(f"\n{maj_str}", style="dim")
+
+    if postcode:
+        header_text.append(f"\nPostcode: {postcode}", style="dim italic")
+
+    console.print(Panel(header_text, title="[bold]Your MP[/bold]", border_style="green"))
+
+    # --- Biography section ---
+    bio = data.get("biography", {})
+    if isinstance(bio, dict):
+        bio_value = bio.get("value", bio)
+        if isinstance(bio_value, dict):
+            entries = bio_value.get("biographyEntries", [])
+            if entries and isinstance(entries, list):
+                bio_text = Text()
+                for entry in entries[:10]:
+                    if isinstance(entry, dict):
+                        cat = entry.get("category", "")
+                        val = entry.get("entry", "")
+                        if cat or val:
+                            bio_text.append(f"  {cat}: ", style="bold")
+                            bio_text.append(f"{val}\n")
+                if bio_text.plain.strip():
+                    console.print(Panel(bio_text, title="[bold]Biography[/bold]", border_style="dim"))
+
+    # --- Registered interests ---
+    interests = data.get("registered_interests", {})
+    if isinstance(interests, dict):
+        interest_items = interests.get("items", [])
+        if interest_items and isinstance(interest_items, list):
+            table = Table(show_header=True, header_style="bold", expand=True)
+            table.add_column("Category", ratio=1)
+            table.add_column("Interest", ratio=2)
+            for item in interest_items[:15]:
+                if isinstance(item, dict):
+                    cat = str(item.get("category", item.get("name", "")))
+                    int_entries = item.get("interests", item.get("entries", []))
+                    if isinstance(int_entries, list) and int_entries:
+                        for int_entry in int_entries[:3]:
+                            if isinstance(int_entry, dict):
+                                desc = str(int_entry.get("interest", int_entry.get("description", "")))
+                                table.add_row(cat, desc)
+                                cat = ""
+                    else:
+                        table.add_row(cat, "")
+            if table.row_count > 0:
+                console.print(Panel(table, title="[bold]Registered Interests[/bold]", border_style="dim"))
+
+    # --- Latest election result ---
+    if isinstance(election_value, dict):
+        candidates = election_value.get("candidates", [])
+        if candidates and isinstance(candidates, list):
+            election_title = election_value.get("electionTitle", "")
+            table = Table(show_header=True, header_style="bold", expand=True)
+            table.add_column("Candidate", ratio=1)
+            table.add_column("Party", ratio=1)
+            table.add_column("Votes", width=8, justify="right")
+            table.add_column("%", width=6, justify="right")
+            for candidate in candidates:
+                if isinstance(candidate, dict):
+                    cand_name = str(candidate.get("name", ""))
+                    cand_party = ""
+                    cand_party_info = candidate.get("party")
+                    if isinstance(cand_party_info, dict):
+                        cand_party = cand_party_info.get("name", "")
+                    elif isinstance(cand_party_info, str):
+                        cand_party = cand_party_info
+                    cand_votes = candidate.get("votes", "")
+                    vote_share = candidate.get("voteShare")
+                    votes_str = f"{cand_votes:,}" if isinstance(cand_votes, int) else str(cand_votes)
+                    share_str = f"{vote_share:.1f}" if isinstance(vote_share, (int, float)) else ""
+                    table.add_row(cand_name, cand_party, votes_str, share_str)
+            if table.row_count > 0:
+                title = f"[bold]Latest Election ({election_title})[/bold]" if election_title else "[bold]Latest Election[/bold]"
+                console.print(Panel(table, title=title, border_style="dim"))
+
+    # --- Recent votes ---
+    voting = data.get("recent_voting", {})
+    if isinstance(voting, dict):
+        vote_items = voting.get("items", [])
+        if vote_items and isinstance(vote_items, list):
+            table = Table(show_header=True, header_style="bold", expand=True)
+            table.add_column("Division", style="cyan", no_wrap=True)
+            table.add_column("Title", ratio=1)
+            table.add_column("Date", width=10)
+            table.add_column("Vote", width=10)
+            for item in vote_items[:15]:
+                if isinstance(item, dict):
+                    value = item.get("value", item)
+                    if isinstance(value, dict):
+                        div_id = str(value.get("divisionId", value.get("DivisionId", "")))
+                        title = str(value.get("title", value.get("Title", "")))
+                        date = str(value.get("date", value.get("Date", "")))[:10]
+                        voted_aye = value.get("memberVotedAye", value.get("inAffirmativeLobby"))
+                        vote_str = "Aye" if voted_aye else ("No" if voted_aye is False else "")
+                        table.add_row(div_id, title, date, vote_str)
+            if table.row_count > 0:
+                console.print(Panel(table, title="[bold]Recent Votes[/bold]", border_style="dim"))
+
+    # --- Topic votes (only if --votes was provided) ---
+    topic_votes = data.get("topic_votes")
+    topic_searched = data.get("topic_searched", "")
+    if topic_votes is not None:
+        if isinstance(topic_votes, dict):
+            div_items = topic_votes.get("items", topic_votes.get("results", []))
+            if not isinstance(div_items, list):
+                div_items = []
+        elif isinstance(topic_votes, list):
+            div_items = topic_votes
+        else:
+            div_items = []
+
+        if div_items:
+            table = Table(show_header=True, header_style="bold", expand=True)
+            table.add_column("ID", style="cyan", width=8)
+            table.add_column("Title", ratio=1)
+            table.add_column("Date", width=10)
+            table.add_column("Ayes", width=6, justify="right")
+            table.add_column("Noes", width=6, justify="right")
+            for div in div_items[:20]:
+                if isinstance(div, dict):
+                    div_id = str(div.get("DivisionId", div.get("divisionId", "")))
+                    title = str(div.get("Title", div.get("title", "")))
+                    date = str(div.get("Date", div.get("date", "")))[:10]
+                    ayes = str(div.get("AyeCount", div.get("ayeCount", "")))
+                    noes = str(div.get("NoCount", div.get("noCount", "")))
+                    table.add_row(div_id, title, date, ayes, noes)
+            if table.row_count > 0:
+                panel_title = f'[bold]Votes on "{topic_searched}"[/bold]' if topic_searched else "[bold]Topic Votes[/bold]"
+                console.print(Panel(table, title=panel_title, border_style="dim"))
+        else:
+            if topic_searched:
+                console.print(f'[dim]No divisions found for "{topic_searched}"[/dim]')
