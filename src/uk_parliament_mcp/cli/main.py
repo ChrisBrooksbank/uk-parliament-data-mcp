@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import sys
 from typing import Optional
 
+import click
 import typer
 from rich.console import Console
 
@@ -142,7 +144,21 @@ _global_fields: str | None = None
 
 def main() -> None:
     """Entry point for the CLI application."""
-    app()
+    try:
+        rv = app(standalone_mode=False)
+        sys.exit(rv or 0)
+    except click.MissingParameter as e:
+        if e.ctx:
+            click.echo(e.ctx.get_help())
+            click.echo()
+        click.echo(f"Error: {e.format_message()}", err=True)
+        sys.exit(2)
+    except click.ClickException as e:
+        e.show()
+        sys.exit(e.exit_code)
+    except click.Abort:
+        click.echo("Aborted!", err=True)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

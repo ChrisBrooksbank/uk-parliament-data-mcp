@@ -99,3 +99,12 @@ class TestMainApp:
         result = cli_runner.invoke(app, ["guide", "--help"])
         assert result.exit_code == 0
         assert "guide" in result.stdout.lower()
+
+
+class TestMissingArgShowsHelp:
+    """Tests for missing argument behavior."""
+
+    def test_missing_arg_exits_with_error(self, cli_runner: CliRunner):
+        """Missing required argument reports error."""
+        result = cli_runner.invoke(app, ["committees", "search"])
+        assert result.exit_code == 2
