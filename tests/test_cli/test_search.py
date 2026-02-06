@@ -36,6 +36,15 @@ def _mock_error_response() -> str:
     return json.dumps({"url": "https://test.example.com", "error": "Service unavailable", "statusCode": 503})
 
 
+def _parse_json_output(output: str) -> dict:
+    """Extract JSON from CLI output, skipping non-JSON lines (e.g. warnings)."""
+    for line in output.splitlines():
+        line = line.strip()
+        if line.startswith("{"):
+            return json.loads(line)
+    raise ValueError(f"No JSON found in output: {output!r}")
+
+
 # ---------------------------------------------------------------------------
 # Source registry tests
 # ---------------------------------------------------------------------------
@@ -368,7 +377,7 @@ class TestSearchCLI:
             result = runner.invoke(app, ["search", "NHS", "--format", "json"])
 
         assert result.exit_code == 0
-        parsed = json.loads(result.output)
+        parsed = _parse_json_output(result.output)
         assert parsed["query"] == "NHS"
 
     def test_scoped_search(self) -> None:
@@ -381,7 +390,7 @@ class TestSearchCLI:
             result = runner.invoke(app, ["search", "NHS", "--scope", "bills,members", "--format", "json"])
 
         assert result.exit_code == 0
-        parsed = json.loads(result.output)
+        parsed = _parse_json_output(result.output)
         assert parsed["sources_queried"] == 2
 
     def test_counts_only(self) -> None:
@@ -394,7 +403,7 @@ class TestSearchCLI:
             result = runner.invoke(app, ["search", "NHS", "--counts-only", "--scope", "members", "--format", "json"])
 
         assert result.exit_code == 0
-        parsed = json.loads(result.output)
+        parsed = _parse_json_output(result.output)
         assert "summary" in parsed
         assert "results" not in parsed
 
@@ -415,7 +424,7 @@ class TestSearchCLI:
             result = runner.invoke(app, ["search", "NHS", "--limit", "3", "--scope", "members", "--format", "json"])
 
         assert result.exit_code == 0
-        parsed = json.loads(result.output)
+        parsed = _parse_json_output(result.output)
         assert parsed["summary"]["members"]["returned"] == 3
 
     def test_exclude_option(self) -> None:
@@ -428,5 +437,18 @@ class TestSearchCLI:
             result = runner.invoke(app, ["search", "NHS", "--exclude", "erskine-may", "--format", "json"])
 
         assert result.exit_code == 0
-        parsed = json.loads(result.output)
+        parsed = _parse_json_output(result.output)
         assert parsed["sources_queried"] == 11
+
+    def test_experimental_warning(self) -> None:
+        """Search command emits an experimental warning on stderr."""
+        from uk_parliament_mcp.cli.main import app
+
+        mock_data = {"items": [], "totalResults": 0}
+        with patch("uk_parliament_mcp.cli.search.get_result", new_callable=AsyncMock) as mock_get:
+            mock_get.return_value = _mock_api_response(mock_data)
+            result = runner.invoke(app, ["search", "NHS", "--scope", "members", "--format", "json"])
+
+        assert result.exit_code == 0
+        # Typer CliRunner captures stderr in output by default
+        assert "experimental" in result.output.lower() or "experimental" in (result.stderr or "").lower()

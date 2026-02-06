@@ -14,7 +14,13 @@ import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.renderers import _parse_api_response
-from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async, should_render_rich
+from uk_parliament_mcp.cli.utils import (
+    echo_utf8,
+    experimental,
+    format_output,
+    run_async,
+    should_render_rich,
+)
 from uk_parliament_mcp.config import (
     BILLS_API_BASE,
     COMMITTEES_API_BASE,
@@ -397,6 +403,7 @@ async def _universal_search_async(
 # ---------------------------------------------------------------------------
 
 
+@experimental
 def search_command(
     query: str = typer.Argument(..., help="Search term to query across all Parliament sources"),
     scope: str | None = typer.Option(

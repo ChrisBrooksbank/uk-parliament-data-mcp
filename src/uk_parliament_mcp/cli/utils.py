@@ -3,11 +3,38 @@
 from __future__ import annotations
 
 import asyncio
+import functools
+import inspect
 import sys
 from collections.abc import Coroutine
 from typing import Any
 
+import typer
+
 from uk_parliament_mcp.cli.formatters import CLIFormatter, OutputFormat
+
+
+def experimental(func):  # noqa: ANN001, ANN201
+    """Mark a CLI command as experimental.
+
+    Prepends '[Experimental]' to the command's docstring (visible in --help)
+    and prints a stderr warning when the command is invoked.
+    """
+    original_doc = func.__doc__ or ""
+    func.__doc__ = f"[Experimental] {original_doc.lstrip()}"
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+        name = func.__name__.replace("_command", "").replace("_", "-")
+        typer.echo(
+            f"Warning: '{name}' is experimental and may change without notice.",
+            err=True,
+        )
+        return func(*args, **kwargs)
+
+    wrapper.__doc__ = func.__doc__
+    wrapper.__signature__ = inspect.signature(func)
+    return wrapper
 
 
 def should_render_rich(output_format: OutputFormat, raw: bool) -> bool:
