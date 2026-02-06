@@ -30,6 +30,7 @@ Connect your AI assistant to 161 UK Parliament API tools for comprehensive parli
 - [CLI Usage](#cli-usage)
   - [Quick Start](#quick-start)
   - [Common Commands](#common-commands)
+  - [Daily/Weekly Digest](#dailyweekly-digest)
   - [Output Modes](#output-modes)
   - [Help System](#help-system)
 - [Alternative Installation Methods](#alternative-installation-methods)
@@ -390,7 +391,7 @@ parliament live commons-now --pretty
 
 ### Common Commands
 
-The CLI organizes 161 tools into 12 command groups:
+The CLI organizes 161 tools into 14 command groups:
 
 ```bash
 # MP and Lords research
@@ -429,6 +430,15 @@ parliament legislation search-treaties "trade"
 
 # Erskine May procedure rules
 parliament procedures search "closure"
+
+# Daily/weekly parliamentary digest
+parliament digest                          # Today's summary
+parliament digest --date 2025-01-15        # Specific date
+parliament digest --period week            # This week (Mon-Fri)
+parliament digest --house 1                # Commons only
+
+# Live dashboard with auto-refresh
+parliament watch
 ```
 
 **High-level composite tools** (combine multiple API calls):
@@ -446,6 +456,35 @@ parliament composite bill-overview "Online Safety" --pretty
 # Get full committee summary
 parliament composite committee-summary "Treasury" --pretty
 ```
+
+### Daily/Weekly Digest
+
+Get a quick overview of parliamentary activity without running multiple commands. The `digest` command aggregates 9 data sources (Hansard debates, Commons/Lords divisions, bills, committee meetings, written statements, oral questions, EDMs, and written questions) into a single summary with clickable links to parliament.uk:
+
+```bash
+# Today's digest (rich table output in terminal, JSON when piped)
+parliament digest
+
+# Pretty-printed for a specific date
+parliament digest --date 2025-01-15 --pretty
+
+# Weekly summary (Monday to Friday)
+parliament digest --period week
+
+# Filter to one house
+parliament digest --house 1                # Commons only
+parliament digest --house 2                # Lords only
+
+# JSON output for scripting
+parliament digest --format json | jq '.commons_divisions | length'
+```
+
+The rich output includes:
+- **Divisions** with Ayes/Noes counts, linked to votes.parliament.uk
+- **Bills** with titles and current stage, linked to bills.parliament.uk
+- **Hansard debates** linked to hansard.parliament.uk
+- **Committee meetings** with date, time, and topic, linked to committees.parliament.uk
+- **Written statements**, **oral questions**, **EDMs**, and **written questions** summaries
 
 ### Output Modes
 

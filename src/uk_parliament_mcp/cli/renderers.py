@@ -1146,3 +1146,592 @@ def render_my_mp(result_json: str) -> None:
         else:
             if topic_searched:
                 console.print(f'[dim]No divisions found for "{topic_searched}"[/dim]')
+
+
+# ---------------------------------------------------------------------------
+# Digest command renderers
+# ---------------------------------------------------------------------------
+
+
+def _safe_list(data: Any, *keys: str) -> list[dict[str, Any]]:
+    """Extract a list from data, trying multiple dict keys.
+
+    Args:
+        data: Raw parsed data (dict or list).
+        keys: Dict keys to probe (e.g. "items", "results", "Response").
+
+    Returns:
+        List of dicts, or empty list.
+    """
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        for k in keys:
+            if k in data and isinstance(data[k], list):
+                return list(data[k])
+    return []
+
+
+def _section_has_data(data: Any) -> bool:
+    """Return True if a digest section has meaningful data."""
+    if data is None:
+        return False
+    if isinstance(data, dict) and data.get("error"):
+        return False
+    if isinstance(data, dict) and not data:
+        return False
+    return not (isinstance(data, list) and not data)
+
+
+def _render_digest_header(data: dict[str, Any]) -> Panel:
+    """Render the digest header panel.
+
+    Args:
+        data: Full digest payload dict.
+
+    Returns:
+        Rich Panel with date/period/house info.
+    """
+    text = Text()
+    period = data.get("period", "day")
+    house = data.get("house")
+
+    if period == "week":
+        start = data.get("start_date", "")
+        end = data.get("end_date", "")
+        text.append(f"Week of {start} to {end}", style="bold white")
+    else:
+        text.append(data.get("date", ""), style="bold white")
+
+    if house:
+        text.append(f"  ({house} only)", style="dim")
+
+    # Summary counts
+    counts: list[str] = []
+
+    hansard = data.get("hansard")
+    if isinstance(hansard, dict):
+        hansard_total = hansard.get("TotalResultCount", hansard.get("totalResultCount", 0))
+        if hansard_total:
+            counts.append(f"Debates: {hansard_total}")
+
+    commons = data.get("commons_divisions")
+    lords = data.get("lords_divisions")
+    if isinstance(commons, list):
+        counts.append(f"Commons divisions: {len(commons)}")
+    if isinstance(lords, list):
+        counts.append(f"Lords divisions: {len(lords)}")
+
+    bills = data.get("bills")
+    if isinstance(bills, dict):
+        bill_items = _safe_list(bills, "items", "results")
+        if bill_items:
+            counts.append(f"Bill sittings: {len(bill_items)}")
+
+    committees = data.get("committees")
+    if isinstance(committees, dict):
+        comm_items = _safe_list(committees, "items", "results")
+        if comm_items:
+            counts.append(f"Committee events: {len(comm_items)}")
+
+    statements = data.get("written_statements")
+    if isinstance(statements, dict):
+        stmt_items = _safe_list(statements, "results", "items")
+        if stmt_items:
+            counts.append(f"Written statements: {len(stmt_items)}")
+
+    edms = data.get("edms")
+    if isinstance(edms, dict):
+        edm_items = _safe_list(edms, "Response", "items", "results")
+        if edm_items:
+            counts.append(f"EDMs: {len(edm_items)}")
+
+    if counts:
+        text.append("\n" + " | ".join(counts), style="dim")
+
+    return Panel(text, title="[bold]Parliamentary Digest[/bold]", border_style="green")
+
+
+def _render_divisions_section(
+    commons: Any, lords: Any
+) -> Panel | None:
+    """Render a combined divisions panel.
+
+    Args:
+        commons: Commons divisions data (list or dict).
+        lords: Lords divisions data (list or dict).
+
+    Returns:
+        Rich Panel, or None if no data.
+    """
+    commons_list = commons if isinstance(commons, list) else []
+    lords_list = lords if isinstance(lords, list) else []
+    if not commons_list and not lords_list:
+        return None
+
+    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+    table.add_column("House", width=8)
+    table.add_column("Division", ratio=1)
+    table.add_column("Ayes", width=6, justify="right")
+    table.add_column("Noes", width=6, justify="right")
+    table.add_column("Date", width=10)
+
+    for div in commons_list[:20]:
+        if isinstance(div, dict):
+            div_id = div.get("DivisionId", div.get("divisionId", ""))
+            title = str(div.get("Title", div.get("title", "")))
+            title_text = Text(title)
+            if div_id:
+                title_text.stylize(f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}")
+            ayes = str(div.get("AyeCount", div.get("ayeCount", "")))
+            noes = str(div.get("NoCount", div.get("noCount", "")))
+            dt = str(div.get("Date", div.get("date", "")))[:10]
+            table.add_row(Text("Commons", style="green"), title_text, ayes, noes, dt)
+
+    for div in lords_list[:20]:
+        if isinstance(div, dict):
+            div_id = div.get("DivisionId", div.get("divisionId", ""))
+            title = str(div.get("Title", div.get("title", "")))
+            title_text = Text(title)
+            if div_id:
+                title_text.stylize(f"link https://votes.parliament.uk/Votes/Lords/Division/{div_id}")
+            ayes = str(div.get("AuthorityCount", div.get("authorityCount", "")))
+            noes = str(div.get("NonAuthorityCount", div.get("nonAuthorityCount", "")))
+            dt = str(div.get("Date", div.get("date", "")))[:10]
+            table.add_row(Text("Lords", style="red"), title_text, ayes, noes, dt)
+
+    if table.row_count == 0:
+        return None
+    return Panel(table, title="[bold]Divisions[/bold]", border_style="dim")
+
+
+def _render_hansard_section(data: Any) -> Panel | None:
+    """Render Hansard debate sections.
+
+    Args:
+        data: Parsed Hansard search/debates.json response.
+
+    Returns:
+        Rich Panel, or None if no data.
+    """
+    if not _section_has_data(data):
+        return None
+
+    text = Text()
+
+    # search/debates.json returns {"Results": [...], "TotalResultCount": N}
+    sections: list[Any] = []
+    if isinstance(data, list):
+        sections = data
+    elif isinstance(data, dict):
+        for key in ("Results", "results", "Sections", "sections", "items"):
+            if key in data and isinstance(data[key], list):
+                sections = data[key]
+                break
+
+    total = 0
+    if isinstance(data, dict):
+        total = data.get("TotalResultCount", data.get("totalResultCount", 0))
+
+    for section in sections[:15]:
+        if isinstance(section, dict):
+            title = section.get("Title", section.get("title", ""))
+            house_name = section.get("House", section.get("house", ""))
+            debate_section = section.get("DebateSection", section.get("debateSection", ""))
+            external_id = section.get("ExternalId", section.get("externalId", ""))
+            if title:
+                text.append("  ")
+                if house_name:
+                    color = _house_color(str(house_name))
+                    text.append(house_name, style=color)
+                    text.append(" ")
+                if debate_section:
+                    text.append(f"({debate_section}) ", style="dim italic")
+                title_text = Text(str(title))
+                if external_id:
+                    title_text.stylize(f"link https://hansard.parliament.uk/debates/{external_id}")
+                text.append_text(title_text)
+                text.append("\n")
+
+    if not text.plain.strip():
+        return None
+    subtitle = f"[dim]{total} debates total[/dim]" if total > len(sections) else None
+    return Panel(text, title="[bold]Hansard Debates[/bold]", subtitle=subtitle, border_style="dim")
+
+
+def _render_bills_section(data: Any) -> Panel | None:
+    """Render bill sittings, enriched with bill details when available.
+
+    Args:
+        data: Parsed Bills/Sittings response (may include _bill_details).
+
+    Returns:
+        Rich Panel, or None if no data.
+    """
+    if not _section_has_data(data):
+        return None
+
+    items = _safe_list(data, "items", "results")
+    if not items:
+        return None
+
+    # Get enriched bill details if available
+    bill_details: dict[str, dict[str, Any]] = {}
+    if isinstance(data, dict):
+        bill_details = data.get("_bill_details", {})
+
+    # Deduplicate by billId
+    bill_ids: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        if isinstance(item, dict):
+            val = item.get("value", item)
+            if not isinstance(val, dict):
+                val = item
+            bid = str(val.get("billId", item.get("billId", "")))
+            if bid and bid not in seen:
+                bill_ids.append(bid)
+                seen.add(bid)
+
+    if not bill_ids:
+        return None
+
+    # If we have enriched details, show a proper table
+    if bill_details:
+        table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+        table.add_column("Bill", ratio=2)
+        table.add_column("Stage", ratio=1)
+
+        for bid in bill_ids[:20]:
+            detail = bill_details.get(bid, {})
+            title = detail.get("shortTitle", detail.get("longTitle", f"Bill {bid}"))
+            bill_text = Text(str(title))
+            bill_text.stylize(f"link https://bills.parliament.uk/bills/{bid}")
+
+            stage = ""
+            current_stage = detail.get("currentStage")
+            if isinstance(current_stage, dict):
+                stage_desc = current_stage.get("description", "")
+                if stage_desc:
+                    stage = str(stage_desc)
+                else:
+                    stage_name = current_stage.get("stageName", "")
+                    if stage_name:
+                        stage = str(stage_name)
+
+            table.add_row(bill_text, stage)
+
+        if table.row_count == 0:
+            return None
+        return Panel(table, title="[bold]Bills[/bold]", border_style="dim")
+
+    # Fallback: no enriched details, show count + IDs
+    text = Text()
+    text.append(f"  {len(bill_ids)} bill(s) with sittings", style="bold")
+    text.append(f"\n  Bill IDs: {', '.join(bill_ids[:20])}", style="dim")
+    return Panel(text, title="[bold]Bills[/bold]", border_style="dim")
+
+
+def _render_committees_section(data: Any) -> Panel | None:
+    """Render committee events.
+
+    Args:
+        data: Parsed Committees/Events response.
+
+    Returns:
+        Rich Panel, or None if no data.
+    """
+    if not _section_has_data(data):
+        return None
+
+    items = _safe_list(data, "items", "results")
+    if not items:
+        return None
+
+    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+    table.add_column("Date", width=10)
+    table.add_column("Time", width=5, style="cyan")
+    table.add_column("Committee", ratio=1)
+    table.add_column("Topic", ratio=1)
+
+    for item in items[:10]:
+        if isinstance(item, dict):
+            date_str = ""
+            time_str = ""
+            for key in ["startDate", "StartDate", "startTime", "StartTime"]:
+                raw = item.get(key, "")
+                if raw and isinstance(raw, str) and "T" in raw:
+                    date_str = raw.split("T")[0]
+                    time_str = raw.split("T")[1][:5]
+                    break
+
+            committee_name = ""
+            committee_id = ""
+            # Single committee object
+            comm = item.get("committee", item.get("Committee"))
+            if isinstance(comm, dict):
+                committee_name = comm.get("name", comm.get("Name", ""))
+                committee_id = str(comm.get("id", comm.get("Id", "")))
+            elif isinstance(comm, str):
+                committee_name = comm
+            # List of committees (Events API returns "committees" array)
+            if not committee_name:
+                comms = item.get("committees", [])
+                if isinstance(comms, list) and comms:
+                    first = comms[0]
+                    if isinstance(first, dict):
+                        committee_name = first.get("name", first.get("Name", ""))
+                        if not committee_id:
+                            committee_id = str(first.get("id", first.get("Id", "")))
+            if not committee_name:
+                committee_name = str(
+                    item.get("committeeName", item.get("CommitteeName", ""))
+                )
+
+            # Make committee name a link if we have an ID
+            comm_text = Text(committee_name)
+            if committee_id:
+                comm_text.stylize(f"link https://committees.parliament.uk/committee/{committee_id}/")
+
+            topic = str(item.get("description", item.get("Description", item.get("title", ""))))
+            # Fallback: show event type + location
+            if not topic or topic == "None":
+                parts: list[str] = []
+                evt = item.get("eventType")
+                if isinstance(evt, dict):
+                    parts.append(evt.get("name", ""))
+                loc = item.get("location", "")
+                if loc:
+                    parts.append(str(loc))
+                topic = " — ".join(p for p in parts if p)
+
+            table.add_row(date_str, time_str, comm_text, topic)
+
+    if table.row_count == 0:
+        return None
+    return Panel(table, title="[bold]Committee Meetings[/bold]", border_style="dim")
+
+
+def _render_statements_section(data: Any) -> Panel | None:
+    """Render written statements.
+
+    Args:
+        data: Parsed written statements response.
+
+    Returns:
+        Rich Panel, or None if no data.
+    """
+    if not _section_has_data(data):
+        return None
+
+    items = _safe_list(data, "results", "items")
+    if not items:
+        return None
+
+    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+    table.add_column("Department", ratio=1)
+    table.add_column("Title", ratio=2)
+
+    for item in items[:10]:
+        if isinstance(item, dict):
+            # Written statements API wraps each item in a "value" object
+            val = item.get("value", item)
+            if not isinstance(val, dict):
+                val = item
+            dept = str(val.get("answeringBodyName", val.get("department", "")))
+            title = str(val.get("title", val.get("heading", "")))
+            title_text = Text(title)
+            stmt_id = val.get("id", val.get("Id", ""))
+            if stmt_id:
+                title_text.stylize(
+                    f"link https://questions-statements.parliament.uk/written-statements/detail/{stmt_id}"
+                )
+            table.add_row(dept, title_text)
+
+    if table.row_count == 0:
+        return None
+    return Panel(table, title="[bold]Written Statements[/bold]", border_style="dim")
+
+
+def _render_oral_qs_section(data: Any) -> Panel | None:
+    """Render oral question times.
+
+    Args:
+        data: Parsed oral question times response.
+
+    Returns:
+        Rich Panel, or None if no data.
+    """
+    if not _section_has_data(data):
+        return None
+
+    items = _safe_list(data, "Response", "items", "results")
+    if not items:
+        return None
+
+    text = Text()
+    for item in items[:10]:
+        if isinstance(item, dict):
+            dept = str(
+                item.get("AnsweringBodyNames", item.get("AnsweringBodyName", item.get("answeringBodyName", "")))
+            )
+            answer_date = str(
+                item.get("AnsweringWhen", item.get("AnswerDate", item.get("answerDate", "")))
+            )[:10]
+            if dept:
+                text.append(f"  {dept}", style="bold")
+                if answer_date:
+                    text.append(f"  ({answer_date})", style="dim")
+                text.append("\n")
+
+    if not text.plain.strip():
+        return None
+    return Panel(text, title="[bold]Oral Questions[/bold]", border_style="dim")
+
+
+def _render_edms_section(data: Any) -> Panel | None:
+    """Render Early Day Motions.
+
+    Args:
+        data: Parsed EDMs response.
+
+    Returns:
+        Rich Panel, or None if no data.
+    """
+    if not _section_has_data(data):
+        return None
+
+    items = _safe_list(data, "Response", "items", "results")
+    if not items:
+        return None
+
+    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+    table.add_column("EDM #", width=7, style="cyan")
+    table.add_column("Title", ratio=1)
+    table.add_column("Primary Sponsor", ratio=1)
+
+    for item in items[:10]:
+        if isinstance(item, dict):
+            edm_id = item.get("Id", item.get("id", ""))
+            edm_num = str(item.get("UIN", item.get("uin", edm_id)))
+            title = str(item.get("Title", item.get("title", "")))
+            title_text = Text(title)
+            if edm_id:
+                title_text.stylize(f"link https://edm.parliament.uk/early-day-motion/{edm_id}")
+            sponsor = str(item.get("PrimarySponsor", item.get("primarySponsor", "")))
+            if isinstance(item.get("PrimarySponsor"), dict):
+                sponsor = item["PrimarySponsor"].get("Name", item["PrimarySponsor"].get("name", ""))
+            elif isinstance(item.get("primarySponsor"), dict):
+                sponsor = item["primarySponsor"].get("Name", item["primarySponsor"].get("name", ""))
+            table.add_row(edm_num, title_text, sponsor)
+
+    if table.row_count == 0:
+        return None
+    return Panel(table, title="[bold]Early Day Motions[/bold]", border_style="dim")
+
+
+def _render_written_qs_section(data: Any) -> Panel | None:
+    """Render written questions summary.
+
+    Args:
+        data: Parsed written questions response.
+
+    Returns:
+        Rich Panel, or None if no data.
+    """
+    if not _section_has_data(data):
+        return None
+
+    items = _safe_list(data, "results", "items")
+    if not items:
+        return None
+
+    # Count tabled vs answered — items may be wrapped in "value"
+    total = len(items)
+    answered = 0
+    for q in items:
+        if isinstance(q, dict):
+            val = q.get("value", q)
+            if (isinstance(val, dict) and val.get("dateAnswered")) or q.get("dateAnswered"):
+                answered += 1
+    tabled = total
+
+    text = Text()
+    text.append(f"  {tabled} tabled", style="bold")
+    text.append(f"  |  {answered} answered", style="dim")
+
+    return Panel(text, title="[bold]Written Questions[/bold]", border_style="dim")
+
+
+def render_digest(result_json: str) -> None:
+    """Render a full parliamentary digest with rich formatting.
+
+    Args:
+        result_json: JSON string from _get_digest_async.
+    """
+    try:
+        data = json.loads(result_json)
+    except (json.JSONDecodeError, TypeError):
+        Console().print("[red]Failed to parse digest data[/red]")
+        return
+
+    if "error" in data:
+        Console().print(f"[red]{data['error']}[/red]")
+        return
+
+    console = Console()
+
+    # Header
+    console.print(_render_digest_header(data))
+
+    # Divisions
+    panel = _render_divisions_section(
+        data.get("commons_divisions"), data.get("lords_divisions")
+    )
+    if panel:
+        console.print(panel)
+
+    # Hansard
+    panel = _render_hansard_section(data.get("hansard"))
+    if panel:
+        console.print(panel)
+
+    # Bills
+    panel = _render_bills_section(data.get("bills"))
+    if panel:
+        console.print(panel)
+
+    # Committees
+    panel = _render_committees_section(data.get("committees"))
+    if panel:
+        console.print(panel)
+
+    # Written statements
+    panel = _render_statements_section(data.get("written_statements"))
+    if panel:
+        console.print(panel)
+
+    # Oral questions
+    panel = _render_oral_qs_section(data.get("oral_questions"))
+    if panel:
+        console.print(panel)
+
+    # EDMs
+    panel = _render_edms_section(data.get("edms"))
+    if panel:
+        console.print(panel)
+
+    # Written questions
+    panel = _render_written_qs_section(data.get("written_questions"))
+    if panel:
+        console.print(panel)
+
+    # If nothing rendered beyond the header, note that
+    sections = [
+        "commons_divisions", "lords_divisions", "hansard", "bills",
+        "committees", "written_statements", "oral_questions", "edms",
+        "written_questions",
+    ]
+    has_any = any(_section_has_data(data.get(s)) for s in sections)
+    if not has_any:
+        console.print("[dim]No parliamentary activity found for this date/period.[/dim]")

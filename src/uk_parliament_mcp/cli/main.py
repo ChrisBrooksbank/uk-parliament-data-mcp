@@ -13,6 +13,7 @@ from uk_parliament_mcp.cli import (
     bills,
     committees,
     composite,
+    digest,
     guide,
     hansard,
     interests,
@@ -47,6 +48,7 @@ app.add_typer(legislation.app, name="legislation")
 app.add_typer(procedures.app, name="procedures")
 app.add_typer(guide.app, name="guide")
 app.add_typer(watch.app, name="watch")
+app.add_typer(digest.app, name="digest")
 
 
 # Top-level reference command for easy discoverability

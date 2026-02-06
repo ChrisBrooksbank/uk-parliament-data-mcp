@@ -58,6 +58,8 @@ parliament <group> <command> [options]
 - `live` - 10 tools for live activity and calendar
 - `legislation` - 11 tools for SIs and treaties
 - `procedures` - 11 tools for Erskine May procedure rules
+- `digest` - Daily/weekly parliamentary summary (aggregates 9 APIs)
+- `watch` - Live Parliament dashboard with auto-refresh
 - `guide` - Help and guidance commands
 
 ### Output Modes
@@ -143,6 +145,24 @@ parliament live calendar
 
 # Next sitting date
 parliament live next-sitting-date --house 1
+```
+
+**Daily/weekly digest:**
+```bash
+# Today's summary across all data sources
+parliament digest --pretty
+
+# Specific date
+parliament digest --date 2025-01-15
+
+# Weekly summary (Mon-Fri)
+parliament digest --period week
+
+# Commons only
+parliament digest --house 1
+
+# JSON output for piping
+parliament digest --format json | jq '.commons_divisions | length'
 ```
 
 ### Help System
@@ -461,6 +481,8 @@ src/uk_parliament_mcp/
 │   ├── live.py         # Live/calendar commands (10 commands)
 │   ├── legislation.py  # SI/treaty commands (11 commands)
 │   ├── procedures.py   # Erskine May commands (11 commands)
+│   ├── digest.py       # Daily/weekly digest (aggregates 9 APIs)
+│   ├── watch.py        # Live dashboard with auto-refresh
 │   └── guide.py        # Help/guidance commands (3 commands)
 └── tools/              # MCP tool modules
     ├── __init__.py
