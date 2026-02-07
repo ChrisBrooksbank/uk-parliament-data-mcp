@@ -53,7 +53,7 @@ parliament <group> <command> [options]
 - `votes` - 10 tools for Commons and Lords divisions
 - `committees` - 26 tools for committee info, evidence
 - `hansard` - 20 tools for parliamentary record
-- `questions` - 12 tools for oral, written questions, and EDMs
+- `questions` - 11 tools for oral, written questions, and EDMs
 - `interests` - 3 tools for register of interests
 - `live` - 10 tools for live activity and calendar
 - `legislation` - 11 tools for SIs and treaties
