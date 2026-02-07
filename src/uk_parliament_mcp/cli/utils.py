@@ -8,6 +8,7 @@ from collections.abc import Coroutine
 from typing import Any
 
 from uk_parliament_mcp.cli.formatters import CLIFormatter, OutputFormat
+from uk_parliament_mcp.http_client import clear_called_urls, get_called_urls
 
 
 def should_render_rich(output_format: OutputFormat, raw: bool) -> bool:
@@ -36,13 +37,28 @@ def run_async(coro: Coroutine[Any, Any, str]) -> str:
     """
     Run an async function synchronously for CLI use.
 
+    Clears URL tracking before execution and prints all called URLs
+    to stderr after the command completes.
+
     Args:
         coro: An async coroutine that returns a string
 
     Returns:
         The result from the coroutine
     """
-    return asyncio.run(coro)
+    clear_called_urls()
+    result = asyncio.run(coro)
+    _print_called_urls()
+    return result
+
+
+def _print_called_urls() -> None:
+    """Print all URLs called during command execution to stderr."""
+    urls = get_called_urls()
+    if urls:
+        print("\nURLs called:", file=sys.stderr)
+        for url in urls:
+            print(f"  {url}", file=sys.stderr)
 
 
 def echo_utf8(text: str) -> None:

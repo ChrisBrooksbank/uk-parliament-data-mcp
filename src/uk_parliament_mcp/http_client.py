@@ -53,6 +53,19 @@ TRANSIENT_STATUS_CODES = frozenset({408, 429, 500, 502, 503, 504})
 CACHE_TTL = timedelta(minutes=15)
 _cache: dict[str, CacheEntry] = {}
 
+# URL call tracking - records all URLs called during a command execution
+_called_urls: list[str] = []
+
+
+def get_called_urls() -> list[str]:
+    """Return a copy of all URLs called since last clear."""
+    return list(_called_urls)
+
+
+def clear_called_urls() -> None:
+    """Clear the list of called URLs. Call before each command execution."""
+    _called_urls.clear()
+
 
 def build_url(base_url: str, parameters: dict[str, Any]) -> str:
     """
@@ -112,6 +125,7 @@ class ParliamentHTTPClient:
 
         Equivalent to C# BaseTools.GetResult()
         """
+        _called_urls.append(url)
         client = await self._get_client()
 
         for attempt in range(MAX_RETRY_ATTEMPTS):
@@ -222,6 +236,7 @@ async def get_result_cached(url: str, cache_key: str | None = None) -> str:
         entry = _cache[key]
         if datetime.now() < entry["expires"]:
             logger.debug("Cache hit for %s", key)
+            _called_urls.append(url)
             return entry["data"]
         else:
             # Expired entry, remove it
