@@ -483,11 +483,8 @@ class TestCliRunnerOutputsJson:
         member_resp = json.dumps({
             "url": "test",
             "data": json.dumps({
-                "items": [
-                    {"value": {"id": 4514, "nameDisplayAs": "Keir Starmer",
-                               "latestHouseMembership": {"house": 1}}}
-                ],
-                "totalResults": 1,
+                "value": {"id": 4514, "nameDisplayAs": "Keir Starmer",
+                           "latestHouseMembership": {"house": 1}}
             }),
         })
         bio_resp = json.dumps({"url": "test", "data": json.dumps({"value": {"biographyEntries": []}})})
@@ -503,7 +500,7 @@ class TestCliRunnerOutputsJson:
             return response
 
         with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = runner.invoke(app, ["composite", "mp-profile", "Starmer"])
+            result = runner.invoke(app, ["composite", "mp-profile", "4514"])
 
         assert result.exit_code == 0
         # Should be valid JSON (not rich markup)

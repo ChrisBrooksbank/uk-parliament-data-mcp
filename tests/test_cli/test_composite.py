@@ -2,8 +2,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from typer.testing import CliRunner
@@ -16,23 +15,18 @@ class TestMpProfile:
 
     @pytest.fixture
     def mock_member_response(self) -> str:
-        """Mock member search response."""
+        """Mock member details response."""
         return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/Search?Name=Test",
+            "url": "https://members-api.parliament.uk/api/Members/4514",
             "data": json.dumps({
-                "items": [
-                    {
-                        "value": {
-                            "id": 4514,
-                            "nameDisplayAs": "Keir Starmer",
-                            "latestHouseMembership": {
-                                "house": 1,
-                                "membershipFrom": "Holborn and St Pancras",
-                            }
-                        }
+                "value": {
+                    "id": 4514,
+                    "nameDisplayAs": "Keir Starmer",
+                    "latestHouseMembership": {
+                        "house": 1,
+                        "membershipFrom": "Holborn and St Pancras",
                     }
-                ],
-                "totalResults": 1,
+                }
             })
         })
 
@@ -72,8 +66,8 @@ class TestMpProfile:
         assert "mp-profile" in result.stdout.lower()
         assert "comprehensive" in result.stdout.lower()
 
-    def test_mp_profile_requires_name(self, cli_runner: CliRunner):
-        """Test that mp-profile requires a name argument."""
+    def test_mp_profile_requires_member_id(self, cli_runner: CliRunner):
+        """Test that mp-profile requires a member_id argument."""
         result = cli_runner.invoke(app, ["composite", "mp-profile"])
         assert result.exit_code != 0
         # Typer outputs help/error text which may vary
@@ -103,7 +97,7 @@ class TestMpProfile:
             return response
 
         with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["composite", "mp-profile", "Keir Starmer"])
+            result = cli_runner.invoke(app, ["composite", "mp-profile", "4514"])
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
@@ -139,30 +133,11 @@ class TestMpProfile:
             return response
 
         with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["composite", "mp-profile", "Test", "--pretty"])
+            result = cli_runner.invoke(app, ["composite", "mp-profile", "4514", "--pretty"])
 
         assert result.exit_code == 0
         # Pretty output has indentation
         assert "  " in result.stdout
-
-    def test_mp_profile_member_not_found(self, cli_runner: CliRunner):
-        """Test mp-profile when member not found."""
-        empty_response = json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/Search?Name=NonExistent",
-            "data": json.dumps({"items": [], "totalResults": 0})
-        })
-
-        async def mock_get_result(url: str) -> str:
-            """Mock async get_result."""
-            return empty_response
-
-        with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["composite", "mp-profile", "NonExistent"])
-
-        assert result.exit_code == 0
-        output = json.loads(result.stdout)
-        assert "error" in output
-        assert "No member found" in output["error"]
 
 
 class TestCheckVote:
@@ -170,19 +145,14 @@ class TestCheckVote:
 
     @pytest.fixture
     def mock_member_response(self) -> str:
-        """Mock member search response."""
+        """Mock member details response."""
         return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/Search?Name=Test",
+            "url": "https://members-api.parliament.uk/api/Members/1234",
             "data": json.dumps({
-                "items": [
-                    {
-                        "value": {
-                            "id": 1234,
-                            "nameDisplayAs": "Test MP",
-                        }
-                    }
-                ],
-                "totalResults": 1,
+                "value": {
+                    "id": 1234,
+                    "nameDisplayAs": "Test MP",
+                }
             })
         })
 
@@ -211,8 +181,8 @@ class TestCheckVote:
         assert "topic" in result.stdout.lower()
 
     def test_check_vote_requires_two_args(self, cli_runner: CliRunner):
-        """Test that check-vote requires mp_name and topic."""
-        result = cli_runner.invoke(app, ["composite", "check-vote", "TestMP"])
+        """Test that check-vote requires member_id and topic."""
+        result = cli_runner.invoke(app, ["composite", "check-vote", "1234"])
         assert result.exit_code != 0
         # Typer outputs help/error text which may vary
         # Just verify command failed (exit code != 0)
@@ -226,12 +196,12 @@ class TestCheckVote:
         """Test check-vote returns combined data."""
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
-            if "Search" in url:
+            if "Members/1234" in url and "divisions" not in url:
                 return mock_member_response
             return mock_divisions_response
 
         with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["composite", "check-vote", "Test MP", "climate"])
+            result = cli_runner.invoke(app, ["composite", "check-vote", "1234", "climate"])
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
@@ -251,12 +221,12 @@ class TestCheckVote:
         """Test check-vote with --data-only flag."""
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
-            if "Search" in url:
+            if "Members/1234" in url and "divisions" not in url:
                 return mock_member_response
             return mock_divisions_response
 
         with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["composite", "check-vote", "Test", "topic", "-d"])
+            result = cli_runner.invoke(app, ["composite", "check-vote", "1234", "topic", "-d"])
 
         assert result.exit_code == 0
         # Should still be valid JSON

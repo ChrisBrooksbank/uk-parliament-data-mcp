@@ -61,21 +61,14 @@ def _extract_member_id(member_response: dict[str, Any]) -> int | None:
     return None
 
 
-async def _get_mp_profile_async(name: str) -> str:
+async def _get_mp_profile_async(member_id: int) -> str:
     """Get comprehensive MP/Lord profile in one call."""
-    # Step 1: Search for member
-    search_url = f"{MEMBERS_API_BASE}/Members/Search?Name={quote(name)}"
-    search_response = await get_result(search_url)
-    member_data = _parse_response(search_response)
+    # Step 1: Fetch member details by ID
+    member_url = f"{MEMBERS_API_BASE}/Members/{member_id}"
+    member_response = await get_result(member_url)
+    member_data = _parse_response(member_response)
 
-    member_id = _extract_member_id(member_data)
-    if not member_id:
-        return json.dumps(
-            {"error": f"No member found matching '{name}'", "search_result": member_data}
-        )
-
-    # Get basic info from search result
-    basic_info = member_data.get("items", [{}])[0].get("value", {})
+    basic_info = member_data.get("value", member_data)
     latest_membership = basic_info.get("latestHouseMembership") or {}
     house = latest_membership.get("house", 1)
 
@@ -102,7 +95,7 @@ async def _get_mp_profile_async(name: str) -> str:
             "registered_interests": _parse_response(interests_response),
             "recent_voting": _parse_response(voting_response),
             "sources": {
-                "search": search_url,
+                "member": member_url,
                 "biography": biography_url,
                 "interests": interests_url,
                 "voting": voting_url,
@@ -111,22 +104,10 @@ async def _get_mp_profile_async(name: str) -> str:
     )
 
 
-async def _check_mp_vote_async(mp_name: str, topic: str) -> str:
+async def _check_mp_vote_async(member_id: int, topic: str) -> str:
     """Check how an MP voted on a specific topic."""
-    # Step 1: Search for member
-    search_url = f"{MEMBERS_API_BASE}/Members/Search?Name={quote(mp_name)}"
-    search_response = await get_result(search_url)
-    member_data = _parse_response(search_response)
-
-    member_id = _extract_member_id(member_data)
-    if not member_id:
-        return json.dumps(
-            {"error": f"No member found matching '{mp_name}'", "search_result": member_data}
-        )
-
-    basic_info = member_data.get("items", [{}])[0].get("value", {})
-
-    # Step 2: Search for divisions on topic with this member
+    # Step 1: Fetch member details and search divisions in parallel
+    member_url = f"{MEMBERS_API_BASE}/Members/{member_id}"
     divisions_url = build_url(
         f"{COMMONS_VOTES_API_BASE}/divisions.json/search",
         {
@@ -134,7 +115,13 @@ async def _check_mp_vote_async(mp_name: str, topic: str) -> str:
             "memberId": member_id,
         },
     )
-    divisions_response = await get_result(divisions_url)
+
+    member_response, divisions_response = await asyncio.gather(
+        get_result(member_url), get_result(divisions_url)
+    )
+
+    member_data = _parse_response(member_response)
+    basic_info = member_data.get("value", member_data)
     divisions_data = _parse_response(divisions_response)
 
     return json.dumps(
@@ -143,7 +130,7 @@ async def _check_mp_vote_async(mp_name: str, topic: str) -> str:
             "member_info": basic_info,
             "topic_searched": topic,
             "divisions": divisions_data,
-            "sources": {"member_search": search_url, "divisions": divisions_url},
+            "sources": {"member": member_url, "divisions": divisions_url},
         }
     )
 
@@ -268,7 +255,7 @@ async def _get_committee_summary_async(topic: str) -> str:
 
 @app.command("mp-profile")
 def mp_profile(
-    name: str = typer.Argument(..., help="Full or partial name of MP or Lord"),
+    member_id: int = typer.Argument(..., help="Parliament member ID (e.g., 4514 for Keir Starmer)"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(
         True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
@@ -284,10 +271,10 @@ def mp_profile(
     """
     Get comprehensive MP/Lord profile in one call.
 
-    Combines member search, biography, interests, and voting summary.
-    Returns basic info, biography, registered interests, and recent votes.
+    Fetches member details, biography, interests, and voting summary by member ID.
+    Use 'parliament members search' to find a member ID first.
     """
-    result = run_async(_get_mp_profile_async(name))
+    result = run_async(_get_mp_profile_async(member_id))
     if should_render_rich(output_format, raw):
         render_mp_profile(result)
     else:
@@ -296,7 +283,7 @@ def mp_profile(
 
 @app.command("check-vote")
 def check_vote(
-    mp_name: str = typer.Argument(..., help="Name of MP to look up"),
+    member_id: int = typer.Argument(..., help="Parliament member ID (e.g., 4514 for Keir Starmer)"),
     topic: str = typer.Argument(..., help="Topic or keyword to search divisions"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(
@@ -313,10 +300,10 @@ def check_vote(
     """
     Check how an MP voted on a specific topic.
 
-    Combines member search and division lookup.
-    Returns MP info and divisions on the topic where they voted.
+    Looks up member by ID and searches divisions on the topic.
+    Use 'parliament members search' to find a member ID first.
     """
-    result = run_async(_check_mp_vote_async(mp_name, topic))
+    result = run_async(_check_mp_vote_async(member_id, topic))
     if should_render_rich(output_format, raw):
         render_check_vote(result)
     else:

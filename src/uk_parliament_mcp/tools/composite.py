@@ -51,30 +51,21 @@ def register_tools(mcp: FastMCP) -> None:
     """Register composite tools with the MCP server."""
 
     @mcp.tool()
-    async def get_mp_profile(name: str) -> str:
-        """Get comprehensive MP/Lord profile in one call - combines search, details, biography, interests, and voting summary | complete MP info, full member profile, MP background, politician details, comprehensive member data | Use when you need a complete picture of an MP or Lord without multiple tool calls | Returns combined data: basic info, biography, registered interests, and recent voting activity
+    async def get_mp_profile(member_id: int) -> str:
+        """Get comprehensive MP/Lord profile in one call - combines member details, biography, interests, and voting summary | complete MP info, full member profile, MP background, politician details, comprehensive member data | Use when you have a member ID and need a complete picture of an MP or Lord without multiple tool calls | Returns combined data: basic info, biography, registered interests, and recent voting activity
 
         Args:
-            name: Full or partial name of the MP or Lord to look up (e.g., 'Keir Starmer', 'Boris Johnson').
+            member_id: Parliament member ID. Get from member search first. Example: 4514 (Keir Starmer).
 
         Returns:
             Combined profile with basic info, biography, interests, and voting summary.
         """
-        from urllib.parse import quote
+        # Step 1: Fetch member details by ID
+        member_url = f"{MEMBERS_API_BASE}/Members/{member_id}"
+        member_response = await get_result(member_url)
+        member_data = _parse_response(member_response)
 
-        # Step 1: Search for member
-        search_url = f"{MEMBERS_API_BASE}/Members/Search?Name={quote(name)}"
-        search_response = await get_result(search_url)
-        member_data = _parse_response(search_response)
-
-        member_id = _extract_member_id(member_data)
-        if not member_id:
-            return json.dumps(
-                {"error": f"No member found matching '{name}'", "search_result": member_data}
-            )
-
-        # Get basic info from search result
-        basic_info = member_data.get("items", [{}])[0].get("value", {})
+        basic_info = member_data.get("value", member_data)
         latest_membership = basic_info.get("latestHouseMembership") or {}
         house = latest_membership.get("house", 1)
 
@@ -101,7 +92,7 @@ def register_tools(mcp: FastMCP) -> None:
                 "registered_interests": _parse_response(interests_response),
                 "recent_voting": _parse_response(voting_response),
                 "sources": {
-                    "search": search_url,
+                    "member": member_url,
                     "biography": biography_url,
                     "interests": interests_url,
                     "voting": voting_url,
@@ -110,32 +101,18 @@ def register_tools(mcp: FastMCP) -> None:
         )
 
     @mcp.tool()
-    async def check_mp_vote(mp_name: str, topic: str) -> str:
-        """Check how an MP voted on a specific topic - combines member search and division lookup | MP voting stance, how did MP vote, voting record on topic, division lookup | Use when you need to know how a specific MP voted on a particular issue | Returns MP details and matching divisions with their vote
+    async def check_mp_vote(member_id: int, topic: str) -> str:
+        """Check how an MP voted on a specific topic - combines member lookup and division search | MP voting stance, how did MP vote, voting record on topic, division lookup | Use when you have a member ID and need to know how they voted on a particular issue | Returns MP details and matching divisions with their vote
 
         Args:
-            mp_name: Name of the MP to look up (e.g., 'Boris Johnson', 'Keir Starmer').
+            member_id: Parliament member ID. Get from member search first. Example: 4514 (Keir Starmer).
             topic: Topic or keyword to search for in Commons divisions (e.g., 'climate', 'NHS', 'brexit').
 
         Returns:
             MP info and divisions matching the topic with the MP's vote.
         """
-        from urllib.parse import quote
-
-        # Step 1: Search for member
-        search_url = f"{MEMBERS_API_BASE}/Members/Search?Name={quote(mp_name)}"
-        search_response = await get_result(search_url)
-        member_data = _parse_response(search_response)
-
-        member_id = _extract_member_id(member_data)
-        if not member_id:
-            return json.dumps(
-                {"error": f"No member found matching '{mp_name}'", "search_result": member_data}
-            )
-
-        basic_info = member_data.get("items", [{}])[0].get("value", {})
-
-        # Step 2: Search for divisions on topic with this member
+        # Step 1: Fetch member details and search divisions in parallel
+        member_url = f"{MEMBERS_API_BASE}/Members/{member_id}"
         divisions_url = build_url(
             f"{COMMONS_VOTES_API_BASE}/divisions.json/search",
             {
@@ -143,7 +120,13 @@ def register_tools(mcp: FastMCP) -> None:
                 "memberId": member_id,
             },
         )
-        divisions_response = await get_result(divisions_url)
+
+        member_response, divisions_response = await asyncio.gather(
+            get_result(member_url), get_result(divisions_url)
+        )
+
+        member_data = _parse_response(member_response)
+        basic_info = member_data.get("value", member_data)
         divisions_data = _parse_response(divisions_response)
 
         return json.dumps(
@@ -152,7 +135,7 @@ def register_tools(mcp: FastMCP) -> None:
                 "member_info": basic_info,
                 "topic_searched": topic,
                 "divisions": divisions_data,
-                "sources": {"member_search": search_url, "divisions": divisions_url},
+                "sources": {"member": member_url, "divisions": divisions_url},
             }
         )
 

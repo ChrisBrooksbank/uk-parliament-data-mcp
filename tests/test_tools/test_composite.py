@@ -123,12 +123,12 @@ class TestGetMpProfile:
 
     @pytest.mark.asyncio
     async def test_get_mp_profile_has_required_parameters(self, mcp: FastMCP):
-        """get_mp_profile has required name parameter."""
+        """get_mp_profile has required member_id parameter."""
         tools = await mcp.list_tools()
         mp_profile_tool = next(t for t in tools if t.name == "get_mp_profile")
         assert mp_profile_tool.inputSchema is not None
         schema = mp_profile_tool.inputSchema
-        assert "name" in schema.get("required", [])
+        assert "member_id" in schema.get("required", [])
 
 
 class TestCheckMpVote:
@@ -143,13 +143,13 @@ class TestCheckMpVote:
 
     @pytest.mark.asyncio
     async def test_check_mp_vote_has_required_parameters(self, mcp: FastMCP):
-        """check_mp_vote has required mp_name and topic parameters."""
+        """check_mp_vote has required member_id and topic parameters."""
         tools = await mcp.list_tools()
         vote_tool = next(t for t in tools if t.name == "check_mp_vote")
         assert vote_tool.inputSchema is not None
         schema = vote_tool.inputSchema
         required = schema.get("required", [])
-        assert "mp_name" in required
+        assert "member_id" in required
         assert "topic" in required
 
 

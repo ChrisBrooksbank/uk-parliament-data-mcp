@@ -126,8 +126,8 @@ QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (122 tools)
 
 ### Composite Tools (Start Here for Common Queries!)
 These tools combine multiple API calls - use them first for efficiency:
-- get_mp_profile(name) - Complete MP profile in one call
-- check_mp_vote(mp_name, topic) - Check how an MP voted on a topic
+- get_mp_profile(member_id) - Complete MP profile in one call
+- check_mp_vote(member_id, topic) - Check how an MP voted on a topic
 - get_bill_overview(search_term) - Full bill info with stages
 - get_committee_summary(topic) - Committee with evidence and publications
 
@@ -140,7 +140,7 @@ These tools combine multiple API calls - use them first for efficiency:
 ### Tool Categories & Entry Points
 | Module | Tools | Start With |
 |--------|-------|------------|
-| composite | 4 | get_mp_profile(name) |
+| composite | 4 | get_mp_profile(member_id) |
 | members | 24 | get_member_by_name(name) |
 | bills | 21 | search_bills(search_term) |
 | committees | 24 | search_committees(search_term) |
@@ -158,7 +158,7 @@ These tools combine multiple API calls - use them first for efficiency:
 ### Common Patterns
 1. Use composite tools first for common queries (saves multiple calls)
 2. For detailed data: Search by name/term -> Get by ID -> Get related data
-3. For MP voting: check_mp_vote() OR get_member_by_name() -> get_commons_voting_record_for_member()
+3. For MP voting: get_member_by_name() -> check_mp_vote(member_id, topic) OR get_commons_voting_record_for_member()
 4. For bill progress: get_bill_overview() OR search_bills() -> get_bill_stages()
 
 Use parliament_guide(topic) for detailed tool information.
@@ -171,15 +171,17 @@ High-level tools that combine multiple API calls for common research tasks.
 Use these FIRST for common queries to reduce tool calls and improve efficiency.
 
 ### MP/Lord Research
-- get_mp_profile(name) - Complete profile in one call
-  - Combines: member search + details + biography + interests + voting
+- get_mp_profile(member_id) - Complete profile in one call
+  - Combines: member details + biography + interests + voting
   - Returns: Basic info, biography, registered interests, recent votes
-  - Example: get_mp_profile("Keir Starmer")
+  - Requires: member_id from get_member_by_name() or members search
+  - Example: get_mp_profile(4514)  # Keir Starmer
 
-- check_mp_vote(mp_name, topic) - Check voting stance on a topic
-  - Combines: member search + division search with member filter
+- check_mp_vote(member_id, topic) - Check voting stance on a topic
+  - Combines: member lookup + division search with member filter
   - Returns: MP info and divisions on the topic where they voted
-  - Example: check_mp_vote("Boris Johnson", "climate")
+  - Requires: member_id from get_member_by_name() or members search
+  - Example: check_mp_vote(4514, "climate")
 
 ### Bill Research
 - get_bill_overview(search_term) - Full bill information
