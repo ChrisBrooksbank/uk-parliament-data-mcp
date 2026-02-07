@@ -8,7 +8,6 @@ import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.pagination import (
-    DAILY_REPORTS_PAGINATION,
     ORAL_QUESTIONS_PAGINATION,
     WRITTEN_QUESTIONS_PAGINATION,
     WRITTEN_STATEMENTS_PAGINATION,
@@ -529,42 +528,3 @@ def get_written_statement_by_uin(
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
-
-@app.command("daily-reports")
-def get_daily_reports(
-    date_from: str | None = typer.Option(None, "--from", help="Start date (YYYY-MM-DD)"),
-    date_to: str | None = typer.Option(None, "--to", help="End date (YYYY-MM-DD)"),
-    house: str | None = typer.Option(None, "--house", help="Commons/Lords/Bicameral"),
-    skip: int = typer.Option(0, "--skip", help="Results to skip (pagination)"),
-    take: int = typer.Option(20, "--take", help="Results to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
-) -> None:
-    """
-    Get daily reports of written questions and answers.
-
-    Use for overview of parliamentary question activity on specific dates or ranges.
-    """
-    url = build_url(
-        f"{WRITTEN_QUESTIONS_API_BASE}/dailyreports/dailyreports",
-        {
-            "dateFrom": date_from,
-            "dateTo": date_to,
-            "house": house,
-            "skip": skip,
-            "take": take,
-        },
-    )
-    result = run_async(
-        paginate_request(url, DAILY_REPORTS_PAGINATION, desired_total=take, start_skip=skip)
-    )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))

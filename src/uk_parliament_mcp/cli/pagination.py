@@ -111,14 +111,6 @@ ERSKINE_MAY_PAGINATION = PaginationConfig(
     default_page_size=20,
 )
 
-DAILY_REPORTS_PAGINATION = PaginationConfig(
-    skip_param="skip",
-    take_param="take",
-    items_key="results",
-    total_key="totalResults",
-    default_page_size=20,
-)
-
 WRITTEN_STATEMENTS_PAGINATION = PaginationConfig(
     skip_param="skip",
     take_param="take",
