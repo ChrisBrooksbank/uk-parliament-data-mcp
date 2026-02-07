@@ -106,7 +106,16 @@ def _extract_items(data: Any) -> list[dict[str, Any]]:
 
     if isinstance(data, dict):
         # Common patterns in Parliament API responses
-        for key in ["items", "results", "Results", "searchResults", "data", "divisions", "members", "bills"]:
+        for key in [
+            "items",
+            "results",
+            "Results",
+            "searchResults",
+            "data",
+            "divisions",
+            "members",
+            "bills",
+        ]:
             if key in data and isinstance(data[key], list):
                 return [item for item in data[key] if isinstance(item, dict)]
 

@@ -192,7 +192,9 @@ def get_events(
             "Take": take,
         },
     )
-    result = run_async(paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -290,7 +292,9 @@ def get_committee_events(
             "Take": take,
         },
     )
-    result = run_async(paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -332,7 +336,9 @@ def get_members(
             "Take": take,
         },
     )
-    result = run_async(paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -381,7 +387,9 @@ def get_publications(
             "Take": take,
         },
     )
-    result = run_async(paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -464,7 +472,9 @@ def get_written_evidence(
             "Take": take,
         },
     )
-    result = run_async(paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -515,7 +525,9 @@ def get_oral_evidence(
             "Take": take,
         },
     )
-    result = run_async(paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -569,7 +581,9 @@ def get_business(
             "Take": take,
         },
     )
-    result = run_async(paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -663,7 +677,9 @@ def get_next_events(
             "Take": take,
         },
     )
-    result = run_async(paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -704,7 +720,9 @@ def get_staff(
             "Take": take,
         },
     )
-    result = run_async(paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -953,7 +971,9 @@ def search_bill_petitions(
             "Take": take,
         },
     )
-    result = run_async(paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 

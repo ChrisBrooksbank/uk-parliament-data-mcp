@@ -240,7 +240,9 @@ def search_treaties_advanced(
             "Take": take,
         },
     )
-    result = run_async(paginate_request(url, TREATIES_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, TREATIES_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import sys
-from typing import Optional
 
 import click
 import typer
@@ -49,6 +48,7 @@ app.add_typer(procedures.app, name="procedures")
 app.add_typer(guide.app, name="guide")
 app.add_typer(watch.app, name="watch")
 app.add_typer(digest.app, name="digest")
+
 
 # Top-level reference command for easy discoverability
 @app.command("reference")
@@ -147,13 +147,13 @@ def my_mp(
 
 @app.callback()
 def callback(
-    raw: Optional[bool] = typer.Option(  # noqa: UP007
+    raw: bool | None = typer.Option(
         None,
         "--raw",
         help="Output full wrapper JSON (url + data), disabling auto-formatting",
         is_eager=True,
     ),
-    fields: Optional[str] = typer.Option(  # noqa: UP007
+    fields: str | None = typer.Option(
         None,
         "--fields",
         help="Comma-separated field paths for column selection (e.g., 'id,nameDisplayAs')",
@@ -168,8 +168,6 @@ def callback(
     This tool is not affiliated with or endorsed by UK Parliament.
     https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab
     """
-    # Store global flags in typer context for subcommands to access
-    ctx = typer.Context
     # We use module-level variables since typer callbacks don't propagate context easily
     import uk_parliament_mcp.cli.main as _self
 

@@ -86,7 +86,7 @@ async def _fetch_all_data(
 
     results: dict[str, Any] = {}
     gathered = await asyncio.gather(*tasks.values(), return_exceptions=True)
-    for key, result in zip(tasks.keys(), gathered):
+    for key, result in zip(tasks.keys(), gathered, strict=False):
         if isinstance(result, Exception):
             results[key] = None
         else:
@@ -219,7 +219,7 @@ async def _run_watch(house: str | None = None, interval: int = 30) -> None:
                 try:
                     await asyncio.wait_for(stop_event.wait(), timeout=interval)
                     break  # Stop event was set
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     continue  # Timeout expired, refresh
     except KeyboardInterrupt:
         pass  # Clean exit on Ctrl+C

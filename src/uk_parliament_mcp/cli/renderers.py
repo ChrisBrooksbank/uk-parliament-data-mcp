@@ -34,6 +34,7 @@ _SLIDE_TYPE_LABELS: dict[str, tuple[str, str]] = {
     "HouseRisen": ("House has risen", "dim italic"),
 }
 
+
 def _house_color(house_name: str) -> str:
     """Return a Rich color for the given house name.
 
@@ -169,9 +170,7 @@ def _render_slide_lines(lines: list[dict[str, Any]], text: Text) -> None:
             text.append("\n")
 
 
-def _render_scrolling_messages(
-    messages: list[dict[str, Any]], text: Text
-) -> None:
+def _render_scrolling_messages(messages: list[dict[str, Any]], text: Text) -> None:
     """Render ScrollingMessageViewModel items below slides.
 
     Args:
@@ -211,12 +210,22 @@ def _render_chamber_panel(data: dict[str, Any] | None, house_name: str) -> Panel
     """
     if data is None or not data:
         content = Text("Not currently sitting", style="dim italic")
-        return Panel(content, title=f"[bold]{house_name}[/bold]", subtitle=_parliament_tv_subtitle(house_name), border_style="dim")
+        return Panel(
+            content,
+            title=f"[bold]{house_name}[/bold]",
+            subtitle=_parliament_tv_subtitle(house_name),
+            border_style="dim",
+        )
 
     # Check if annunciator is disabled
     if data.get("annunciatorDisabled"):
         content = Text("Annunciator offline", style="dim italic")
-        return Panel(content, title=f"[bold]{house_name}[/bold]", subtitle=_parliament_tv_subtitle(house_name), border_style="dim")
+        return Panel(
+            content,
+            title=f"[bold]{house_name}[/bold]",
+            subtitle=_parliament_tv_subtitle(house_name),
+            border_style="dim",
+        )
 
     text = Text()
     is_active = False
@@ -266,7 +275,12 @@ def _render_chamber_panel(data: dict[str, Any] | None, house_name: str) -> Panel
 
     color = _house_color(house_name)
     border_style = color if is_active else "dim"
-    return Panel(text, title=f"[bold {color}]{house_name}[/bold {color}]", subtitle=_parliament_tv_subtitle(house_name), border_style=border_style)
+    return Panel(
+        text,
+        title=f"[bold {color}]{house_name}[/bold {color}]",
+        subtitle=_parliament_tv_subtitle(house_name),
+        border_style=border_style,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -427,7 +441,12 @@ def _render_calendar_table(
 
         house_text = Text(house_str, style=_house_color(house_str))
         table.add_row(
-            time_display, house_text, event_str, type_str, location_str, category_str,
+            time_display,
+            house_text,
+            event_str,
+            type_str,
+            location_str,
+            category_str,
             style=row_style,
         )
 
@@ -580,7 +599,9 @@ def render_mp_profile(result_json: str) -> None:
                             bio_text.append(f"  {cat}: ", style="bold")
                             bio_text.append(f"{val}\n")
                 if bio_text.plain.strip():
-                    console.print(Panel(bio_text, title="[bold]Biography[/bold]", border_style="dim"))
+                    console.print(
+                        Panel(bio_text, title="[bold]Biography[/bold]", border_style="dim")
+                    )
 
     # Registered interests
     # Interests API returns flat items: each item has .category (object with .name)
@@ -589,7 +610,9 @@ def render_mp_profile(result_json: str) -> None:
     if isinstance(interests, dict):
         interest_items = interests.get("items", [])
         if interest_items and isinstance(interest_items, list):
-            table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+            table = Table(
+                show_header=True, header_style="bold", expand=True, row_styles=["", "dim"]
+            )
             table.add_column("Category", ratio=1)
             table.add_column("Interest", ratio=2)
             for item in interest_items[:20]:
@@ -602,14 +625,18 @@ def render_mp_profile(result_json: str) -> None:
                     summary = item.get("summary", "")
                     table.add_row(cat, str(summary) if summary else "")
             if table.row_count > 0:
-                console.print(Panel(table, title="[bold]Registered Interests[/bold]", border_style="dim"))
+                console.print(
+                    Panel(table, title="[bold]Registered Interests[/bold]", border_style="dim")
+                )
 
     # Recent voting
     voting = data.get("recent_voting", {})
     if isinstance(voting, dict):
         vote_items = voting.get("items", [])
         if vote_items and isinstance(vote_items, list):
-            table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+            table = Table(
+                show_header=True, header_style="bold", expand=True, row_styles=["", "dim"]
+            )
             table.add_column("Div ID", style="cyan", no_wrap=True)
             table.add_column("Title", ratio=1)
             table.add_column("Date", width=10)
@@ -618,7 +645,9 @@ def render_mp_profile(result_json: str) -> None:
                 if isinstance(item, dict):
                     value = item.get("value", item)
                     if isinstance(value, dict):
-                        div_num = value.get("id", value.get("divisionId", value.get("divisionNumber", "")))
+                        div_num = value.get(
+                            "id", value.get("divisionId", value.get("divisionNumber", ""))
+                        )
                         div_id = value.get("id", value.get("divisionId", ""))
                         title = str(value.get("title", value.get("Title", "")))
                         date = str(value.get("date", value.get("Date", "")))[:10]
@@ -626,7 +655,9 @@ def render_mp_profile(result_json: str) -> None:
                         vote_str = "Aye" if voted_aye else ("No" if voted_aye is False else "")
                         div_text = Text(str(div_num))
                         if div_id:
-                            div_text.stylize(f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}")
+                            div_text.stylize(
+                                f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}"
+                            )
                         table.add_row(div_text, title, date, vote_str)
             if table.row_count > 0:
                 console.print(Panel(table, title="[bold]Recent Votes[/bold]", border_style="dim"))
@@ -689,7 +720,9 @@ def render_check_vote(result_json: str) -> None:
                 noes = str(div.get("NoCount", div.get("noCount", "")))
                 div_text = Text(str(div_id))
                 if div_id:
-                    div_text.stylize(f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}")
+                    div_text.stylize(
+                        f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}"
+                    )
                 table.add_row(div_text, title, date, ayes, noes)
         if table.row_count > 0:
             console.print(Panel(table, title="[bold]Divisions[/bold]", border_style="dim"))
@@ -887,7 +920,11 @@ def render_committee_summary(result_json: str) -> None:
                 witnesses = ""
                 witness_list = item.get("witnesses", [])
                 if isinstance(witness_list, list):
-                    names = [str(w.get("name", "")) for w in witness_list if isinstance(w, dict) and w.get("name")]
+                    names = [
+                        str(w.get("name", ""))
+                        for w in witness_list
+                        if isinstance(w, dict) and w.get("name")
+                    ]
                     witnesses = ", ".join(names[:3])
                     if len(names) > 3:
                         witnesses += f" +{len(names) - 3} more"
@@ -995,7 +1032,9 @@ def render_my_mp(result_json: str) -> None:
         majority = election_value.get("majority")
         election_date = str(election_value.get("electionDate", ""))[:4]
         if majority is not None:
-            maj_str = f"Majority: {majority:,}" if isinstance(majority, int) else f"Majority: {majority}"
+            maj_str = (
+                f"Majority: {majority:,}" if isinstance(majority, int) else f"Majority: {majority}"
+            )
             if election_date:
                 maj_str += f" ({election_date})"
             header_text.append(f"\n{maj_str}", style="dim")
@@ -1021,7 +1060,9 @@ def render_my_mp(result_json: str) -> None:
                             bio_text.append(f"  {cat}: ", style="bold")
                             bio_text.append(f"{val}\n")
                 if bio_text.plain.strip():
-                    console.print(Panel(bio_text, title="[bold]Biography[/bold]", border_style="dim"))
+                    console.print(
+                        Panel(bio_text, title="[bold]Biography[/bold]", border_style="dim")
+                    )
 
     # --- Registered interests ---
     # Interests API returns flat items: each item has .category (object with .name)
@@ -1030,7 +1071,9 @@ def render_my_mp(result_json: str) -> None:
     if isinstance(interests, dict):
         interest_items = interests.get("items", [])
         if interest_items and isinstance(interest_items, list):
-            table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+            table = Table(
+                show_header=True, header_style="bold", expand=True, row_styles=["", "dim"]
+            )
             table.add_column("Category", ratio=1)
             table.add_column("Interest", ratio=2)
             for item in interest_items[:20]:
@@ -1043,7 +1086,9 @@ def render_my_mp(result_json: str) -> None:
                     summary = item.get("summary", "")
                     table.add_row(cat, str(summary) if summary else "")
             if table.row_count > 0:
-                console.print(Panel(table, title="[bold]Registered Interests[/bold]", border_style="dim"))
+                console.print(
+                    Panel(table, title="[bold]Registered Interests[/bold]", border_style="dim")
+                )
 
     # --- Latest election result ---
     if isinstance(election_value, dict):
@@ -1052,7 +1097,9 @@ def render_my_mp(result_json: str) -> None:
             election_title = election_value.get("electionTitle", "")
             electorate = election_value.get("electorate")
             turnout = election_value.get("turnout")
-            table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+            table = Table(
+                show_header=True, header_style="bold", expand=True, row_styles=["", "dim"]
+            )
             table.add_column("Candidate", ratio=1)
             table.add_column("Party", ratio=1)
             table.add_column("Votes", width=8, justify="right")
@@ -1068,11 +1115,19 @@ def render_my_mp(result_json: str) -> None:
                         cand_party = cand_party_info
                     cand_votes = candidate.get("votes", "")
                     vote_share = candidate.get("voteShare")
-                    votes_str = f"{cand_votes:,}" if isinstance(cand_votes, int) else str(cand_votes)
-                    share_str = f"{vote_share * 100:.1f}%" if isinstance(vote_share, (int, float)) else ""
+                    votes_str = (
+                        f"{cand_votes:,}" if isinstance(cand_votes, int) else str(cand_votes)
+                    )
+                    share_str = (
+                        f"{vote_share * 100:.1f}%" if isinstance(vote_share, (int, float)) else ""
+                    )
                     table.add_row(cand_name, cand_party, votes_str, share_str)
             if table.row_count > 0:
-                title = f"[bold]Latest Election ({election_title})[/bold]" if election_title else "[bold]Latest Election[/bold]"
+                title = (
+                    f"[bold]Latest Election ({election_title})[/bold]"
+                    if election_title
+                    else "[bold]Latest Election[/bold]"
+                )
                 subtitle_parts: list[str] = []
                 if isinstance(electorate, int):
                     subtitle_parts.append(f"Electorate: {electorate:,}")
@@ -1080,7 +1135,9 @@ def render_my_mp(result_json: str) -> None:
                     subtitle_parts.append(f"Turnout: {turnout:,}")
                     if isinstance(electorate, int) and electorate > 0:
                         subtitle_parts.append(f"({turnout * 100 / electorate:.1f}%)")
-                subtitle = "[dim]" + " | ".join(subtitle_parts) + "[/dim]" if subtitle_parts else None
+                subtitle = (
+                    "[dim]" + " | ".join(subtitle_parts) + "[/dim]" if subtitle_parts else None
+                )
                 console.print(Panel(table, title=title, subtitle=subtitle, border_style="dim"))
 
     # --- Recent votes ---
@@ -1088,7 +1145,9 @@ def render_my_mp(result_json: str) -> None:
     if isinstance(voting, dict):
         vote_items = voting.get("items", [])
         if vote_items and isinstance(vote_items, list):
-            table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+            table = Table(
+                show_header=True, header_style="bold", expand=True, row_styles=["", "dim"]
+            )
             table.add_column("Div ID", style="cyan", no_wrap=True)
             table.add_column("Title", ratio=1)
             table.add_column("Date", width=10)
@@ -1097,7 +1156,9 @@ def render_my_mp(result_json: str) -> None:
                 if isinstance(item, dict):
                     value = item.get("value", item)
                     if isinstance(value, dict):
-                        div_num = value.get("id", value.get("divisionId", value.get("divisionNumber", "")))
+                        div_num = value.get(
+                            "id", value.get("divisionId", value.get("divisionNumber", ""))
+                        )
                         div_id = value.get("id", value.get("divisionId", ""))
                         title = str(value.get("title", value.get("Title", "")))
                         date = str(value.get("date", value.get("Date", "")))[:10]
@@ -1105,7 +1166,9 @@ def render_my_mp(result_json: str) -> None:
                         vote_str = "Aye" if voted_aye else ("No" if voted_aye is False else "")
                         div_text = Text(str(div_num))
                         if div_id:
-                            div_text.stylize(f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}")
+                            div_text.stylize(
+                                f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}"
+                            )
                         table.add_row(div_text, title, date, vote_str)
             if table.row_count > 0:
                 console.print(Panel(table, title="[bold]Recent Votes[/bold]", border_style="dim"))
@@ -1124,7 +1187,9 @@ def render_my_mp(result_json: str) -> None:
             div_items = []
 
         if div_items:
-            table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+            table = Table(
+                show_header=True, header_style="bold", expand=True, row_styles=["", "dim"]
+            )
             table.add_column("ID", style="cyan", width=8)
             table.add_column("Title", ratio=1)
             table.add_column("Date", width=10)
@@ -1139,10 +1204,16 @@ def render_my_mp(result_json: str) -> None:
                     noes = str(div.get("NoCount", div.get("noCount", "")))
                     div_text = Text(str(div_id))
                     if div_id:
-                        div_text.stylize(f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}")
+                        div_text.stylize(
+                            f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}"
+                        )
                     table.add_row(div_text, title, date, ayes, noes)
             if table.row_count > 0:
-                panel_title = f'[bold]Votes on "{topic_searched}"[/bold]' if topic_searched else "[bold]Topic Votes[/bold]"
+                panel_title = (
+                    f'[bold]Votes on "{topic_searched}"[/bold]'
+                    if topic_searched
+                    else "[bold]Topic Votes[/bold]"
+                )
                 console.print(Panel(table, title=panel_title, border_style="dim"))
         else:
             if topic_searched:
@@ -1253,9 +1324,7 @@ def _render_digest_header(data: dict[str, Any]) -> Panel:
     return Panel(text, title="[bold]Parliamentary Digest[/bold]", border_style="green")
 
 
-def _render_divisions_section(
-    commons: Any, lords: Any
-) -> Panel | None:
+def _render_divisions_section(commons: Any, lords: Any) -> Panel | None:
     """Render a combined divisions panel.
 
     Args:
@@ -1283,7 +1352,9 @@ def _render_divisions_section(
             title = str(div.get("Title", div.get("title", "")))
             title_text = Text(title)
             if div_id:
-                title_text.stylize(f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}")
+                title_text.stylize(
+                    f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}"
+                )
             ayes = str(div.get("AyeCount", div.get("ayeCount", "")))
             noes = str(div.get("NoCount", div.get("noCount", "")))
             dt = str(div.get("Date", div.get("date", "")))[:10]
@@ -1295,7 +1366,9 @@ def _render_divisions_section(
             title = str(div.get("Title", div.get("title", "")))
             title_text = Text(title)
             if div_id:
-                title_text.stylize(f"link https://votes.parliament.uk/Votes/Lords/Division/{div_id}")
+                title_text.stylize(
+                    f"link https://votes.parliament.uk/Votes/Lords/Division/{div_id}"
+                )
             ayes = str(div.get("AuthorityCount", div.get("authorityCount", "")))
             noes = str(div.get("NonAuthorityCount", div.get("nonAuthorityCount", "")))
             dt = str(div.get("Date", div.get("date", "")))[:10]
@@ -1356,7 +1429,9 @@ def _render_hansard_section(data: Any) -> Panel | None:
                 sitting_date = str(section.get("SittingDate", section.get("sittingDate", "")))[:10]
                 slug = re.sub(r"[^A-Za-z0-9]", "", str(title))
                 house_lower = house_name.lower()
-                id_text.stylize(f"link https://hansard.parliament.uk/{house_lower}/{sitting_date}/debates/{ext_id}/{slug}")
+                id_text.stylize(
+                    f"link https://hansard.parliament.uk/{house_lower}/{sitting_date}/debates/{ext_id}/{slug}"
+                )
             house_text = Text(house_name, style=_house_color(house_name))
             table.add_row(id_text, house_text, debate_section, str(title))
 
@@ -1491,14 +1566,14 @@ def _render_committees_section(data: Any) -> Panel | None:
                         if not committee_id:
                             committee_id = str(first.get("id", first.get("Id", "")))
             if not committee_name:
-                committee_name = str(
-                    item.get("committeeName", item.get("CommitteeName", ""))
-                )
+                committee_name = str(item.get("committeeName", item.get("CommitteeName", "")))
 
             # Make committee name a link if we have an ID
             comm_text = Text(committee_name)
             if committee_id:
-                comm_text.stylize(f"link https://committees.parliament.uk/committee/{committee_id}/")
+                comm_text.stylize(
+                    f"link https://committees.parliament.uk/committee/{committee_id}/"
+                )
 
             topic = str(item.get("description", item.get("Description", item.get("title", ""))))
             # Fallback: show event type + location
@@ -1580,7 +1655,10 @@ def _render_oral_qs_section(data: Any) -> Panel | None:
     for item in items[:10]:
         if isinstance(item, dict):
             dept = str(
-                item.get("AnsweringBodyNames", item.get("AnsweringBodyName", item.get("answeringBodyName", "")))
+                item.get(
+                    "AnsweringBodyNames",
+                    item.get("AnsweringBodyName", item.get("answeringBodyName", "")),
+                )
             )
             answer_date = str(
                 item.get("AnsweringWhen", item.get("AnswerDate", item.get("answerDate", "")))
@@ -1722,10 +1800,11 @@ def _render_written_qs_section(
         api_total = data["totalResults"]
 
     subtitle = (
-        f"[dim]{api_total} total | {total_answered} answered"
-        f" | {len(bodies)} departments[/dim]"
+        f"[dim]{api_total} total | {total_answered} answered | {len(bodies)} departments[/dim]"
     )
-    return Panel(table, title="[bold]Written Questions[/bold]", subtitle=subtitle, border_style="dim")
+    return Panel(
+        table, title="[bold]Written Questions[/bold]", subtitle=subtitle, border_style="dim"
+    )
 
 
 def render_digest(result_json: str) -> None:
@@ -1750,9 +1829,7 @@ def render_digest(result_json: str) -> None:
     console.print(_render_digest_header(data))
 
     # Divisions
-    panel = _render_divisions_section(
-        data.get("commons_divisions"), data.get("lords_divisions")
-    )
+    panel = _render_divisions_section(data.get("commons_divisions"), data.get("lords_divisions"))
     if panel:
         console.print(panel)
 
@@ -1797,8 +1874,14 @@ def render_digest(result_json: str) -> None:
 
     # If nothing rendered beyond the header, note that
     sections = [
-        "commons_divisions", "lords_divisions", "hansard", "bills",
-        "committees", "written_statements", "oral_questions", "edms",
+        "commons_divisions",
+        "lords_divisions",
+        "hansard",
+        "bills",
+        "committees",
+        "written_statements",
+        "oral_questions",
+        "edms",
         "written_questions",
     ]
     has_any = any(_section_has_data(data.get(s)) for s in sections)

@@ -527,4 +527,3 @@ def get_written_statement_by_uin(
     )
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
-

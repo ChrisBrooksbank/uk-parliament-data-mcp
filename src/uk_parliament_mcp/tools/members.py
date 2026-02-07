@@ -36,9 +36,12 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Department names, abbreviations, and policy responsibilities.
         """
-        url = build_url(f"{MEMBERS_API_BASE}/Reference/AnsweringBodies", {
-            "nameContains": name_contains,
-        })
+        url = build_url(
+            f"{MEMBERS_API_BASE}/Reference/AnsweringBodies",
+            {
+                "nameContains": name_contains,
+            },
+        )
         return await get_result(url)
 
     @mcp.tool()
@@ -92,9 +95,12 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             List of all government departments.
         """
-        url = build_url(f"{MEMBERS_API_BASE}/Reference/Departments", {
-            "nameContains": name_contains,
-        })
+        url = build_url(
+            f"{MEMBERS_API_BASE}/Reference/Departments",
+            {
+                "nameContains": name_contains,
+            },
+        )
         return await get_result(url)
 
     @mcp.tool()

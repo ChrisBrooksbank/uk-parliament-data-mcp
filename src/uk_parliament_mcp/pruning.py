@@ -60,7 +60,7 @@ def prune_response(response_str: str) -> str:
         pruned_data = _strip_nulls_and_empties(parsed["data"])
         pruned_data = _flatten_value_wrappers(pruned_data)
         pruned_data = _truncate_arrays(pruned_data)
-        pruned = {k: v for k, v in parsed.items()}
+        pruned = dict(parsed.items())
         pruned["data"] = pruned_data
     else:
         pruned = _strip_nulls_and_empties(parsed)
@@ -187,10 +187,7 @@ def _compute_meta(original_bytes: int, pruned_bytes: int) -> dict[str, int]:
     Returns:
         Dict with originalBytes, prunedBytes, reductionPercent.
     """
-    if original_bytes == 0:
-        reduction = 0
-    else:
-        reduction = round((1 - pruned_bytes / original_bytes) * 100)
+    reduction = 0 if original_bytes == 0 else round((1 - pruned_bytes / original_bytes) * 100)
     return {
         "originalBytes": original_bytes,
         "prunedBytes": pruned_bytes,

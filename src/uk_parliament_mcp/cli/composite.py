@@ -27,7 +27,9 @@ from uk_parliament_mcp.config import (
 )
 from uk_parliament_mcp.http_client import build_url, get_result
 
-app = typer.Typer(help="High-level composite commands combining multiple API calls", no_args_is_help=True)
+app = typer.Typer(
+    help="High-level composite commands combining multiple API calls", no_args_is_help=True
+)
 
 
 def _parse_response(response: str) -> dict[str, Any]:

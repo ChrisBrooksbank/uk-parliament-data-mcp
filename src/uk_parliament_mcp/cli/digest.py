@@ -87,9 +87,7 @@ def _calculate_dates(target: str | None, period: str) -> tuple[str, str]:
 # ---------------------------------------------------------------------------
 
 
-async def _fetch_hansard(
-    start_date: str, end_date: str, house: int | None
-) -> dict[str, Any]:
+async def _fetch_hansard(start_date: str, end_date: str, house: int | None) -> dict[str, Any]:
     """Fetch Hansard debates for the date range."""
     params: dict[str, Any] = {
         "queryParameters.startDate": start_date,
@@ -98,13 +96,13 @@ async def _fetch_hansard(
     if house is not None:
         params["queryParameters.house"] = "Commons" if house == 1 else "Lords"
     url = build_url(f"{HANSARD_API_BASE}/search/debates.json", params)
-    data = _parse_api_response(await paginate_request(url, HANSARD_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
+    data = _parse_api_response(
+        await paginate_request(url, HANSARD_PAGINATION, desired_total=_DIGEST_MAX_ITEMS)
+    )
     return data if data is not None else {}
 
 
-async def _fetch_commons_votes(
-    start_date: str, end_date: str
-) -> list[dict[str, Any]]:
+async def _fetch_commons_votes(start_date: str, end_date: str) -> list[dict[str, Any]]:
     """Fetch Commons divisions for the date range."""
     url = build_url(
         f"{COMMONS_VOTES_API_BASE}/divisions.json/search",
@@ -123,15 +121,15 @@ async def _fetch_commons_votes(
     return []
 
 
-async def _fetch_lords_votes(
-    start_date: str, end_date: str
-) -> list[dict[str, Any]]:
+async def _fetch_lords_votes(start_date: str, end_date: str) -> list[dict[str, Any]]:
     """Fetch Lords divisions for the date range."""
     url = build_url(
         f"{LORDS_VOTES_API_BASE}/Divisions/search",
         {"StartDate": start_date, "EndDate": end_date},
     )
-    data = _parse_api_response(await paginate_request(url, LORDS_VOTES_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
+    data = _parse_api_response(
+        await paginate_request(url, LORDS_VOTES_PAGINATION, desired_total=_DIGEST_MAX_ITEMS)
+    )
     if isinstance(data, list):
         return data
     if isinstance(data, dict):
@@ -150,9 +148,7 @@ async def _fetch_bill_detail(bill_id: str) -> dict[str, Any]:
     return {}
 
 
-async def _fetch_bills(
-    start_date: str, end_date: str, house: int | None
-) -> dict[str, Any]:
+async def _fetch_bills(start_date: str, end_date: str, house: int | None) -> dict[str, Any]:
     """Fetch bill sittings for the date range, enriched with bill details."""
     params: dict[str, Any] = {"DateFrom": start_date, "DateTo": end_date}
     if house == 1:
@@ -160,7 +156,9 @@ async def _fetch_bills(
     elif house == 2:
         params["House"] = "Lords"
     url = build_url(f"{BILLS_API_BASE}/Sittings", params)
-    data = _parse_api_response(await paginate_request(url, BILLS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
+    data = _parse_api_response(
+        await paginate_request(url, BILLS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS)
+    )
     if data is None:
         return {}
 
@@ -199,9 +197,7 @@ async def _fetch_bills(
     return result
 
 
-async def _fetch_committees(
-    start_date: str, end_date: str
-) -> dict[str, Any]:
+async def _fetch_committees(start_date: str, end_date: str) -> dict[str, Any]:
     """Fetch committee events for the date range."""
     url = build_url(
         f"{COMMITTEES_API_BASE}/Events",
@@ -211,25 +207,25 @@ async def _fetch_committees(
             "ExcludeCancelledEvents": True,
         },
     )
-    data = _parse_api_response(await paginate_request(url, COMMITTEES_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
+    data = _parse_api_response(
+        await paginate_request(url, COMMITTEES_PAGINATION, desired_total=_DIGEST_MAX_ITEMS)
+    )
     return data if data is not None else {}
 
 
-async def _fetch_statements(
-    start_date: str, end_date: str
-) -> dict[str, Any]:
+async def _fetch_statements(start_date: str, end_date: str) -> dict[str, Any]:
     """Fetch written statements for the date range."""
     url = build_url(
         f"{WRITTEN_QUESTIONS_API_BASE}/writtenstatements/statements",
         {"madeWhenFrom": start_date, "madeWhenTo": end_date},
     )
-    data = _parse_api_response(await paginate_request(url, WRITTEN_STATEMENTS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
+    data = _parse_api_response(
+        await paginate_request(url, WRITTEN_STATEMENTS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS)
+    )
     return data if data is not None else {}
 
 
-async def _fetch_oral_qs(
-    start_date: str, end_date: str
-) -> dict[str, Any]:
+async def _fetch_oral_qs(start_date: str, end_date: str) -> dict[str, Any]:
     """Fetch oral question times for the date range."""
     url = build_url(
         f"{ORAL_QUESTIONS_API_BASE}/oralquestiontimes/list",
@@ -238,13 +234,13 @@ async def _fetch_oral_qs(
             "parameters.answeringDateEnd": end_date,
         },
     )
-    data = _parse_api_response(await paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
+    data = _parse_api_response(
+        await paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS)
+    )
     return data if data is not None else {}
 
 
-async def _fetch_edms(
-    start_date: str, end_date: str
-) -> dict[str, Any]:
+async def _fetch_edms(start_date: str, end_date: str) -> dict[str, Any]:
     """Fetch Early Day Motions tabled in the date range."""
     url = build_url(
         f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotions/list",
@@ -253,13 +249,13 @@ async def _fetch_edms(
             "parameters.tabledEndDate": end_date,
         },
     )
-    data = _parse_api_response(await paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS))
+    data = _parse_api_response(
+        await paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=_DIGEST_MAX_ITEMS)
+    )
     return data if data is not None else {}
 
 
-async def _fetch_written_qs(
-    start_date: str, end_date: str
-) -> dict[str, Any]:
+async def _fetch_written_qs(start_date: str, end_date: str) -> dict[str, Any]:
     """Fetch written questions for the date range.
 
     Uses a higher cap than other sections because the digest groups by
@@ -279,9 +275,7 @@ async def _fetch_written_qs(
 # ---------------------------------------------------------------------------
 
 
-async def _fetch_digest_data(
-    start_date: str, end_date: str, house: int | None
-) -> dict[str, Any]:
+async def _fetch_digest_data(start_date: str, end_date: str, house: int | None) -> dict[str, Any]:
     """Fetch all 9 data sources in parallel.
 
     Args:
@@ -325,9 +319,7 @@ async def _fetch_digest_data(
 # ---------------------------------------------------------------------------
 
 
-async def _get_digest_async(
-    target_date: str | None, period: str, house: int | None
-) -> str:
+async def _get_digest_async(target_date: str | None, period: str, house: int | None) -> str:
     """Build the digest JSON string.
 
     Args:

@@ -233,7 +233,9 @@ def browse_erskine_may_index(
             "take": take,
         },
     )
-    result = run_async(paginate_request(url, ERSKINE_MAY_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, ERSKINE_MAY_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -292,7 +294,9 @@ def search_erskine_may_index(
             "take": take,
         },
     )
-    result = run_async(paginate_request(url, ERSKINE_MAY_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, ERSKINE_MAY_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
@@ -326,5 +330,7 @@ def search_erskine_may_sections(
             "take": take,
         },
     )
-    result = run_async(paginate_request(url, ERSKINE_MAY_PAGINATION, desired_total=take, start_skip=skip))
+    result = run_async(
+        paginate_request(url, ERSKINE_MAY_PAGINATION, desired_total=take, start_skip=skip)
+    )
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
