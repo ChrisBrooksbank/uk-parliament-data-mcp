@@ -5,7 +5,16 @@ from __future__ import annotations
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
+from uk_parliament_mcp.cli.utils import (
+    DataOnlyOpt,
+    FieldsOpt,
+    FormatOpt,
+    PrettyOpt,
+    RawOpt,
+    echo_utf8,
+    format_output,
+    run_async,
+)
 from uk_parliament_mcp.config import (
     COMMONS_VOTES_API_BASE,
     HOUSE_COMMONS,
@@ -15,6 +24,13 @@ from uk_parliament_mcp.config import (
 from uk_parliament_mcp.http_client import build_url, get_result
 
 app = typer.Typer(help="Commons and Lords voting records and divisions", no_args_is_help=True)
+
+
+def _validate_house(house: int) -> None:
+    """Validate house parameter, raising typer.Exit on invalid value."""
+    if house not in (HOUSE_COMMONS, HOUSE_LORDS):
+        typer.echo(f"Invalid house value: {house}. Use 1 for Commons or 2 for Lords.")
+        raise typer.Exit(code=1)
 
 
 @app.command("search")
@@ -37,17 +53,11 @@ def search_divisions(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip (pagination)"),
     take: int = typer.Option(25, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search voting divisions in Commons or Lords.
@@ -55,6 +65,7 @@ def search_divisions(
     Search for divisions by topic (e.g., 'brexit', 'climate', 'NHS').
     Use --house flag to specify Commons (1) or Lords (2).
     """
+    _validate_house(house)
     if house == HOUSE_COMMONS:
         url = build_url(
             f"{COMMONS_VOTES_API_BASE}/divisions.json/search",
@@ -69,7 +80,7 @@ def search_divisions(
                 "queryParameters.take": take,
             },
         )
-    elif house == HOUSE_LORDS:
+    else:
         url = build_url(
             f"{LORDS_VOTES_API_BASE}/Divisions/search",
             {
@@ -83,9 +94,6 @@ def search_divisions(
                 "take": take,
             },
         )
-    else:
-        typer.echo(f"Invalid house value: {house}. Use 1 for Commons or 2 for Lords.")
-        raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
@@ -100,30 +108,22 @@ def get_division(
         "-h",
         help="House to query (1=Commons, 2=Lords)",
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get detailed information about a specific division.
 
     Returns complete division details including who voted for/against and vote totals.
     """
+    _validate_house(house)
     if house == HOUSE_COMMONS:
         url = f"{COMMONS_VOTES_API_BASE}/division/{division_id}.json"
-    elif house == HOUSE_LORDS:
-        url = f"{LORDS_VOTES_API_BASE}/Divisions/{division_id}"
     else:
-        typer.echo(f"Invalid house value: {house}. Use 1 for Commons or 2 for Lords.")
-        raise typer.Exit(code=1)
+        url = f"{LORDS_VOTES_API_BASE}/Divisions/{division_id}"
 
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
@@ -151,23 +151,18 @@ def get_member_voting_record(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip (pagination)"),
     take: int = typer.Option(25, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get complete voting record for a member.
 
     Returns all votes cast by the specified member in Commons or Lords divisions.
     """
+    _validate_house(house)
     if house == HOUSE_COMMONS:
         url = build_url(
             f"{COMMONS_VOTES_API_BASE}/divisions.json/membervoting",
@@ -182,7 +177,7 @@ def get_member_voting_record(
                 "queryParameters.take": take,
             },
         )
-    elif house == HOUSE_LORDS:
+    else:
         url = build_url(
             f"{LORDS_VOTES_API_BASE}/Divisions/membervoting",
             {
@@ -196,9 +191,6 @@ def get_member_voting_record(
                 "take": take,
             },
         )
-    else:
-        typer.echo(f"Invalid house value: {house}. Use 1 for Commons or 2 for Lords.")
-        raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
@@ -224,23 +216,18 @@ def get_divisions_grouped_by_party(
     include_when_member_was_teller: bool | None = typer.Option(
         None, "--include-teller", help="Include when member was a teller"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get divisions grouped by party voting patterns.
 
     Shows how different parties voted on issues. Useful for analyzing party-line voting behavior.
     """
+    _validate_house(house)
     if house == HOUSE_COMMONS:
         url = build_url(
             f"{COMMONS_VOTES_API_BASE}/divisions.json/groupedbyparty",
@@ -253,7 +240,7 @@ def get_divisions_grouped_by_party(
                 "queryParameters.includeWhenMemberWasTeller": include_when_member_was_teller,
             },
         )
-    elif house == HOUSE_LORDS:
+    else:
         url = build_url(
             f"{LORDS_VOTES_API_BASE}/Divisions/groupedbyparty",
             {
@@ -265,9 +252,6 @@ def get_divisions_grouped_by_party(
                 "IncludeWhenMemberWasTeller": include_when_member_was_teller,
             },
         )
-    else:
-        typer.echo(f"Invalid house value: {house}. Use 1 for Commons or 2 for Lords.")
-        raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
@@ -293,23 +277,18 @@ def get_divisions_search_count(
     include_when_member_was_teller: bool | None = typer.Option(
         None, "--include-teller", help="Include when member was a teller"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get total count of divisions matching search criteria.
 
     Useful for knowing how many results a search will return before retrieving them.
     """
+    _validate_house(house)
     if house == HOUSE_COMMONS:
         url = build_url(
             f"{COMMONS_VOTES_API_BASE}/divisions.json/searchTotalResults",
@@ -322,7 +301,7 @@ def get_divisions_search_count(
                 "queryParameters.includeWhenMemberWasTeller": include_when_member_was_teller,
             },
         )
-    elif house == HOUSE_LORDS:
+    else:
         url = build_url(
             f"{LORDS_VOTES_API_BASE}/Divisions/searchTotalResults",
             {
@@ -334,9 +313,6 @@ def get_divisions_search_count(
                 "IncludeWhenMemberWasTeller": include_when_member_was_teller,
             },
         )
-    else:
-        typer.echo(f"Invalid house value: {house}. Use 1 for Commons or 2 for Lords.")
-        raise typer.Exit(code=1)
 
     result = run_async(get_result(url))
     echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))

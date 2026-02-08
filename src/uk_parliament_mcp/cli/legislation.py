@@ -7,10 +7,18 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.pagination import TREATIES_PAGINATION, paginate_request
-from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
+from uk_parliament_mcp.cli.pagination import TREATIES_PAGINATION
+from uk_parliament_mcp.cli.utils import (
+    DataOnlyOpt,
+    FieldsOpt,
+    FormatOpt,
+    PrettyOpt,
+    RawOpt,
+    output_paginated,
+    output_result,
+)
 from uk_parliament_mcp.config import STATUTORY_INSTRUMENTS_API_BASE, TREATIES_API_BASE
-from uk_parliament_mcp.http_client import build_url, get_result
+from uk_parliament_mcp.http_client import build_url
 
 app = typer.Typer(
     help="Statutory Instruments and Treaties - secondary legislation and international agreements",
@@ -21,17 +29,11 @@ app = typer.Typer(
 @app.command("search-si")
 def search_statutory_instruments(
     name: str = typer.Argument(..., help="Name or title of the statutory instrument"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search for Statutory Instruments (secondary legislation) by name.
@@ -40,24 +42,17 @@ def search_statutory_instruments(
     primary legislation. SIs are used to implement or modify laws.
     """
     url = f"{STATUTORY_INSTRUMENTS_API_BASE}/StatutoryInstrument?Name={quote(name)}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("search-acts")
 def search_acts_of_parliament(
     name: str = typer.Argument(..., help="Name or title of the Act (e.g. 'Climate Change Act')"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search for Acts of Parliament (primary legislation) by name or topic.
@@ -66,8 +61,7 @@ def search_acts_of_parliament(
     or understanding the legal framework on particular issues.
     """
     url = f"{STATUTORY_INSTRUMENTS_API_BASE}/ActOfParliament?Name={quote(name)}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("get-si")
@@ -75,17 +69,11 @@ def get_statutory_instrument(
     instrument_id: str = typer.Argument(
         ..., help="The SI ID (alphanumeric string from search results)"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get full details of a specific Statutory Instrument.
@@ -93,8 +81,7 @@ def get_statutory_instrument(
     Returns SI details including laying info, procedure, and status.
     """
     url = f"{STATUTORY_INSTRUMENTS_API_BASE}/StatutoryInstrument/{instrument_id}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("si-business")
@@ -102,17 +89,11 @@ def get_si_business_items(
     instrument_id: str = typer.Argument(
         ..., help="The SI ID (alphanumeric string from search results)"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get business items (debates, motions) for a Statutory Instrument.
@@ -121,24 +102,17 @@ def get_si_business_items(
     SI progress, scrutiny, debates, or motions.
     """
     url = f"{STATUTORY_INSTRUMENTS_API_BASE}/StatutoryInstrument/{instrument_id}/BusinessItems"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("get-act")
 def get_act_of_parliament(
     act_id: str = typer.Argument(..., help="The Act ID (alphanumeric string from search results)"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get full details of an Act of Parliament.
@@ -146,8 +120,7 @@ def get_act_of_parliament(
     Returns Act details including primary legislation information.
     """
     url = f"{STATUTORY_INSTRUMENTS_API_BASE}/ActOfParliament/{act_id}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("search-treaties")
@@ -155,17 +128,11 @@ def search_treaties(
     search_text: str = typer.Argument(
         ..., help="Search term (e.g. 'trade', 'EU', 'climate', 'Brexit')"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search UK international treaties and agreements under parliamentary scrutiny.
@@ -175,8 +142,7 @@ def search_treaties(
     and parliamentary scrutiny status.
     """
     url = build_url(f"{TREATIES_API_BASE}/Treaty", {"SearchText": search_text})
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("search-treaties-advanced")
@@ -207,17 +173,11 @@ def search_treaties_advanced(
     house: str | None = typer.Option(None, "--house", help="Commons or Lords"),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip (pagination)"),
     take: int = typer.Option(20, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Advanced treaty search with full filtering.
@@ -240,25 +200,18 @@ def search_treaties_advanced(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, TREATIES_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, TREATIES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("treaty-departments")
 def get_treaty_government_organisations(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get departments that lay treaties.
@@ -267,23 +220,16 @@ def get_treaty_government_organisations(
     government organisations with IDs (e.g., Foreign Office).
     """
     url = f"{TREATIES_API_BASE}/GovernmentOrganisation"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("treaty-series")
 def get_treaty_series_memberships(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get treaty series types.
@@ -292,8 +238,7 @@ def get_treaty_series_memberships(
     series membership types (Country, EU, Miscellaneous).
     """
     url = f"{TREATIES_API_BASE}/SeriesMembership"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("get-treaty")
@@ -301,17 +246,11 @@ def get_treaty(
     treaty_id: str = typer.Argument(
         ..., help="The treaty ID (alphanumeric string from search results)"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get full details of a specific treaty.
@@ -319,8 +258,7 @@ def get_treaty(
     Returns treaty details including status, dates, and parties involved.
     """
     url = f"{TREATIES_API_BASE}/Treaty/{treaty_id}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("treaty-business")
@@ -328,17 +266,11 @@ def get_treaty_business_items(
     treaty_id: str = typer.Argument(
         ..., help="The treaty ID (alphanumeric string from search results)"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get parliamentary business items for treaty scrutiny.
@@ -348,5 +280,4 @@ def get_treaty_business_items(
     parliamentary scrutiny.
     """
     url = f"{TREATIES_API_BASE}/Treaty/{treaty_id}/BusinessItems"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)

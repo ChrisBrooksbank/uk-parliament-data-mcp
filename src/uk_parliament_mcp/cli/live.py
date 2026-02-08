@@ -6,7 +6,18 @@ import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.renderers import render_calendar, render_chamber_now
-from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async, should_render_rich
+from uk_parliament_mcp.cli.utils import (
+    DataOnlyOpt,
+    FieldsOpt,
+    FormatOpt,
+    PrettyOpt,
+    RawOpt,
+    echo_utf8,
+    format_output,
+    output_result,
+    run_async,
+    should_render_rich,
+)
 from uk_parliament_mcp.config import NOW_API_BASE, WHATSON_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
 
@@ -15,17 +26,11 @@ app = typer.Typer(help="Live activity and parliamentary calendar", no_args_is_he
 
 @app.command("commons-now")
 def happening_now_in_commons(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get live information about what's currently happening in the House of Commons chamber.
@@ -43,17 +48,11 @@ def happening_now_in_commons(
 
 @app.command("lords-now")
 def happening_now_in_lords(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get live information about what's currently happening in the House of Lords chamber.
@@ -74,17 +73,11 @@ def search_calendar(
     house: str = typer.Argument(..., help="House name: 'Commons' or 'Lords'"),
     start_date: str = typer.Argument(..., help="Start date (YYYY-MM-DD)"),
     end_date: str = typer.Argument(..., help="End date (YYYY-MM-DD)"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search parliamentary calendar for upcoming events and business in either chamber.
@@ -109,17 +102,11 @@ def search_calendar(
 
 @app.command("sessions")
 def get_sessions(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get list of parliamentary sessions.
@@ -128,8 +115,7 @@ def get_sessions(
     or the parliamentary calendar structure.
     """
     url = f"{WHATSON_API_BASE}/sessions/list.json"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("non-sitting-days")
@@ -137,17 +123,11 @@ def get_non_sitting_days(
     house: str = typer.Argument(..., help="House name: 'Commons' or 'Lords'"),
     start_date: str = typer.Argument(..., help="Start date (YYYY-MM-DD)"),
     end_date: str = typer.Argument(..., help="End date (YYYY-MM-DD)"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get periods when Parliament is not sitting (recesses, holidays).
@@ -163,8 +143,7 @@ def get_non_sitting_days(
             "queryParameters.endDate": end_date,
         },
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("sitting-dates")
@@ -172,17 +151,11 @@ def get_sitting_dates(
     house: str = typer.Argument(..., help="House name: 'Commons' or 'Lords'"),
     start_date: str = typer.Argument(..., help="Start date (YYYY-MM-DD)"),
     end_date: str = typer.Argument(..., help="End date (YYYY-MM-DD)"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get sitting dates for a house within a date range.
@@ -194,8 +167,7 @@ def get_sitting_dates(
         f"{WHATSON_API_BASE}/proceduraldates/{house}/sittingdates.json",
         {"startDate": start_date, "endDate": end_date},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("next-sitting-date")
@@ -205,17 +177,11 @@ def get_next_sitting_date(
         ...,
         help="Date to find next sitting after (YYYY-MM-DD). Use today's date to find when Parliament next sits.",
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get the next sitting date after a specified date.
@@ -227,8 +193,7 @@ def get_next_sitting_date(
         f"{WHATSON_API_BASE}/proceduraldates/{house}/nextsittingdate.json",
         {"dateToCheck": date_to_check},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("tabling-deadline")
@@ -237,17 +202,11 @@ def get_tabling_deadline(
     requested_date: str = typer.Argument(
         ..., help="Date to find tabling deadline for (YYYY-MM-DD)"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get the valid tabling date for a specified date (Commons only).
@@ -259,8 +218,7 @@ def get_tabling_deadline(
         f"{WHATSON_API_BASE}/proceduraldates/{house}/tablingdate.json",
         {"requestedDate": requested_date},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("answer-deadline")
@@ -270,17 +228,11 @@ def get_answer_deadline(
         ..., help="Type of written question: 'NamedDay' or 'Ordinary'"
     ),
     tabled_date: str = typer.Argument(..., help="Date the question was tabled (YYYY-MM-DD)"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get the earliest answer date for a written question (Commons only).
@@ -292,24 +244,17 @@ def get_answer_deadline(
         f"{WHATSON_API_BASE}/proceduraldates/{house}/answerdate.json",
         {"questionType": question_type, "tabledDate": tabled_date},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("calendar-event")
 def get_calendar_event(
     event_id: int = typer.Argument(..., help="The calendar event ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get calendar event by ID.
@@ -318,5 +263,4 @@ def get_calendar_event(
     have its ID from another query.
     """
     url = f"{WHATSON_API_BASE}/events/cal{event_id}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)

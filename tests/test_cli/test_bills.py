@@ -90,7 +90,7 @@ class TestRecent:
             """Mock async get_result."""
             return mock_recent_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "recent", "-p"])
 
         assert result.exit_code == 0
@@ -207,7 +207,7 @@ class TestGet:
             """Mock async get_result."""
             return mock_bill_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "get", "123"])
 
         assert result.exit_code == 0
@@ -226,7 +226,7 @@ class TestGet:
             """Mock async get_result."""
             return mock_bill_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "get", "123", "--pretty"])
 
         assert result.exit_code == 0
@@ -447,7 +447,7 @@ class TestPublications:
             """Mock async get_result."""
             return mock_publications_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "publications", "123"])
 
         assert result.exit_code == 0
@@ -466,7 +466,7 @@ class TestPublications:
             """Mock async get_result."""
             return mock_publications_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "publications", "123", "-d"])
 
         assert result.exit_code == 0
@@ -516,7 +516,7 @@ class TestTypes:
             """Mock async get_result."""
             return mock_types_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "types"])
 
         assert result.exit_code == 0
@@ -535,7 +535,7 @@ class TestTypes:
             """Mock async get_result."""
             return mock_types_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "types", "-p"])
 
         assert result.exit_code == 0
@@ -584,7 +584,7 @@ class TestStagesList:
             """Mock async get_result."""
             return mock_stages_list_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "stages-list"])
 
         assert result.exit_code == 0
@@ -621,7 +621,7 @@ class TestRSS:
             """Mock async get_result."""
             return mock_rss_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "rss-all"])
 
         assert result.exit_code == 0
@@ -639,7 +639,7 @@ class TestRSS:
             """Mock async get_result."""
             return mock_rss_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "rss-public"])
 
         assert result.exit_code == 0
@@ -657,7 +657,7 @@ class TestRSS:
             """Mock async get_result."""
             return mock_rss_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "rss-private"])
 
         assert result.exit_code == 0
@@ -680,7 +680,7 @@ class TestRSS:
             """Mock async get_result."""
             return mock_rss_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "rss-bill", "123"])
 
         assert result.exit_code == 0
@@ -771,7 +771,7 @@ class TestSittings:
             """Mock async get_result."""
             return mock_sittings_response
 
-        with patch("uk_parliament_mcp.cli.bills.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["bills", "sittings", "-p"])
 
         assert result.exit_code == 0

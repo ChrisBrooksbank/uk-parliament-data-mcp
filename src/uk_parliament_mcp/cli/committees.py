@@ -7,10 +7,18 @@ from urllib.parse import quote
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.pagination import COMMITTEES_PAGINATION, paginate_request
-from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
+from uk_parliament_mcp.cli.pagination import COMMITTEES_PAGINATION
+from uk_parliament_mcp.cli.utils import (
+    DataOnlyOpt,
+    FieldsOpt,
+    FormatOpt,
+    PrettyOpt,
+    RawOpt,
+    output_paginated,
+    output_result,
+)
 from uk_parliament_mcp.config import COMMITTEES_API_BASE
-from uk_parliament_mcp.http_client import build_url, get_result
+from uk_parliament_mcp.http_client import build_url
 
 app = typer.Typer(help="Committee information, meetings, and evidence", no_args_is_help=True)
 
@@ -19,17 +27,11 @@ app = typer.Typer(help="Committee information, meetings, and evidence", no_args_
 def get_meetings(
     from_date: str = typer.Argument(..., help="Start date (YYYY-MM-DD)"),
     to_date: str = typer.Argument(..., help="End date (YYYY-MM-DD)"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Find committee meetings and hearings by date range.
@@ -38,24 +40,17 @@ def get_meetings(
     Covers both Commons and Lords committees.
     """
     url = f"{COMMITTEES_API_BASE}/Broadcast/Meetings?FromDate={quote(from_date)}&ToDate={quote(to_date)}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("search")
 def search_committees(
     search_term: str = typer.Argument(..., help="Search term for committee names or subject areas"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search for parliamentary committees by name or subject area.
@@ -64,23 +59,16 @@ def search_committees(
     or when researching committee work (e.g., 'Treasury', 'Health', 'Defence').
     """
     url = f"{COMMITTEES_API_BASE}/Committees?SearchTerm={quote(search_term)}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("types")
 def get_types(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get all types of parliamentary committees.
@@ -89,8 +77,7 @@ def get_types(
     Delegated Legislation Committee, etc.
     """
     url = f"{COMMITTEES_API_BASE}/CommitteeType"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("get")
@@ -100,17 +87,11 @@ def get_committee(
     show_on_website_only: bool = typer.Option(
         True, "--website-only/--all", help="Show only public committees"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get comprehensive committee profile and membership details.
@@ -125,8 +106,7 @@ def get_committee(
             "showOnWebsiteOnly": show_on_website_only,
         },
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("events")
@@ -155,17 +135,11 @@ def get_events(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
     take: int = typer.Option(30, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search for committee events with flexible filtering.
@@ -192,10 +166,9 @@ def get_events(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, COMMITTEES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("event")
@@ -204,17 +177,11 @@ def get_event(
     show_on_website_only: bool = typer.Option(
         True, "--website-only/--all", help="Show only public events"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get detailed information about a specific committee event.
@@ -226,8 +193,7 @@ def get_event(
         f"{COMMITTEES_API_BASE}/Events/{event_id}",
         {"showOnWebsiteOnly": show_on_website_only},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("committee-events")
@@ -256,17 +222,11 @@ def get_committee_events(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
     take: int = typer.Option(30, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get events for a specific committee.
@@ -292,10 +252,9 @@ def get_committee_events(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, COMMITTEES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("members")
@@ -309,17 +268,11 @@ def get_members(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
     take: int = typer.Option(30, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get members and staff of a specific committee.
@@ -336,10 +289,9 @@ def get_members(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, COMMITTEES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("publications")
@@ -356,17 +308,11 @@ def get_publications(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
     take: int = typer.Option(30, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search for committee publications.
@@ -387,10 +333,9 @@ def get_publications(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, COMMITTEES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("publication")
@@ -399,17 +344,11 @@ def get_publication(
     show_on_website_only: bool = typer.Option(
         True, "--website-only/--all", help="Show only public publications"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get detailed information about a specific committee publication.
@@ -421,8 +360,7 @@ def get_publication(
         f"{COMMITTEES_API_BASE}/Publications/{publication_id}",
         {"showOnWebsiteOnly": show_on_website_only},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("written-evidence")
@@ -441,17 +379,11 @@ def get_written_evidence(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
     take: int = typer.Option(30, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search for written evidence submissions to committees.
@@ -472,10 +404,9 @@ def get_written_evidence(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, COMMITTEES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("oral-evidence")
@@ -494,17 +425,11 @@ def get_oral_evidence(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
     take: int = typer.Option(30, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search for oral evidence sessions from committee hearings.
@@ -525,10 +450,9 @@ def get_oral_evidence(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, COMMITTEES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("business")
@@ -549,17 +473,11 @@ def get_business(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
     take: int = typer.Option(30, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search for committee business (inquiries, investigations).
@@ -581,10 +499,9 @@ def get_business(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, COMMITTEES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("business-details")
@@ -593,17 +510,11 @@ def get_business_details(
     show_on_website_only: bool = typer.Option(
         True, "--website-only/--all", help="Show only public items"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get detailed information about a specific committee business item.
@@ -615,23 +526,16 @@ def get_business_details(
         f"{COMMITTEES_API_BASE}/CommitteeBusiness/{business_id}",
         {"showOnWebsiteOnly": show_on_website_only},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("business-types")
 def get_business_types(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get all types of committee business.
@@ -639,8 +543,7 @@ def get_business_types(
     Understand different types of committee work (inquiries, debates, etc.).
     """
     url = f"{COMMITTEES_API_BASE}/CommitteeBusinessType"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("next-events")
@@ -651,17 +554,11 @@ def get_next_events(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
     take: int = typer.Option(30, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get upcoming events for all committees.
@@ -677,10 +574,9 @@ def get_next_events(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, COMMITTEES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("staff")
@@ -694,17 +590,11 @@ def get_staff(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
     take: int = typer.Option(30, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get staff members of a committee.
@@ -720,26 +610,19 @@ def get_staff(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, COMMITTEES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("publications-summary")
 def get_publications_summary(
     committee_id: int = typer.Argument(..., help="Committee ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get summary of publications grouped by type.
@@ -747,24 +630,17 @@ def get_publications_summary(
     Overview of a committee's publication output with counts by type.
     """
     url = f"{COMMITTEES_API_BASE}/Committees/{committee_id}/Publications/Summary"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("event-activities")
 def get_event_activities(
     event_id: int = typer.Argument(..., help="Event ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get activities scheduled for an event.
@@ -772,24 +648,17 @@ def get_event_activities(
     See what's on the agenda for a committee meeting.
     """
     url = f"{COMMITTEES_API_BASE}/Events/{event_id}/Activities"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("event-attendance")
 def get_event_attendance(
     event_id: int = typer.Argument(..., help="Event ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get attendance record for an event.
@@ -797,8 +666,7 @@ def get_event_attendance(
     See which members attended a committee meeting.
     """
     url = f"{COMMITTEES_API_BASE}/Events/{event_id}/Attendance"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("member-memberships")
@@ -810,17 +678,11 @@ def get_member_memberships(
         None, "--status", help="Membership status (Current/Former)"
     ),
     committee_category: str | None = typer.Option(None, "--category", help="Committee category"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get committee memberships for one or more members.
@@ -835,8 +697,7 @@ def get_member_memberships(
             "CommitteeCategory": committee_category,
         },
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("oral-evidence-details")
@@ -845,17 +706,11 @@ def get_oral_evidence_details(
     show_on_website_only: bool = typer.Option(
         True, "--website-only/--all", help="Show only public evidence"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get detailed oral evidence by ID.
@@ -866,8 +721,7 @@ def get_oral_evidence_details(
         f"{COMMITTEES_API_BASE}/OralEvidence/{evidence_id}",
         {"showOnWebsiteOnly": show_on_website_only},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("written-evidence-details")
@@ -876,17 +730,11 @@ def get_written_evidence_details(
     show_on_website_only: bool = typer.Option(
         True, "--website-only/--all", help="Show only public evidence"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get detailed written evidence by ID.
@@ -897,23 +745,16 @@ def get_written_evidence_details(
         f"{COMMITTEES_API_BASE}/WrittenEvidence/{evidence_id}",
         {"showOnWebsiteOnly": show_on_website_only},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("publication-types")
 def get_publication_types(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get all types of committee publications.
@@ -921,8 +762,7 @@ def get_publication_types(
     Understand different types of committee publications (report types, document types).
     """
     url = f"{COMMITTEES_API_BASE}/PublicationType"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("bill-petitions")
@@ -941,17 +781,11 @@ def search_bill_petitions(
     ),
     skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
     take: int = typer.Option(30, "--take", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search petitions on Private Bills.
@@ -971,26 +805,19 @@ def search_bill_petitions(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, COMMITTEES_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, COMMITTEES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("business-publications-summary")
 def get_business_publications_summary(
     business_id: int = typer.Argument(..., help="Committee business ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get publication summary for an inquiry.
@@ -998,5 +825,4 @@ def get_business_publications_summary(
     See publication types for a committee business/inquiry with counts.
     """
     url = f"{COMMITTEES_API_BASE}/CommitteeBusiness/{business_id}/Publications/Summary"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)

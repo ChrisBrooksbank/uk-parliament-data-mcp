@@ -5,10 +5,27 @@ from __future__ import annotations
 import asyncio
 import sys
 from collections.abc import Coroutine
-from typing import Any
+from typing import Annotated, Any
+
+import typer
 
 from uk_parliament_mcp.cli.formatters import CLIFormatter, OutputFormat
-from uk_parliament_mcp.http_client import clear_called_urls, get_called_urls
+from uk_parliament_mcp.http_client import clear_called_urls, get_called_urls, get_result
+
+# ── Annotated type aliases for the 5 output params on every command ──
+PrettyOpt = Annotated[bool, typer.Option("--pretty", "-p", help="Pretty-print JSON output")]
+DataOnlyOpt = Annotated[
+    bool,
+    typer.Option("--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"),
+]
+FormatOpt = Annotated[
+    OutputFormat,
+    typer.Option("--format", "-f", help="Output format: json, table, markdown, csv, auto"),
+]
+RawOpt = Annotated[bool, typer.Option("--raw", help="Output full wrapper JSON (url + data)")]
+FieldsOpt = Annotated[
+    str | None, typer.Option("--fields", help="Comma-separated field paths for columns")
+]
 
 
 def should_render_rich(output_format: OutputFormat, raw: bool) -> bool:
@@ -104,3 +121,34 @@ def format_output(
         output_format = OutputFormat.JSON
     formatter = CLIFormatter(output_format, pretty, data_only, fields)
     return formatter.format_output(result)
+
+
+def output_result(
+    url: str,
+    pretty: bool = False,
+    data_only: bool = True,
+    output_format: OutputFormat = OutputFormat.AUTO,
+    fields: str | None = None,
+    raw: bool = False,
+) -> None:
+    """Fetch a URL and print formatted output. Combines run_async + format_output + echo_utf8."""
+    result = run_async(get_result(url))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+
+
+def output_paginated(
+    url: str,
+    config: Any,
+    take: int | None,
+    skip: int,
+    pretty: bool = False,
+    data_only: bool = True,
+    output_format: OutputFormat = OutputFormat.AUTO,
+    fields: str | None = None,
+    raw: bool = False,
+) -> None:
+    """Fetch a paginated URL and print formatted output."""
+    from uk_parliament_mcp.cli.pagination import paginate_request
+
+    result = run_async(paginate_request(url, config, desired_total=take, start_skip=skip))
+    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))

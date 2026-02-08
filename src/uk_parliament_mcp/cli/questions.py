@@ -11,11 +11,18 @@ from uk_parliament_mcp.cli.pagination import (
     ORAL_QUESTIONS_PAGINATION,
     WRITTEN_QUESTIONS_PAGINATION,
     WRITTEN_STATEMENTS_PAGINATION,
-    paginate_request,
 )
-from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
+from uk_parliament_mcp.cli.utils import (
+    DataOnlyOpt,
+    FieldsOpt,
+    FormatOpt,
+    PrettyOpt,
+    RawOpt,
+    output_paginated,
+    output_result,
+)
 from uk_parliament_mcp.config import ORAL_QUESTIONS_API_BASE, WRITTEN_QUESTIONS_API_BASE
-from uk_parliament_mcp.http_client import build_url, get_result
+from uk_parliament_mcp.http_client import build_url
 
 app = typer.Typer(help="Parliamentary questions, EDMs, and statements", no_args_is_help=True)
 
@@ -24,17 +31,11 @@ app = typer.Typer(help="Parliamentary questions, EDMs, and statements", no_args_
 @app.command("recent-edms")
 def get_recently_tabled_edms(
     take: int = typer.Option(10, "--take", help="Number of EDMs to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get recently tabled Early Day Motions (EDMs).
@@ -43,8 +44,7 @@ def get_recently_tabled_edms(
     build cross-party support, and raise issues. Use for tracking political sentiment.
     """
     url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotions/list?parameters.orderBy=DateTabledDesc&skip=0&take={take}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("search-edms")
@@ -83,17 +83,11 @@ def search_early_day_motions(
     ),
     skip: int = typer.Option(0, "--skip", help="Results to skip (pagination)"),
     take: int = typer.Option(25, "--take", help="Results to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search Early Day Motions by topic, member, or status.
@@ -120,26 +114,19 @@ def search_early_day_motions(
             "parameters.take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, ORAL_QUESTIONS_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("get-edm")
 def get_early_day_motion(
     edm_id: int = typer.Argument(..., help="EDM ID number"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get full details of an Early Day Motion by ID.
@@ -147,8 +134,7 @@ def get_early_day_motion(
     Returns complete EDM text, primary sponsor, supporters, and signature count.
     """
     url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotion/{edm_id}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 # Oral Questions Commands
@@ -168,17 +154,11 @@ def search_oral_question_times(
     answering_body_ids: str | None = typer.Option(
         None, "--body-ids", help="Comma-separated answering body IDs"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get scheduled oral question times for ministers.
@@ -197,8 +177,7 @@ def search_oral_question_times(
             "parameters.answeringBodyIds": answering_body_ids,
         },
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("search-oral")
@@ -222,17 +201,11 @@ def search_oral_questions(
     ),
     skip: int = typer.Option(0, "--skip", help="Results to skip (pagination)"),
     take: int = typer.Option(20, "--take", help="Results to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search oral parliamentary questions (not EDMs).
@@ -253,10 +226,9 @@ def search_oral_questions(
             "parameters.take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, ORAL_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url, ORAL_QUESTIONS_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 # Written Questions Commands
@@ -306,17 +278,11 @@ def search_written_questions(
     house: str | None = typer.Option(None, "--house", help="Commons/Lords/Bicameral"),
     skip: int = typer.Option(0, "--skip", help="Results to skip (pagination)"),
     take: int = typer.Option(20, "--take", help="Results to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search written parliamentary questions.
@@ -349,10 +315,17 @@ def search_written_questions(
             "take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, WRITTEN_QUESTIONS_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url,
+        WRITTEN_QUESTIONS_PAGINATION,
+        take,
+        skip,
+        pretty,
+        data_only,
+        output_format,
+        fields,
+        raw,
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("get-written-question")
@@ -361,17 +334,11 @@ def get_written_question(
     expand_member: bool = typer.Option(
         True, "--expand-member/--no-expand", help="Include member details"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get a specific written question by ID.
@@ -382,8 +349,7 @@ def get_written_question(
         f"{WRITTEN_QUESTIONS_API_BASE}/writtenquestions/questions/{question_id}",
         {"expandMember": expand_member},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("get-written-question-by-uin")
@@ -393,17 +359,11 @@ def get_written_question_by_uin(
     expand_member: bool = typer.Option(
         True, "--expand-member/--no-expand", help="Include member details"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get a written question by date and UIN.
@@ -414,8 +374,7 @@ def get_written_question_by_uin(
         f"{WRITTEN_QUESTIONS_API_BASE}/writtenquestions/questions/{quote(date)}/{quote(uin)}",
         {"expandMember": expand_member},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 # Written Statements Commands
@@ -429,17 +388,11 @@ def search_written_statements(
     house: str | None = typer.Option(None, "--house", help="Commons/Lords/Bicameral"),
     skip: int = typer.Option(0, "--skip", help="Results to skip (pagination)"),
     take: int = typer.Option(20, "--take", help="Results to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search written ministerial statements.
@@ -460,10 +413,17 @@ def search_written_statements(
             "take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, WRITTEN_STATEMENTS_PAGINATION, desired_total=take, start_skip=skip)
+    output_paginated(
+        url,
+        WRITTEN_STATEMENTS_PAGINATION,
+        take,
+        skip,
+        pretty,
+        data_only,
+        output_format,
+        fields,
+        raw,
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("get-statement")
@@ -472,17 +432,11 @@ def get_written_statement(
     expand_member: bool = typer.Option(
         True, "--expand-member/--no-expand", help="Include member details"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get a specific written statement by ID.
@@ -493,8 +447,7 @@ def get_written_statement(
         f"{WRITTEN_QUESTIONS_API_BASE}/writtenstatements/statements/{statement_id}",
         {"expandMember": expand_member},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("get-statement-by-uin")
@@ -504,17 +457,11 @@ def get_written_statement_by_uin(
     expand_member: bool = typer.Option(
         True, "--expand-member/--no-expand", help="Include member details"
     ),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get a written statement by date and UIN.
@@ -525,5 +472,4 @@ def get_written_statement_by_uin(
         f"{WRITTEN_QUESTIONS_API_BASE}/writtenstatements/statements/{quote(date)}/{quote(uin)}",
         {"expandMember": expand_member},
     )
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)

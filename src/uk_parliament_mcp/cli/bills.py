@@ -5,10 +5,18 @@ from __future__ import annotations
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.pagination import BILLS_PAGINATION, paginate_request
-from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async
+from uk_parliament_mcp.cli.pagination import BILLS_PAGINATION
+from uk_parliament_mcp.cli.utils import (
+    DataOnlyOpt,
+    FieldsOpt,
+    FormatOpt,
+    PrettyOpt,
+    RawOpt,
+    output_paginated,
+    output_result,
+)
 from uk_parliament_mcp.config import BILLS_API_BASE
-from uk_parliament_mcp.http_client import build_url, get_result
+from uk_parliament_mcp.http_client import build_url
 
 app = typer.Typer(help="Bills and legislation tools", no_args_is_help=True)
 
@@ -16,17 +24,11 @@ app = typer.Typer(help="Bills and legislation tools", no_args_is_help=True)
 @app.command("recent")
 def get_recent_bills(
     take: int = typer.Option(10, "--take", "-t", help="Number of bills to return (default: 10)"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get most recently updated bills and current legislative activity.
@@ -34,8 +36,7 @@ def get_recent_bills(
     Returns bill titles, stages, sponsors, dates, and current status.
     """
     url = f"{BILLS_API_BASE}/Bills?SortOrder=DateUpdatedDescending&skip=0&take={take}"
-    result = run_async(paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=0))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_paginated(url, BILLS_PAGINATION, take, 0, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("search")
@@ -78,17 +79,11 @@ def search_bills(
     ),
     skip: int | None = typer.Option(None, "--skip", help="Number of records to skip (pagination)"),
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Search for parliamentary bills by title, subject, or keyword.
@@ -114,25 +109,18 @@ def search_bills(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0)
+    output_paginated(
+        url, BILLS_PAGINATION, take, skip or 0, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("types")
 def get_bill_types(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get all types of bills that can be introduced in Parliament.
@@ -140,23 +128,16 @@ def get_bill_types(
     Returns bill types with descriptions (e.g., Government Bill, Private Member's Bill).
     """
     url = f"{BILLS_API_BASE}/BillTypes"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("stages-list")
 def get_bill_stages_list(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get all possible stages a bill can go through in its legislative journey.
@@ -164,24 +145,17 @@ def get_bill_stages_list(
     Returns all bill stages with descriptions (e.g., First Reading, Committee Stage, Royal Assent).
     """
     url = f"{BILLS_API_BASE}/Stages"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("get")
 def get_bill(
     bill_id: int = typer.Argument(..., help="Bill ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get detailed information about a specific bill by ID.
@@ -189,8 +163,7 @@ def get_bill(
     Returns comprehensive bill details including title, sponsors, stages, summary, and status.
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("stages")
@@ -198,17 +171,11 @@ def get_stages(
     bill_id: int = typer.Argument(..., help="Bill ID"),
     skip: int | None = typer.Option(None, "--skip", help="Number of records to skip (pagination)"),
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get all stages of a specific bill by bill ID.
@@ -219,27 +186,20 @@ def get_stages(
         f"{BILLS_API_BASE}/Bills/{bill_id}/Stages",
         {"Skip": skip, "Take": take},
     )
-    result = run_async(
-        paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0)
+    output_paginated(
+        url, BILLS_PAGINATION, take, skip or 0, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("stage-details")
 def get_stage_details(
     bill_id: int = typer.Argument(..., help="Bill ID"),
     stage_id: int = typer.Argument(..., help="Bill stage ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get detailed information about a specific stage of a bill.
@@ -247,8 +207,7 @@ def get_stage_details(
     Returns complete details including timings, committee involvement, and related activities.
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("amendments")
@@ -267,17 +226,11 @@ def get_amendments(
     ),
     skip: int | None = typer.Option(None, "--skip", help="Number of records to skip (pagination)"),
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get all amendments for a specific bill stage.
@@ -295,10 +248,9 @@ def get_amendments(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0)
+    output_paginated(
+        url, BILLS_PAGINATION, take, skip or 0, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("amendment")
@@ -306,17 +258,11 @@ def get_amendment(
     bill_id: int = typer.Argument(..., help="Bill ID"),
     stage_id: int = typer.Argument(..., help="Bill stage ID"),
     amendment_id: int = typer.Argument(..., help="Amendment ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get detailed information about a specific amendment.
@@ -324,8 +270,7 @@ def get_amendment(
     Returns complete amendment details including text, sponsors, decision, and explanatory notes.
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}/Amendments/{amendment_id}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("ping-pong")
@@ -344,17 +289,11 @@ def get_ping_pong_items(
     ),
     skip: int | None = typer.Option(None, "--skip", help="Number of records to skip (pagination)"),
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get ping pong items (amendments and motions) for a bill stage.
@@ -372,10 +311,9 @@ def get_ping_pong_items(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0)
+    output_paginated(
+        url, BILLS_PAGINATION, take, skip or 0, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("ping-pong-item")
@@ -383,17 +321,11 @@ def get_ping_pong_item(
     bill_id: int = typer.Argument(..., help="Bill ID"),
     stage_id: int = typer.Argument(..., help="Bill stage ID"),
     item_id: int = typer.Argument(..., help="Ping pong item ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get detailed information about a specific ping pong item.
@@ -401,24 +333,17 @@ def get_ping_pong_item(
     Returns complete details about final stage amendments or motions in the legislative process.
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}/PingPongItems/{item_id}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("publications")
 def get_publications(
     bill_id: int = typer.Argument(..., help="Bill ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get all publications for a specific bill.
@@ -426,25 +351,18 @@ def get_publications(
     Returns publications including documents, impact assessments, and explanatory notes.
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Publications"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("stage-publications")
 def get_stage_publications(
     bill_id: int = typer.Argument(..., help="Bill ID"),
     stage_id: int = typer.Argument(..., help="Stage ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get publications for a specific bill stage.
@@ -452,25 +370,18 @@ def get_stage_publications(
     Returns documents related to a particular stage of legislation.
     """
     url = f"{BILLS_API_BASE}/Bills/{bill_id}/Stages/{stage_id}/Publications"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("publication-document")
 def get_publication_document(
     publication_id: int = typer.Argument(..., help="Publication ID"),
     document_id: int = typer.Argument(..., help="Document ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get information about a specific publication document.
@@ -478,8 +389,7 @@ def get_publication_document(
     Returns metadata about bill documents including filename, content type, and size.
     """
     url = f"{BILLS_API_BASE}/Publications/{publication_id}/Documents/{document_id}"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("news")
@@ -487,17 +397,11 @@ def get_news_articles(
     bill_id: int = typer.Argument(..., help="Bill ID"),
     skip: int | None = typer.Option(None, "--skip", help="Number of records to skip (pagination)"),
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get news articles related to a specific bill.
@@ -508,25 +412,18 @@ def get_news_articles(
         f"{BILLS_API_BASE}/Bills/{bill_id}/NewsArticles",
         {"Skip": skip, "Take": take},
     )
-    result = run_async(
-        paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0)
+    output_paginated(
+        url, BILLS_PAGINATION, take, skip or 0, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("rss-all")
 def get_all_bills_rss(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get RSS feed of all bills.
@@ -534,23 +431,16 @@ def get_all_bills_rss(
     Returns RSS feed for staying updated on all legislative activity.
     """
     url = f"{BILLS_API_BASE}/Rss/allbills.rss"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("rss-public")
 def get_public_bills_rss(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get RSS feed of public bills only.
@@ -558,23 +448,16 @@ def get_public_bills_rss(
     Returns RSS feed for monitoring government and public bills, excluding private bills.
     """
     url = f"{BILLS_API_BASE}/Rss/publicbills.rss"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("rss-private")
 def get_private_bills_rss(
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get RSS feed of private bills only.
@@ -582,24 +465,17 @@ def get_private_bills_rss(
     Returns RSS feed for monitoring private member bills and private bills.
     """
     url = f"{BILLS_API_BASE}/Rss/privatebills.rss"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("rss-bill")
 def get_bill_rss(
     bill_id: int = typer.Argument(..., help="Bill ID"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get RSS feed for a specific bill by ID.
@@ -607,25 +483,18 @@ def get_bill_rss(
     Returns RSS feed for tracking updates and changes to a particular piece of legislation.
     """
     url = f"{BILLS_API_BASE}/Rss/Bills/{bill_id}.rss"
-    result = run_async(get_result(url))
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+    output_result(url, pretty, data_only, output_format, fields, raw)
 
 
 @app.command("publication-types")
 def get_publication_types(
     skip: int | None = typer.Option(None, "--skip", help="Number of records to skip (pagination)"),
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get all publication types available for bills.
@@ -636,10 +505,9 @@ def get_publication_types(
         f"{BILLS_API_BASE}/PublicationTypes",
         {"Skip": skip, "Take": take},
     )
-    result = run_async(
-        paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0)
+    output_paginated(
+        url, BILLS_PAGINATION, take, skip or 0, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
 
 
 @app.command("sittings")
@@ -649,17 +517,11 @@ def get_sittings(
     date_to: str | None = typer.Option(None, "--to", help="End date (YYYY-MM-DD)"),
     skip: int | None = typer.Option(None, "--skip", help="Number of records to skip (pagination)"),
     take: int | None = typer.Option(None, "--take", "-t", help="Number of records to return"),
-    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
-    data_only: bool = typer.Option(
-        True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
-    ),
-    output_format: OutputFormat = typer.Option(
-        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
-    ),
-    raw: bool = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)"),
-    fields: str | None = typer.Option(
-        None, "--fields", help="Comma-separated field paths for columns"
-    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
 ) -> None:
     """
     Get parliamentary sittings with optional filtering by house and date range.
@@ -676,7 +538,6 @@ def get_sittings(
             "Take": take,
         },
     )
-    result = run_async(
-        paginate_request(url, BILLS_PAGINATION, desired_total=take, start_skip=skip or 0)
+    output_paginated(
+        url, BILLS_PAGINATION, take, skip or 0, pretty, data_only, output_format, fields, raw
     )
-    echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
