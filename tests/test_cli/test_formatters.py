@@ -11,10 +11,13 @@ from uk_parliament_mcp.cli.formatters import (
     CLIFormatter,
     FieldsHint,
     OutputFormat,
+    TruncationWarning,
     _detect_columns,
     _extract_all_field_paths,
     _extract_items,
+    _extract_total,
     _format_hint_text,
+    _format_truncation_warning,
     _get_nested_value,
     _parse_fields,
     _resolve_format,
@@ -644,3 +647,185 @@ class TestFieldsHintIntegration:
         formatter = CLIFormatter(OutputFormat.JSON)
         formatter.format_output(response)
         assert formatter.fields_hint is None
+
+
+class TestExtractTotal:
+    """Tests for _extract_total helper."""
+
+    def test_total_results_key(self) -> None:
+        """Test extracting from totalResults (Members API)."""
+        data = {"items": [{"id": 1}], "totalResults": 150}
+        assert _extract_total(data) == 150
+
+    def test_total_result_count_key(self) -> None:
+        """Test extracting from TotalResultCount."""
+        data = {"Results": [{"id": 1}], "TotalResultCount": 200}
+        assert _extract_total(data) == 200
+
+    def test_total_results_capitalized_key(self) -> None:
+        """Test extracting from TotalResults (Hansard API)."""
+        data = {"Results": [{"id": 1}], "TotalResults": 500}
+        assert _extract_total(data) == 500
+
+    def test_paging_info_total(self) -> None:
+        """Test extracting from PagingInfo.Total (Oral Questions API)."""
+        data = {"Response": [{"id": 1}], "PagingInfo": {"Total": 75}}
+        assert _extract_total(data) == 75
+
+    def test_no_total_key(self) -> None:
+        """Test returns None when no total key found."""
+        data = {"items": [{"id": 1}]}
+        assert _extract_total(data) is None
+
+    def test_non_dict_input(self) -> None:
+        """Test returns None for non-dict input."""
+        assert _extract_total([{"id": 1}]) is None
+        assert _extract_total("string") is None
+
+    def test_non_int_total(self) -> None:
+        """Test returns None when total value is not int."""
+        data = {"totalResults": "not a number"}
+        assert _extract_total(data) is None
+
+    def test_paging_info_non_dict(self) -> None:
+        """Test PagingInfo that's not a dict is ignored."""
+        data = {"PagingInfo": "bad"}
+        assert _extract_total(data) is None
+
+
+class TestFormatTruncationWarning:
+    """Tests for _format_truncation_warning helper."""
+
+    def test_basic_format(self) -> None:
+        """Test basic warning format."""
+        warning = TruncationWarning(showing=20, total=150)
+        text = _format_truncation_warning(warning)
+        assert "Showing 20 of 150 results" in text
+        assert "130 more available" in text
+        assert "--take 150" in text
+
+    def test_cap_at_1000(self) -> None:
+        """Test --take suggestion is capped at 1000."""
+        warning = TruncationWarning(showing=20, total=5000)
+        text = _format_truncation_warning(warning)
+        assert "--take 1000" in text
+        assert "--take 5000" not in text
+
+    def test_small_total(self) -> None:
+        """Test with small total below cap."""
+        warning = TruncationWarning(showing=10, total=25)
+        text = _format_truncation_warning(warning)
+        assert "--take 25" in text
+        assert "15 more available" in text
+
+
+class TestTruncationWarningIntegration:
+    """Tests that truncation_warning is set after formatting."""
+
+    @pytest.fixture
+    def truncated_response(self) -> str:
+        """Response with totalResults > items count."""
+        return json.dumps(
+            {
+                "items": [{"id": 1, "name": "Test"}],
+                "totalResults": 150,
+            }
+        )
+
+    @pytest.fixture
+    def non_truncated_response(self) -> str:
+        """Response where items == totalResults."""
+        return json.dumps(
+            {
+                "items": [{"id": 1, "name": "Test"}],
+                "totalResults": 1,
+            }
+        )
+
+    def test_table_sets_truncation_warning(self, truncated_response: str) -> None:
+        """Test _format_table sets truncation_warning when truncated."""
+        formatter = CLIFormatter(OutputFormat.TABLE)
+        formatter.format_output(truncated_response)
+        assert formatter.truncation_warning is not None
+        assert formatter.truncation_warning.showing == 1
+        assert formatter.truncation_warning.total == 150
+
+    def test_table_caption_present(self, truncated_response: str) -> None:
+        """Test table output includes truncation caption text."""
+        formatter = CLIFormatter(OutputFormat.TABLE)
+        result = formatter.format_output(truncated_response)
+        # Rich may word-wrap the caption across lines, so check for key fragments
+        assert "Showing 1 of" in result
+        assert "150 results" in result
+        assert "--take" in result
+
+    def test_table_no_caption_when_not_truncated(self, non_truncated_response: str) -> None:
+        """Test table output has no caption when not truncated."""
+        formatter = CLIFormatter(OutputFormat.TABLE)
+        result = formatter.format_output(non_truncated_response)
+        assert "Showing" not in result
+        assert formatter.truncation_warning is None
+
+    def test_markdown_blockquote_present(self, truncated_response: str) -> None:
+        """Test markdown output includes blockquote warning."""
+        formatter = CLIFormatter(OutputFormat.MARKDOWN)
+        result = formatter.format_output(truncated_response)
+        assert "> **Showing 1 of 150 results**" in result
+
+    def test_markdown_no_blockquote_when_not_truncated(
+        self, non_truncated_response: str
+    ) -> None:
+        """Test markdown has no blockquote when not truncated."""
+        formatter = CLIFormatter(OutputFormat.MARKDOWN)
+        result = formatter.format_output(non_truncated_response)
+        assert "> **Showing" not in result
+
+    def test_csv_output_clean(self, truncated_response: str) -> None:
+        """Test CSV output does not contain inline truncation text."""
+        formatter = CLIFormatter(OutputFormat.CSV)
+        result = formatter.format_output(truncated_response)
+        assert "> **Showing" not in result
+        # But truncation_warning attribute should still be set
+        assert formatter.truncation_warning is not None
+
+    def test_json_output_clean(self, truncated_response: str) -> None:
+        """Test JSON output is clean (no inline truncation text)."""
+        formatter = CLIFormatter(OutputFormat.JSON)
+        result = formatter.format_output(truncated_response)
+        parsed = json.loads(result)
+        assert isinstance(parsed, dict)
+        # truncation_warning attribute should still be set
+        assert formatter.truncation_warning is not None
+
+    def test_no_total_in_response(self) -> None:
+        """Test no truncation_warning when total is absent."""
+        response = json.dumps({"items": [{"id": 1}]})
+        formatter = CLIFormatter(OutputFormat.TABLE)
+        formatter.format_output(response)
+        assert formatter.truncation_warning is None
+
+    def test_hansard_total_results(self) -> None:
+        """Test truncation with Hansard API TotalResults key."""
+        response = json.dumps(
+            {
+                "Results": [{"id": 1, "title": "Debate"}],
+                "TotalResults": 300,
+            }
+        )
+        formatter = CLIFormatter(OutputFormat.TABLE)
+        formatter.format_output(response)
+        assert formatter.truncation_warning is not None
+        assert formatter.truncation_warning.total == 300
+
+    def test_oral_questions_paging_info(self) -> None:
+        """Test truncation with Oral Questions PagingInfo.Total."""
+        response = json.dumps(
+            {
+                "Response": [{"id": 1, "value": "Question"}],
+                "PagingInfo": {"Total": 50},
+            }
+        )
+        formatter = CLIFormatter(OutputFormat.TABLE)
+        formatter.format_output(response)
+        assert formatter.truncation_warning is not None
+        assert formatter.truncation_warning.total == 50

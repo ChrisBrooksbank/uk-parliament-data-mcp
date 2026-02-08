@@ -24,6 +24,14 @@ class FieldsHint:
     available: list[str] = dataclass_field(default_factory=list)
 
 
+@dataclass
+class TruncationWarning:
+    """Indicates results were truncated by the API."""
+
+    showing: int
+    total: int
+
+
 class OutputFormat(StrEnum):
     """Output format options for CLI commands."""
 
@@ -138,6 +146,7 @@ def _extract_items(data: Any) -> list[dict[str, Any]]:
             "items",
             "results",
             "Results",
+            "Response",
             "searchResults",
             "data",
             "divisions",
@@ -217,6 +226,54 @@ def _format_hint_text(hint: FieldsHint) -> str:
     return "\n".join(lines)
 
 
+def _extract_total(data: Any) -> int | None:
+    """Extract total result count from various response structures.
+
+    Checks known total count keys used by different Parliament APIs.
+
+    Args:
+        data: Parsed response data.
+
+    Returns:
+        Total count as int, or None if not found.
+    """
+    if not isinstance(data, dict):
+        return None
+
+    # Direct top-level keys
+    for key in ["totalResults", "TotalResultCount", "TotalResults"]:
+        if key in data:
+            val = data[key]
+            if isinstance(val, int):
+                return val
+
+    # Nested PagingInfo.Total (Oral Questions API)
+    paging_info = data.get("PagingInfo")
+    if isinstance(paging_info, dict):
+        total = paging_info.get("Total")
+        if isinstance(total, int):
+            return total
+
+    return None
+
+
+def _format_truncation_warning(warning: TruncationWarning) -> str:
+    """Format a TruncationWarning into text.
+
+    Args:
+        warning: The TruncationWarning with showing/total counts.
+
+    Returns:
+        Formatted warning string.
+    """
+    remaining = warning.total - warning.showing
+    suggested = min(warning.total, 1000)
+    return (
+        f"Showing {warning.showing} of {warning.total} results "
+        f"({remaining} more available). Use --take {suggested} to get all."
+    )
+
+
 def _resolve_format(fmt: OutputFormat) -> OutputFormat:
     """Resolve AUTO format based on whether stdout is a TTY.
 
@@ -254,6 +311,7 @@ class CLIFormatter:
         self.data_only = data_only
         self.fields = fields
         self.fields_hint: FieldsHint | None = None
+        self.truncation_warning: TruncationWarning | None = None
 
     def format_output(self, result: str) -> str:
         """Format the result according to the configured format.
@@ -271,6 +329,9 @@ class CLIFormatter:
 
         # Extract data if requested
         data = self._extract_data(parsed)
+
+        # Check for truncation
+        self._check_truncation(data)
 
         if self.output_format == OutputFormat.JSON:
             return self._format_json(data)
@@ -294,6 +355,15 @@ class CLIFormatter:
                     return data_content
             return data_content
         return parsed
+
+    def _check_truncation(self, data: Any) -> None:
+        """Check if results are truncated and set truncation_warning if so."""
+        total = _extract_total(data)
+        if total is None:
+            return
+        items = _extract_items(data)
+        if len(items) < total:
+            self.truncation_warning = TruncationWarning(showing=len(items), total=total)
 
     def _get_columns(self, items: list[dict[str, Any]]) -> list[tuple[str, str]]:
         """Get columns, using user-specified fields if set."""
@@ -354,7 +424,18 @@ class CLIFormatter:
 
         self.fields_hint = self._build_fields_hint(items, columns)
 
-        table = Table(show_header=True, header_style="bold")
+        caption = None
+        caption_style = None
+        if self.truncation_warning:
+            caption = _format_truncation_warning(self.truncation_warning)
+            caption_style = "bold yellow"
+
+        table = Table(
+            show_header=True,
+            header_style="bold",
+            caption=caption,
+            caption_style=caption_style,
+        )
 
         # Add columns
         for _, header in columns:
@@ -422,6 +503,16 @@ class CLIFormatter:
                     # Escape pipe characters in markdown
                     row_values.append(str(value).replace("|", "\\|"))
             lines.append("| " + " | ".join(row_values) + " |")
+
+        if self.truncation_warning:
+            lines.append("")
+            w = self.truncation_warning
+            remaining = w.total - w.showing
+            suggested = min(w.total, 1000)
+            lines.append(
+                f"> **Showing {w.showing} of {w.total} results** "
+                f"({remaining} more available). Use `--take {suggested}` to get all."
+            )
 
         return "\n".join(lines)
 
