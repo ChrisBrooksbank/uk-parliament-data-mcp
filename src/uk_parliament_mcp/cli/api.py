@@ -16,6 +16,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from uk_parliament_mcp.cli.completion import complete_api_names
 from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import echo_utf8
 from uk_parliament_mcp.cli.utils import should_render_rich as _should_render_rich
@@ -119,7 +120,7 @@ def list_apis(
 
 @app.command("endpoints")
 def endpoints(
-    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
+    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')", autocompletion=complete_api_names),
     tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by tag"),
     output_format: OutputFormat = typer.Option(
         OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
@@ -178,7 +179,7 @@ def endpoints(
 
 @app.command("detail")
 def detail(
-    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
+    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')", autocompletion=complete_api_names),
     path: str = typer.Argument(..., help="Endpoint path (supports partial matching)"),
     method: str = typer.Option("GET", "--method", "-m", help="HTTP method"),
     output_format: OutputFormat = typer.Option(
@@ -327,7 +328,7 @@ def search(
 
 @app.command("schema")
 def schema(
-    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
+    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')", autocompletion=complete_api_names),
     schema_name: str | None = typer.Argument(None, help="Schema name (omit to list all)"),
     output_format: OutputFormat = typer.Option(
         OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
@@ -429,7 +430,7 @@ def schema(
 
 @app.command("params")
 def params(
-    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
+    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')", autocompletion=complete_api_names),
     path: str = typer.Argument(..., help="Endpoint path (supports partial matching)"),
     method: str = typer.Option("GET", "--method", "-m", help="HTTP method"),
     output_format: OutputFormat = typer.Option(
