@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -144,3 +145,75 @@ class TestFormatOutput:
         parsed = json.loads(result)
         # raw=True should force data_only=False and JSON format
         assert "url" in parsed
+
+
+class TestFieldsHintPrinting:
+    """Tests for fields hint printing to stderr."""
+
+    @pytest.fixture
+    def table_response(self) -> str:
+        """Response with items that produce a table."""
+        return json.dumps(
+            {
+                "url": "https://api.parliament.uk/test",
+                "data": json.dumps(
+                    {"items": [{"id": 1, "name": "Test", "extra": "hidden"}]}
+                ),
+            }
+        )
+
+    @patch("uk_parliament_mcp.cli.utils.sys")
+    def test_hint_printed_when_tty_and_table(self, mock_sys, table_response: str, capsys):
+        """Test hint is printed to stderr when TTY + table format."""
+        mock_sys.stdout.isatty.return_value = True
+        mock_sys.platform = "linux"
+        # Use real stderr for capsys capture
+        import sys
+
+        mock_sys.stderr = sys.stderr
+        result = format_output(
+            table_response, output_format=OutputFormat.TABLE, data_only=True
+        )
+        captured = capsys.readouterr()
+        assert "Showing:" in captured.err
+        assert "Tip:" in captured.err
+
+    @patch("uk_parliament_mcp.cli.utils.sys")
+    def test_hint_not_printed_when_piped(self, mock_sys, table_response: str, capsys):
+        """Test hint is NOT printed when stdout is not a TTY."""
+        mock_sys.stdout.isatty.return_value = False
+        mock_sys.platform = "linux"
+        import sys
+
+        mock_sys.stderr = sys.stderr
+        result = format_output(
+            table_response, output_format=OutputFormat.JSON, data_only=True
+        )
+        captured = capsys.readouterr()
+        assert "Showing:" not in captured.err
+
+    @patch("uk_parliament_mcp.cli.utils.sys")
+    def test_hint_not_printed_for_json_format(self, mock_sys, table_response: str, capsys):
+        """Test hint is NOT printed for JSON format (no fields_hint set)."""
+        mock_sys.stdout.isatty.return_value = True
+        mock_sys.platform = "linux"
+        import sys
+
+        mock_sys.stderr = sys.stderr
+        result = format_output(
+            table_response, output_format=OutputFormat.JSON, data_only=True
+        )
+        captured = capsys.readouterr()
+        assert "Showing:" not in captured.err
+
+    @patch("uk_parliament_mcp.cli.utils.sys")
+    def test_hint_not_printed_for_raw_mode(self, mock_sys, table_response: str, capsys):
+        """Test hint is NOT printed for raw mode."""
+        mock_sys.stdout.isatty.return_value = True
+        mock_sys.platform = "linux"
+        import sys
+
+        mock_sys.stderr = sys.stderr
+        result = format_output(table_response, raw=True)
+        captured = capsys.readouterr()
+        assert "Showing:" not in captured.err

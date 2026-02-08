@@ -9,9 +9,12 @@ import pytest
 
 from uk_parliament_mcp.cli.formatters import (
     CLIFormatter,
+    FieldsHint,
     OutputFormat,
     _detect_columns,
+    _extract_all_field_paths,
     _extract_items,
+    _format_hint_text,
     _get_nested_value,
     _parse_fields,
     _resolve_format,
@@ -460,3 +463,169 @@ class TestOutputFormatEnum:
         """Test enum inherits from str."""
         assert isinstance(OutputFormat.JSON, str)
         assert OutputFormat.JSON == "json"
+
+
+class TestExtractAllFieldPaths:
+    """Tests for _extract_all_field_paths helper."""
+
+    def test_flat_dict(self) -> None:
+        """Test flat dict produces simple paths."""
+        item = {"id": 1, "name": "Test", "active": True}
+        paths = _extract_all_field_paths(item)
+        assert paths == ["active", "id", "name"]
+
+    def test_nested_dict(self) -> None:
+        """Test nested dict produces dot-notation paths."""
+        item = {"id": 1, "party": {"name": "Labour", "id": 15}}
+        paths = _extract_all_field_paths(item)
+        assert "party" in paths
+        assert "party.id" in paths
+        assert "party.name" in paths
+
+    def test_depth_limit(self) -> None:
+        """Test recursion stops at max_depth."""
+        item = {"a": {"b": {"c": {"d": "deep"}}}}
+        paths = _extract_all_field_paths(item, max_depth=2)
+        assert "a" in paths
+        assert "a.b" in paths
+        # depth=2 means we go into 'a' (depth 2->1) then 'b' (depth 1->0, no recurse)
+        assert "a.b.c" not in paths
+
+    def test_list_values_not_recursed(self) -> None:
+        """Test list values are noted as key only, not recursed into."""
+        item = {"id": 1, "tags": ["a", "b"]}
+        paths = _extract_all_field_paths(item)
+        assert "tags" in paths
+        # Should not recurse into list elements
+        assert len([p for p in paths if p.startswith("tags.")]) == 0
+
+    def test_underscore_keys_skipped(self) -> None:
+        """Test keys starting with _ are skipped."""
+        item = {"id": 1, "_internal": "hidden", "name": "Test"}
+        paths = _extract_all_field_paths(item)
+        assert "_internal" not in paths
+        assert "id" in paths
+
+    def test_empty_dict(self) -> None:
+        """Test empty dict returns empty list."""
+        assert _extract_all_field_paths({}) == []
+
+    def test_sorted_output(self) -> None:
+        """Test output is sorted."""
+        item = {"zebra": 1, "alpha": 2, "middle": 3}
+        paths = _extract_all_field_paths(item)
+        assert paths == sorted(paths)
+
+
+class TestBuildFieldsHint:
+    """Tests for CLIFormatter._build_fields_hint."""
+
+    def test_correct_showing_available_split(self) -> None:
+        """Test showing/available are correctly split."""
+        items = [{"id": 1, "name": "Test", "extra": "data", "score": 99}]
+        columns = [("id", "ID"), ("name", "Name")]
+        formatter = CLIFormatter(OutputFormat.TABLE)
+        hint = formatter._build_fields_hint(items, columns)
+        assert hint is not None
+        assert hint.showing == ["id", "name"]
+        assert "extra" in hint.available
+        assert "score" in hint.available
+        assert "id" not in hint.available
+        assert "name" not in hint.available
+
+    def test_value_wrapper_handling(self) -> None:
+        """Test items with 'value' wrapper are unwrapped."""
+        items = [{"value": {"id": 1, "name": "Test", "extra": "data"}}]
+        columns = [("id", "ID")]
+        formatter = CLIFormatter(OutputFormat.TABLE)
+        hint = formatter._build_fields_hint(items, columns)
+        assert hint is not None
+        assert "name" in hint.available
+        assert "extra" in hint.available
+
+    def test_empty_items(self) -> None:
+        """Test empty items returns None."""
+        formatter = CLIFormatter(OutputFormat.TABLE)
+        hint = formatter._build_fields_hint([], [("id", "ID")])
+        assert hint is None
+
+    def test_nested_fields_in_available(self) -> None:
+        """Test nested fields appear in available."""
+        items = [{"id": 1, "party": {"name": "Lab", "abbr": "L"}}]
+        columns = [("id", "ID")]
+        formatter = CLIFormatter(OutputFormat.TABLE)
+        hint = formatter._build_fields_hint(items, columns)
+        assert hint is not None
+        assert "party.name" in hint.available
+        assert "party.abbr" in hint.available
+
+
+class TestFormatHintText:
+    """Tests for _format_hint_text helper."""
+
+    def test_output_format(self) -> None:
+        """Test hint text has expected structure."""
+        hint = FieldsHint(showing=["id", "name"], available=["extra", "score"])
+        text = _format_hint_text(hint)
+        assert "Showing: id, name" in text
+        assert "Available: extra, score" in text
+        assert "Tip: use --fields" in text
+
+    def test_truncation_at_15(self) -> None:
+        """Test available fields are truncated at 15."""
+        available = [f"field{i}" for i in range(20)]
+        hint = FieldsHint(showing=["id"], available=available)
+        text = _format_hint_text(hint)
+        assert "(+5 more)" in text
+        # First 15 should be present
+        assert "field0" in text
+        assert "field14" in text
+        # 16th should not be listed directly
+        assert "field15" not in text.split("(+5 more)")[0]
+
+    def test_no_available_fields(self) -> None:
+        """Test hint when no extra fields are available."""
+        hint = FieldsHint(showing=["id", "name"], available=[])
+        text = _format_hint_text(hint)
+        assert "Showing: id, name" in text
+        assert "Available:" not in text
+        assert "Tip:" in text
+
+    def test_tip_includes_example(self) -> None:
+        """Test tip includes example with field names."""
+        hint = FieldsHint(showing=["id", "name"], available=["extra"])
+        text = _format_hint_text(hint)
+        assert '--fields "id,name,extra"' in text
+
+
+class TestFieldsHintIntegration:
+    """Tests that fields_hint is set after formatting."""
+
+    def test_table_format_sets_hint(self) -> None:
+        """Test _format_table sets fields_hint."""
+        response = json.dumps({"items": [{"id": 1, "name": "Test", "extra": "data"}]})
+        formatter = CLIFormatter(OutputFormat.TABLE)
+        formatter.format_output(response)
+        assert formatter.fields_hint is not None
+        assert len(formatter.fields_hint.showing) > 0
+
+    def test_markdown_format_sets_hint(self) -> None:
+        """Test _format_markdown sets fields_hint."""
+        response = json.dumps({"items": [{"id": 1, "name": "Test"}]})
+        formatter = CLIFormatter(OutputFormat.MARKDOWN)
+        formatter.format_output(response)
+        assert formatter.fields_hint is not None
+
+    def test_csv_format_sets_hint(self) -> None:
+        """Test _format_csv sets fields_hint."""
+        response = json.dumps({"items": [{"id": 1, "name": "Test"}]})
+        formatter = CLIFormatter(OutputFormat.CSV)
+        formatter.format_output(response)
+        assert formatter.fields_hint is not None
+
+    def test_json_format_does_not_set_hint(self) -> None:
+        """Test _format_json does NOT set fields_hint."""
+        response = json.dumps({"items": [{"id": 1, "name": "Test"}]})
+        formatter = CLIFormatter(OutputFormat.JSON)
+        formatter.format_output(response)
+        assert formatter.fields_hint is None

@@ -9,7 +9,7 @@ from typing import Annotated, Any
 
 import typer
 
-from uk_parliament_mcp.cli.formatters import CLIFormatter, OutputFormat
+from uk_parliament_mcp.cli.formatters import CLIFormatter, OutputFormat, _format_hint_text
 from uk_parliament_mcp.http_client import clear_called_urls, get_called_urls, get_result
 
 # ── Annotated type aliases for the 5 output params on every command ──
@@ -120,7 +120,10 @@ def format_output(
         data_only = False
         output_format = OutputFormat.JSON
     formatter = CLIFormatter(output_format, pretty, data_only, fields)
-    return formatter.format_output(result)
+    output = formatter.format_output(result)
+    if sys.stdout.isatty() and formatter.fields_hint is not None:
+        print(_format_hint_text(formatter.fields_hint), file=sys.stderr)
+    return output
 
 
 def output_result(

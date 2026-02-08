@@ -5,6 +5,8 @@ from __future__ import annotations
 import csv
 import json
 import sys
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
 from enum import StrEnum
 from io import StringIO
 from typing import Any
@@ -12,6 +14,14 @@ from typing import Any
 from rich.console import Console
 from rich.json import JSON
 from rich.table import Table
+
+
+@dataclass
+class FieldsHint:
+    """Tracks which fields are shown and which are available."""
+
+    showing: list[str] = dataclass_field(default_factory=list)
+    available: list[str] = dataclass_field(default_factory=list)
 
 
 class OutputFormat(StrEnum):
@@ -145,6 +155,53 @@ def _parse_fields(fields: str) -> list[tuple[str, str]]:
     return columns
 
 
+def _extract_all_field_paths(
+    item: dict[str, Any], prefix: str = "", max_depth: int = 3
+) -> list[str]:
+    """Recursively extract all dot-notation field paths from a dict.
+
+    Args:
+        item: Dictionary to extract paths from.
+        prefix: Current dot-notation prefix.
+        max_depth: Maximum recursion depth.
+
+    Returns:
+        Sorted list of dot-notation paths.
+    """
+    if max_depth <= 0:
+        return []
+    paths: list[str] = []
+    for key, value in item.items():
+        if key.startswith("_"):
+            continue
+        full_path = f"{prefix}{key}" if not prefix else f"{prefix}.{key}"
+        paths.append(full_path)
+        if isinstance(value, dict) and max_depth > 1:
+            paths.extend(_extract_all_field_paths(value, full_path, max_depth - 1))
+    return sorted(paths)
+
+
+def _format_hint_text(hint: FieldsHint) -> str:
+    """Format a FieldsHint into text for stderr output.
+
+    Args:
+        hint: The FieldsHint with showing/available fields.
+
+    Returns:
+        Formatted hint string.
+    """
+    lines: list[str] = []
+    lines.append(f"  Showing: {', '.join(hint.showing)}")
+    if hint.available:
+        max_show = 15
+        avail = hint.available[:max_show]
+        suffix = f", (+{len(hint.available) - max_show} more)" if len(hint.available) > max_show else ""
+        lines.append(f"  Available: {', '.join(avail)}{suffix}")
+    example_fields = hint.showing[:2] + hint.available[:1] if hint.available else hint.showing[:3]
+    lines.append(f'  Tip: use --fields to select columns, e.g. --fields "{",".join(example_fields)}"')
+    return "\n".join(lines)
+
+
 def _resolve_format(fmt: OutputFormat) -> OutputFormat:
     """Resolve AUTO format based on whether stdout is a TTY.
 
@@ -181,6 +238,7 @@ class CLIFormatter:
         self.pretty = pretty
         self.data_only = data_only
         self.fields = fields
+        self.fields_hint: FieldsHint | None = None
 
     def format_output(self, result: str) -> str:
         """Format the result according to the configured format.
@@ -228,6 +286,28 @@ class CLIFormatter:
             return _parse_fields(self.fields)
         return _detect_columns(items)
 
+    def _build_fields_hint(
+        self, items: list[dict[str, Any]], columns: list[tuple[str, str]]
+    ) -> FieldsHint | None:
+        """Build a FieldsHint from items and the columns being displayed.
+
+        Args:
+            items: The data items.
+            columns: The columns being shown.
+
+        Returns:
+            FieldsHint or None if no items.
+        """
+        if not items:
+            return None
+        first_item = items[0]
+        if "value" in first_item and isinstance(first_item.get("value"), dict):
+            first_item = first_item["value"]
+        all_paths = _extract_all_field_paths(first_item)
+        showing = [path for path, _ in columns]
+        available = [p for p in all_paths if p not in showing]
+        return FieldsHint(showing=showing, available=available)
+
     def _format_json(self, data: Any) -> str:
         """Format data as JSON.
 
@@ -256,6 +336,8 @@ class CLIFormatter:
         columns = self._get_columns(items)
         if not columns:
             return self._format_json(data)
+
+        self.fields_hint = self._build_fields_hint(items, columns)
 
         table = Table(show_header=True, header_style="bold")
 
@@ -297,6 +379,8 @@ class CLIFormatter:
         if not columns:
             return self._format_json(data)
 
+        self.fields_hint = self._build_fields_hint(items, columns)
+
         lines: list[str] = []
 
         # Header row
@@ -336,6 +420,8 @@ class CLIFormatter:
         columns = self._get_columns(items)
         if not columns:
             return self._format_json(data)
+
+        self.fields_hint = self._build_fields_hint(items, columns)
 
         output = StringIO()
         writer = csv.writer(output)
