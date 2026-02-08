@@ -1,4 +1,5 @@
 """Tests for CLI bills commands."""
+
 from __future__ import annotations
 
 import json
@@ -16,24 +17,28 @@ class TestRecent:
     @pytest.fixture
     def mock_recent_response(self) -> str:
         """Mock recent bills response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Bills?SortOrder=DateUpdatedDescending&skip=0&take=10",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Bills?SortOrder=DateUpdatedDescending&skip=0&take=10",
+                "data": json.dumps(
                     {
-                        "billId": 123,
-                        "shortTitle": "Online Safety Bill",
-                        "currentStage": {"name": "Royal Assent"},
-                    },
-                    {
-                        "billId": 124,
-                        "shortTitle": "Finance Bill",
-                        "currentStage": {"name": "Committee Stage"},
+                        "items": [
+                            {
+                                "billId": 123,
+                                "shortTitle": "Online Safety Bill",
+                                "currentStage": {"name": "Royal Assent"},
+                            },
+                            {
+                                "billId": 124,
+                                "shortTitle": "Finance Bill",
+                                "currentStage": {"name": "Committee Stage"},
+                            },
+                        ],
+                        "totalResults": 2,
                     }
-                ],
-                "totalResults": 2,
-            })
-        })
+                ),
+            }
+        )
 
     def test_recent_help(self, cli_runner: CliRunner):
         """Test that recent --help shows command info."""
@@ -48,6 +53,7 @@ class TestRecent:
         mock_recent_response: str,
     ):
         """Test recent returns bill data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_recent_response
@@ -67,6 +73,7 @@ class TestRecent:
         mock_recent_response: str,
     ):
         """Test recent with --take option."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_recent_response
@@ -86,6 +93,7 @@ class TestRecent:
         mock_recent_response: str,
     ):
         """Test recent with --pretty flag formats output."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_recent_response
@@ -104,19 +112,23 @@ class TestSearch:
     @pytest.fixture
     def mock_search_response(self) -> str:
         """Mock bill search response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Bills?SearchTerm=Online%20Safety",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Bills?SearchTerm=Online%20Safety",
+                "data": json.dumps(
                     {
-                        "billId": 123,
-                        "shortTitle": "Online Safety Bill",
-                        "longTitle": "A Bill to make provision about online safety",
+                        "items": [
+                            {
+                                "billId": 123,
+                                "shortTitle": "Online Safety Bill",
+                                "longTitle": "A Bill to make provision about online safety",
+                            }
+                        ],
+                        "totalResults": 1,
                     }
-                ],
-                "totalResults": 1,
-            })
-        })
+                ),
+            }
+        )
 
     def test_search_help(self, cli_runner: CliRunner):
         """Test that search --help shows command info."""
@@ -135,6 +147,7 @@ class TestSearch:
         mock_search_response: str,
     ):
         """Test search returns bill data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_search_response
@@ -154,6 +167,7 @@ class TestSearch:
         mock_search_response: str,
     ):
         """Test search with --data-only flag strips wrapper."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_search_response
@@ -173,17 +187,21 @@ class TestGet:
     @pytest.fixture
     def mock_bill_response(self) -> str:
         """Mock bill get response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Bills/123",
-            "data": json.dumps({
-                "value": {
-                    "billId": 123,
-                    "shortTitle": "Online Safety Bill",
-                    "longTitle": "A Bill to make provision about online safety",
-                    "currentStage": {"name": "Royal Assent"},
-                }
-            })
-        })
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Bills/123",
+                "data": json.dumps(
+                    {
+                        "value": {
+                            "billId": 123,
+                            "shortTitle": "Online Safety Bill",
+                            "longTitle": "A Bill to make provision about online safety",
+                            "currentStage": {"name": "Royal Assent"},
+                        }
+                    }
+                ),
+            }
+        )
 
     def test_get_help(self, cli_runner: CliRunner):
         """Test that get --help shows command info."""
@@ -203,6 +221,7 @@ class TestGet:
         mock_bill_response: str,
     ):
         """Test get returns bill data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_bill_response
@@ -222,6 +241,7 @@ class TestGet:
         mock_bill_response: str,
     ):
         """Test get with --pretty flag formats output."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_bill_response
@@ -240,24 +260,28 @@ class TestStages:
     @pytest.fixture
     def mock_stages_response(self) -> str:
         """Mock bill stages response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Bills/123/Stages",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Bills/123/Stages",
+                "data": json.dumps(
                     {
-                        "id": 1,
-                        "name": "First Reading",
-                        "house": "Commons",
-                    },
-                    {
-                        "id": 2,
-                        "name": "Second Reading",
-                        "house": "Commons",
+                        "items": [
+                            {
+                                "id": 1,
+                                "name": "First Reading",
+                                "house": "Commons",
+                            },
+                            {
+                                "id": 2,
+                                "name": "Second Reading",
+                                "house": "Commons",
+                            },
+                        ],
+                        "totalResults": 2,
                     }
-                ],
-                "totalResults": 2,
-            })
-        })
+                ),
+            }
+        )
 
     def test_stages_help(self, cli_runner: CliRunner):
         """Test that stages --help shows command info."""
@@ -276,6 +300,7 @@ class TestStages:
         mock_stages_response: str,
     ):
         """Test stages returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_stages_response
@@ -295,12 +320,15 @@ class TestStages:
         mock_stages_response: str,
     ):
         """Test stages with pagination options."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_stages_response
 
         with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["bills", "stages", "123", "--skip", "0", "--take", "10"])
+            result = cli_runner.invoke(
+                app, ["bills", "stages", "123", "--skip", "0", "--take", "10"]
+            )
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
@@ -315,19 +343,23 @@ class TestAmendments:
     @pytest.fixture
     def mock_amendments_response(self) -> str:
         """Mock amendments response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Bills/123/Stages/456/Amendments",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Bills/123/Stages/456/Amendments",
+                "data": json.dumps(
                     {
-                        "id": 789,
-                        "number": "1",
-                        "description": "Amendment to clause 5",
+                        "items": [
+                            {
+                                "id": 789,
+                                "number": "1",
+                                "description": "Amendment to clause 5",
+                            }
+                        ],
+                        "totalResults": 1,
                     }
-                ],
-                "totalResults": 1,
-            })
-        })
+                ),
+            }
+        )
 
     def test_amendments_help(self, cli_runner: CliRunner):
         """Test that amendments --help shows command info."""
@@ -346,6 +378,7 @@ class TestAmendments:
         mock_amendments_response: str,
     ):
         """Test amendments returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_amendments_response
@@ -365,12 +398,15 @@ class TestAmendments:
         mock_amendments_response: str,
     ):
         """Test amendments with search filter."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_amendments_response
 
         with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["bills", "amendments", "123", "456", "--search", "clause"])
+            result = cli_runner.invoke(
+                app, ["bills", "amendments", "123", "456", "--search", "clause"]
+            )
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
@@ -384,6 +420,7 @@ class TestAmendments:
         mock_amendments_response: str,
     ):
         """Test amendments with multiple filters."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_amendments_response
@@ -391,7 +428,7 @@ class TestAmendments:
         with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(
                 app,
-                ["bills", "amendments", "123", "456", "--search", "clause", "--decision", "Agreed"]
+                ["bills", "amendments", "123", "456", "--search", "clause", "--decision", "Agreed"],
             )
 
         assert result.exit_code == 0
@@ -407,24 +444,28 @@ class TestPublications:
     @pytest.fixture
     def mock_publications_response(self) -> str:
         """Mock publications response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Bills/123/Publications",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Bills/123/Publications",
+                "data": json.dumps(
                     {
-                        "id": 1,
-                        "title": "Bill Text",
-                        "publicationType": "Bill as introduced",
-                    },
-                    {
-                        "id": 2,
-                        "title": "Explanatory Notes",
-                        "publicationType": "Explanatory notes",
+                        "items": [
+                            {
+                                "id": 1,
+                                "title": "Bill Text",
+                                "publicationType": "Bill as introduced",
+                            },
+                            {
+                                "id": 2,
+                                "title": "Explanatory Notes",
+                                "publicationType": "Explanatory notes",
+                            },
+                        ],
+                        "totalResults": 2,
                     }
-                ],
-                "totalResults": 2,
-            })
-        })
+                ),
+            }
+        )
 
     def test_publications_help(self, cli_runner: CliRunner):
         """Test that publications --help shows command info."""
@@ -443,6 +484,7 @@ class TestPublications:
         mock_publications_response: str,
     ):
         """Test publications returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_publications_response
@@ -462,6 +504,7 @@ class TestPublications:
         mock_publications_response: str,
     ):
         """Test publications with --data-only flag."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_publications_response
@@ -481,24 +524,28 @@ class TestTypes:
     @pytest.fixture
     def mock_types_response(self) -> str:
         """Mock bill types response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/BillTypes",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/BillTypes",
+                "data": json.dumps(
                     {
-                        "id": 1,
-                        "name": "Government Bill",
-                        "description": "Bills introduced by government ministers",
-                    },
-                    {
-                        "id": 2,
-                        "name": "Private Member's Bill",
-                        "description": "Bills introduced by backbench MPs",
+                        "items": [
+                            {
+                                "id": 1,
+                                "name": "Government Bill",
+                                "description": "Bills introduced by government ministers",
+                            },
+                            {
+                                "id": 2,
+                                "name": "Private Member's Bill",
+                                "description": "Bills introduced by backbench MPs",
+                            },
+                        ],
+                        "totalResults": 2,
                     }
-                ],
-                "totalResults": 2,
-            })
-        })
+                ),
+            }
+        )
 
     def test_types_help(self, cli_runner: CliRunner):
         """Test that types --help shows command info."""
@@ -512,6 +559,7 @@ class TestTypes:
         mock_types_response: str,
     ):
         """Test types returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_types_response
@@ -531,6 +579,7 @@ class TestTypes:
         mock_types_response: str,
     ):
         """Test types with --pretty flag."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_types_response
@@ -549,24 +598,28 @@ class TestStagesList:
     @pytest.fixture
     def mock_stages_list_response(self) -> str:
         """Mock stages list response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Stages",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Stages",
+                "data": json.dumps(
                     {
-                        "id": 1,
-                        "name": "First Reading",
-                        "description": "Formal introduction of a bill",
-                    },
-                    {
-                        "id": 2,
-                        "name": "Second Reading",
-                        "description": "General debate on bill principles",
+                        "items": [
+                            {
+                                "id": 1,
+                                "name": "First Reading",
+                                "description": "Formal introduction of a bill",
+                            },
+                            {
+                                "id": 2,
+                                "name": "Second Reading",
+                                "description": "General debate on bill principles",
+                            },
+                        ],
+                        "totalResults": 2,
                     }
-                ],
-                "totalResults": 2,
-            })
-        })
+                ),
+            }
+        )
 
     def test_stages_list_help(self, cli_runner: CliRunner):
         """Test that stages-list --help shows command info."""
@@ -580,6 +633,7 @@ class TestStagesList:
         mock_stages_list_response: str,
     ):
         """Test stages-list returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_stages_list_response
@@ -600,10 +654,12 @@ class TestRSS:
     @pytest.fixture
     def mock_rss_response(self) -> str:
         """Mock RSS response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Rss/allbills.rss",
-            "data": json.dumps("<rss>...</rss>")
-        })
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Rss/allbills.rss",
+                "data": json.dumps("<rss>...</rss>"),
+            }
+        )
 
     def test_rss_all_help(self, cli_runner: CliRunner):
         """Test that rss-all --help shows command info."""
@@ -617,6 +673,7 @@ class TestRSS:
         mock_rss_response: str,
     ):
         """Test rss-all returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_rss_response
@@ -635,6 +692,7 @@ class TestRSS:
         mock_rss_response: str,
     ):
         """Test rss-public returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_rss_response
@@ -653,6 +711,7 @@ class TestRSS:
         mock_rss_response: str,
     ):
         """Test rss-private returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_rss_response
@@ -676,6 +735,7 @@ class TestRSS:
         mock_rss_response: str,
     ):
         """Test rss-bill returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_rss_response
@@ -695,24 +755,28 @@ class TestSittings:
     @pytest.fixture
     def mock_sittings_response(self) -> str:
         """Mock sittings response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Sittings",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Sittings",
+                "data": json.dumps(
                     {
-                        "id": 1,
-                        "date": "2024-01-15",
-                        "house": "Commons",
-                    },
-                    {
-                        "id": 2,
-                        "date": "2024-01-16",
-                        "house": "Lords",
+                        "items": [
+                            {
+                                "id": 1,
+                                "date": "2024-01-15",
+                                "house": "Commons",
+                            },
+                            {
+                                "id": 2,
+                                "date": "2024-01-16",
+                                "house": "Lords",
+                            },
+                        ],
+                        "totalResults": 2,
                     }
-                ],
-                "totalResults": 2,
-            })
-        })
+                ),
+            }
+        )
 
     def test_sittings_help(self, cli_runner: CliRunner):
         """Test that sittings --help shows command info."""
@@ -726,6 +790,7 @@ class TestSittings:
         mock_sittings_response: str,
     ):
         """Test sittings returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_sittings_response
@@ -745,6 +810,7 @@ class TestSittings:
         mock_sittings_response: str,
     ):
         """Test sittings with house and date filters."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_sittings_response
@@ -752,7 +818,16 @@ class TestSittings:
         with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(
                 app,
-                ["bills", "sittings", "--house", "Commons", "--from", "2024-01-01", "--to", "2024-12-31"]
+                [
+                    "bills",
+                    "sittings",
+                    "--house",
+                    "Commons",
+                    "--from",
+                    "2024-01-01",
+                    "--to",
+                    "2024-12-31",
+                ],
             )
 
         assert result.exit_code == 0
@@ -767,6 +842,7 @@ class TestSittings:
         mock_sittings_response: str,
     ):
         """Test sittings with --pretty flag."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_sittings_response

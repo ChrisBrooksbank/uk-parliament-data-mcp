@@ -53,7 +53,9 @@ class TestSearchLordsDivisions:
     @pytest.mark.asyncio
     async def test_builds_url_with_search_term(self):
         """search_lords_divisions builds URL with search term."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -69,7 +71,9 @@ class TestSearchLordsDivisions:
     @pytest.mark.asyncio
     async def test_url_encodes_special_characters(self):
         """search_lords_divisions URL-encodes special characters in search term."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -84,7 +88,9 @@ class TestSearchLordsDivisions:
     @pytest.mark.asyncio
     async def test_builds_url_with_majority_comparator(self):
         """search_lords_divisions builds URL with majority comparator params."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -107,7 +113,9 @@ class TestGetLordsVotingRecordForMember:
     @pytest.mark.asyncio
     async def test_builds_url_with_member_id_only(self):
         """get_lords_voting_record_for_member builds URL with member_id only."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -123,13 +131,17 @@ class TestGetLordsVotingRecordForMember:
     @pytest.mark.asyncio
     async def test_builds_url_with_search_term(self):
         """get_lords_voting_record_for_member builds URL with search term parameter."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
             lords_votes.register_tools(mcp)
 
-            await mcp.call_tool("get_lords_voting_record_for_member", {"member_id": 4514, "search_term": "climate"})
+            await mcp.call_tool(
+                "get_lords_voting_record_for_member", {"member_id": 4514, "search_term": "climate"}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -139,7 +151,9 @@ class TestGetLordsVotingRecordForMember:
     @pytest.mark.asyncio
     async def test_builds_url_with_date_range(self):
         """get_lords_voting_record_for_member builds URL with date range parameters."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -162,13 +176,17 @@ class TestGetLordsVotingRecordForMember:
     @pytest.mark.asyncio
     async def test_builds_url_with_pagination(self):
         """get_lords_voting_record_for_member builds URL with pagination parameters."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
             lords_votes.register_tools(mcp)
 
-            await mcp.call_tool("get_lords_voting_record_for_member", {"member_id": 4514, "skip": 10, "take": 50})
+            await mcp.call_tool(
+                "get_lords_voting_record_for_member", {"member_id": 4514, "skip": 10, "take": 50}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -178,7 +196,9 @@ class TestGetLordsVotingRecordForMember:
     @pytest.mark.asyncio
     async def test_builds_url_with_all_params(self):
         """get_lords_voting_record_for_member builds URL with all parameters."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -212,7 +232,9 @@ class TestGetLordsVotingRecordForMember:
     @pytest.mark.asyncio
     async def test_filters_none_values(self):
         """get_lords_voting_record_for_member filters out None parameter values."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -246,7 +268,9 @@ class TestGetLordsDivisionById:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_lords_division_by_id builds correct URL."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -265,7 +289,9 @@ class TestGetLordsDivisionsGroupedByParty:
     @pytest.mark.asyncio
     async def test_builds_url_with_no_params(self):
         """get_lords_divisions_grouped_by_party builds URL with no optional params."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -280,13 +306,17 @@ class TestGetLordsDivisionsGroupedByParty:
     @pytest.mark.asyncio
     async def test_builds_url_with_search_term(self):
         """get_lords_divisions_grouped_by_party builds URL with search term."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
             lords_votes.register_tools(mcp)
 
-            await mcp.call_tool("get_lords_divisions_grouped_by_party", {"search_term": "education"})
+            await mcp.call_tool(
+                "get_lords_divisions_grouped_by_party", {"search_term": "education"}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -295,7 +325,9 @@ class TestGetLordsDivisionsGroupedByParty:
     @pytest.mark.asyncio
     async def test_builds_url_with_all_params(self):
         """get_lords_divisions_grouped_by_party builds URL with all parameters."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -325,7 +357,9 @@ class TestGetLordsDivisionsGroupedByParty:
     @pytest.mark.asyncio
     async def test_filters_none_values(self):
         """get_lords_divisions_grouped_by_party filters out None parameter values."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -355,7 +389,9 @@ class TestGetLordsDivisionsSearchCount:
     @pytest.mark.asyncio
     async def test_builds_url_with_no_params(self):
         """get_lords_divisions_search_count builds URL with no optional params."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -370,7 +406,9 @@ class TestGetLordsDivisionsSearchCount:
     @pytest.mark.asyncio
     async def test_builds_url_with_search_term(self):
         """get_lords_divisions_search_count builds URL with search term."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -385,7 +423,9 @@ class TestGetLordsDivisionsSearchCount:
     @pytest.mark.asyncio
     async def test_builds_url_with_all_params(self):
         """get_lords_divisions_search_count builds URL with all parameters."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -415,7 +455,9 @@ class TestGetLordsDivisionsSearchCount:
     @pytest.mark.asyncio
     async def test_filters_none_values(self):
         """get_lords_divisions_search_count filters out None parameter values."""
-        with patch("uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.lords_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")

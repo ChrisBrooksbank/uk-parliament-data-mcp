@@ -38,6 +38,7 @@ from uk_parliament_mcp.cli.watch import (
 # Realistic MessageViewModel test data factories
 # ---------------------------------------------------------------------------
 
+
 def _make_message(
     slides: list[dict] | None = None,
     scrolling: list[dict] | None = None,
@@ -98,6 +99,7 @@ def _make_member(
 # _parse_api_response
 # ---------------------------------------------------------------------------
 
+
 class TestParseApiResponse:
     """Tests for _parse_api_response helper."""
 
@@ -132,6 +134,7 @@ class TestParseApiResponse:
 # ---------------------------------------------------------------------------
 # _format_slide_type_label
 # ---------------------------------------------------------------------------
+
 
 class TestFormatSlideTypeLabel:
     """Tests for the slide type label helper."""
@@ -180,6 +183,7 @@ class TestFormatSlideTypeLabel:
 # _render_chamber_panel
 # ---------------------------------------------------------------------------
 
+
 class TestRenderChamberPanel:
     """Tests for _render_chamber_panel with real MessageViewModel data."""
 
@@ -193,38 +197,44 @@ class TestRenderChamberPanel:
         assert isinstance(panel, Panel)
 
     def test_debate_slide(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide(
-                "Debate",
-                lines=[
-                    _make_line("Online Safety Bill - Second Reading", "Text100", 1),
-                ],
-                speaker_time="2024-01-15T14:32:00",
-            ),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide(
+                    "Debate",
+                    lines=[
+                        _make_line("Online Safety Bill - Second Reading", "Text100", 1),
+                    ],
+                    speaker_time="2024-01-15T14:32:00",
+                ),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Commons")
         assert isinstance(panel, Panel)
         # Active Commons debate -> green border
         assert panel.border_style == "green"  # type: ignore[union-attr]
 
     def test_lords_active_border_is_red(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide("Debate", lines=[_make_line("Lords debate", "Text100", 1)]),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide("Debate", lines=[_make_line("Lords debate", "Text100", 1)]),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Lords")
         assert isinstance(panel, Panel)
         # Active Lords debate -> red border
         assert panel.border_style == "red"  # type: ignore[union-attr]
 
     def test_division_slide(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide(
-                "Division",
-                lines=[
-                    _make_line("Ayes: 310  Noes: 250", "Division", 1),
-                ],
-            ),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide(
+                    "Division",
+                    lines=[
+                        _make_line("Ayes: 310  Noes: 250", "Division", 1),
+                    ],
+                ),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Commons")
         rendered = panel.renderable
         assert isinstance(rendered, Text)
@@ -232,15 +242,17 @@ class TestRenderChamberPanel:
         assert "Ayes" in rendered.plain
 
     def test_pmqs_with_member(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide(
-                "PrimeMinistersQuestions",
-                lines=[
-                    _make_line("", "Member", 1, member=_make_member()),
-                    _make_line("Question 1", "Text100", 2),
-                ],
-            ),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide(
+                    "PrimeMinistersQuestions",
+                    lines=[
+                        _make_line("", "Member", 1, member=_make_member()),
+                        _make_line("Question 1", "Text100", 2),
+                    ],
+                ),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Commons")
         rendered = panel.renderable
         assert isinstance(rendered, Text)
@@ -250,9 +262,11 @@ class TestRenderChamberPanel:
         assert "Holborn and St Pancras" in rendered.plain
 
     def test_not_sitting_slide(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide("NotSitting"),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide("NotSitting"),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Commons")
         assert panel.border_style == "dim"  # type: ignore[union-attr]
         rendered = panel.renderable
@@ -260,9 +274,11 @@ class TestRenderChamberPanel:
         assert "Not Sitting" in rendered.plain
 
     def test_house_risen_slide(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide("HouseRisen"),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide("HouseRisen"),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Lords")
         assert panel.border_style == "dim"  # type: ignore[union-attr]
         rendered = panel.renderable
@@ -304,10 +320,12 @@ class TestRenderChamberPanel:
         assert "Normal info" in rendered.plain
 
     def test_multiple_slides(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide("Debate", lines=[_make_line("First item", "Text100", 1)]),
-            _make_slide("Statement", lines=[_make_line("Ministerial Statement", "Text100", 1)]),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide("Debate", lines=[_make_line("First item", "Text100", 1)]),
+                _make_slide("Statement", lines=[_make_line("Ministerial Statement", "Text100", 1)]),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Commons")
         rendered = panel.renderable
         assert isinstance(rendered, Text)
@@ -316,10 +334,12 @@ class TestRenderChamberPanel:
         assert "Ministerial Statement" in rendered.plain
 
     def test_blank_slide_skipped(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide("BlankSlide"),
-            _make_slide("Debate", lines=[_make_line("Actual content", "Text100", 1)]),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide("BlankSlide"),
+                _make_slide("Debate", lines=[_make_line("Actual content", "Text100", 1)]),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Commons")
         rendered = panel.renderable
         assert isinstance(rendered, Text)
@@ -327,13 +347,18 @@ class TestRenderChamberPanel:
         assert "Actual content" in rendered.plain
 
     def test_divider_lines(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide("Debate", lines=[
-                _make_line("Before divider", "Text100", 1),
-                _make_line("", "DividerSolid", 2),
-                _make_line("After divider", "Text100", 3),
-            ]),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide(
+                    "Debate",
+                    lines=[
+                        _make_line("Before divider", "Text100", 1),
+                        _make_line("", "DividerSolid", 2),
+                        _make_line("After divider", "Text100", 3),
+                    ],
+                ),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Commons")
         rendered = panel.renderable
         assert isinstance(rendered, Text)
@@ -342,13 +367,18 @@ class TestRenderChamberPanel:
         assert "----" in rendered.plain
 
     def test_empty_line_style(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide("Debate", lines=[
-                _make_line("Line one", "Text100", 1),
-                _make_line("", "EmptyLine", 2),
-                _make_line("Line two", "Text100", 3),
-            ]),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide(
+                    "Debate",
+                    lines=[
+                        _make_line("Line one", "Text100", 1),
+                        _make_line("", "EmptyLine", 2),
+                        _make_line("Line two", "Text100", 3),
+                    ],
+                ),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Commons")
         rendered = panel.renderable
         assert isinstance(rendered, Text)
@@ -356,11 +386,16 @@ class TestRenderChamberPanel:
         assert "Line two" in rendered.plain
 
     def test_footer_style_dim(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide("Debate", lines=[
-                _make_line("Footer text", "Footer", 1),
-            ]),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide(
+                    "Debate",
+                    lines=[
+                        _make_line("Footer text", "Footer", 1),
+                    ],
+                ),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Commons")
         rendered = panel.renderable
         assert isinstance(rendered, Text)
@@ -374,13 +409,18 @@ class TestRenderChamberPanel:
         assert "No current activity" in rendered.plain
 
     def test_lines_sorted_by_display_order(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide("Debate", lines=[
-                _make_line("Third", "Text100", 3),
-                _make_line("First", "Text100", 1),
-                _make_line("Second", "Text100", 2),
-            ]),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide(
+                    "Debate",
+                    lines=[
+                        _make_line("Third", "Text100", 3),
+                        _make_line("First", "Text100", 1),
+                        _make_line("Second", "Text100", 2),
+                    ],
+                ),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Commons")
         rendered = panel.renderable
         assert isinstance(rendered, Text)
@@ -391,6 +431,7 @@ class TestRenderChamberPanel:
 # ---------------------------------------------------------------------------
 # _render_calendar_table
 # ---------------------------------------------------------------------------
+
 
 class TestRenderCalendarTable:
     """Tests for _render_calendar_table."""
@@ -491,6 +532,7 @@ class TestRenderCalendarTable:
 # _calendar_subtitle
 # ---------------------------------------------------------------------------
 
+
 class TestCalendarSubtitle:
     """Tests for _calendar_subtitle helper."""
 
@@ -510,6 +552,7 @@ class TestCalendarSubtitle:
 # ---------------------------------------------------------------------------
 # _house_color
 # ---------------------------------------------------------------------------
+
 
 class TestHouseColor:
     """Tests for _house_color helper."""
@@ -534,6 +577,7 @@ class TestHouseColor:
 # ---------------------------------------------------------------------------
 # Calendar time-tracking
 # ---------------------------------------------------------------------------
+
 
 class TestCalendarTimeTracking:
     """Tests for calendar time-tracking highlight and windowing."""
@@ -628,6 +672,7 @@ class TestCalendarTimeTracking:
 # _estimate_chamber_height
 # ---------------------------------------------------------------------------
 
+
 class TestEstimateChamberHeight:
     """Tests for _estimate_chamber_height."""
 
@@ -650,9 +695,11 @@ class TestEstimateChamberHeight:
         assert height == 3
 
     def test_single_slide(self) -> None:
-        msg = _make_message(slides=[
-            _make_slide("NotSitting"),
-        ])
+        msg = _make_message(
+            slides=[
+                _make_slide("NotSitting"),
+            ]
+        )
         panel = _render_chamber_panel(msg, "House of Commons")
         height = _estimate_chamber_height(panel)
         # "Not Sitting\n" → 1 content line + 2 borders = 3
@@ -664,12 +711,8 @@ class TestEstimateChamberHeight:
             slides=[_make_slide("Division")],
             show_commons_bell=True,
         )
-        h_no_bell = _estimate_chamber_height(
-            _render_chamber_panel(msg_no_bell, "House of Commons")
-        )
-        h_bell = _estimate_chamber_height(
-            _render_chamber_panel(msg_bell, "House of Commons")
-        )
+        h_no_bell = _estimate_chamber_height(_render_chamber_panel(msg_no_bell, "House of Commons"))
+        h_bell = _estimate_chamber_height(_render_chamber_panel(msg_bell, "House of Commons"))
         assert h_bell > h_no_bell
 
     def test_scrolling_messages_increase_height(self) -> None:
@@ -683,18 +726,15 @@ class TestEstimateChamberHeight:
                 {"content": "Alert 2", "alertType": "Standard"},
             ],
         )
-        h_no = _estimate_chamber_height(
-            _render_chamber_panel(msg_no_scroll, "House of Commons")
-        )
-        h_yes = _estimate_chamber_height(
-            _render_chamber_panel(msg_scroll, "House of Commons")
-        )
+        h_no = _estimate_chamber_height(_render_chamber_panel(msg_no_scroll, "House of Commons"))
+        h_yes = _estimate_chamber_height(_render_chamber_panel(msg_scroll, "House of Commons"))
         assert h_yes > h_no
 
 
 # ---------------------------------------------------------------------------
 # _render_dashboard
 # ---------------------------------------------------------------------------
+
 
 class TestRenderDashboard:
     """Tests for _render_dashboard."""
@@ -777,6 +817,7 @@ class TestRenderDashboard:
 # Async fetch functions
 # ---------------------------------------------------------------------------
 
+
 class TestFetchFunctions:
     """Tests for async fetch functions."""
 
@@ -807,9 +848,7 @@ class TestFetchFunctions:
 
     @pytest.mark.asyncio
     async def test_fetch_calendar_today(self) -> None:
-        mock_response = json.dumps(
-            {"url": "test", "data": [{"Description": "Event 1"}]}
-        )
+        mock_response = json.dumps({"url": "test", "data": [{"Description": "Event 1"}]})
         with patch("uk_parliament_mcp.cli.watch.get_result", return_value=mock_response):
             result = await _fetch_calendar_today()
             assert len(result) == 1
@@ -854,6 +893,7 @@ class TestFetchFunctions:
 # ---------------------------------------------------------------------------
 # Watch CLI command
 # ---------------------------------------------------------------------------
+
 
 class TestWatchCommand:
     """Tests for the watch CLI command."""
@@ -901,6 +941,7 @@ class TestWatchCommand:
 # _parliament_tv_subtitle helper
 # ---------------------------------------------------------------------------
 
+
 class TestParliamentTvSubtitle:
     """Tests for _parliament_tv_subtitle helper."""
 
@@ -944,6 +985,7 @@ class TestParliamentTvSubtitle:
 # ---------------------------------------------------------------------------
 # Chamber panel Parliament TV subtitle
 # ---------------------------------------------------------------------------
+
 
 class TestChamberPanelSubtitle:
     """Tests for Parliament TV subtitle on chamber panels."""

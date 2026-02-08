@@ -45,7 +45,9 @@ class TestSearchErskineMay:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """search_erskine_may builds correct URL."""
-        with patch("uk_parliament_mcp.tools.erskine_may.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.erskine_may.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -65,7 +67,9 @@ class TestSearchErskineMay:
     @pytest.mark.asyncio
     async def test_url_encodes_spaces(self):
         """search_erskine_may URL-encodes spaces in search term."""
-        with patch("uk_parliament_mcp.tools.erskine_may.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.erskine_may.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -86,7 +90,9 @@ class TestSearchErskineMay:
     @pytest.mark.asyncio
     async def test_url_encodes_special_characters(self):
         """search_erskine_may URL-encodes special characters in search term."""
-        with patch("uk_parliament_mcp.tools.erskine_may.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.erskine_may.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")

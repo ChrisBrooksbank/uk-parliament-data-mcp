@@ -1,4 +1,5 @@
 """Tests for CLI main entry point."""
+
 from __future__ import annotations
 
 from typer.testing import CliRunner

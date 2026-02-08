@@ -180,7 +180,9 @@ class TestResolveFormat:
 
         original = fmt.sys
         try:
-            fmt.sys = type("MockSys", (), {"stdout": type("Stdout", (), {"isatty": lambda self: True})()})()  # type: ignore[assignment]
+            fmt.sys = type(
+                "MockSys", (), {"stdout": type("Stdout", (), {"isatty": lambda self: True})()}
+            )()  # type: ignore[assignment]
             assert _resolve_format(OutputFormat.AUTO) == OutputFormat.TABLE
         finally:
             fmt.sys = original  # type: ignore[assignment]
@@ -192,7 +194,9 @@ class TestResolveFormat:
 
         original = fmt.sys
         try:
-            fmt.sys = type("MockSys", (), {"stdout": type("Stdout", (), {"isatty": lambda self: False})()})()  # type: ignore[assignment]
+            fmt.sys = type(
+                "MockSys", (), {"stdout": type("Stdout", (), {"isatty": lambda self: False})()}
+            )()  # type: ignore[assignment]
             assert _resolve_format(OutputFormat.AUTO) == OutputFormat.JSON
         finally:
             fmt.sys = original  # type: ignore[assignment]
@@ -207,9 +211,7 @@ class TestCLIFormatterJSON:
         return json.dumps(
             {
                 "url": "https://api.parliament.uk/test",
-                "data": json.dumps(
-                    {"items": [{"id": 1, "name": "Test"}], "total": 1}
-                ),
+                "data": json.dumps({"items": [{"id": 1, "name": "Test"}], "total": 1}),
             }
         )
 
@@ -296,9 +298,7 @@ class TestCLIFormatterTable:
 
     def test_table_with_custom_fields(self) -> None:
         """Test table format with custom fields parameter."""
-        response = json.dumps(
-            {"items": [{"id": 1, "name": "Test", "extra": "data"}]}
-        )
+        response = json.dumps({"items": [{"id": 1, "name": "Test", "extra": "data"}]})
         formatter = CLIFormatter(OutputFormat.TABLE, fields="id,name")
         result = formatter.format_output(response)
         assert "Test" in result
@@ -368,9 +368,12 @@ class TestCLIFormatterCSV:
         response = json.dumps(
             {
                 "items": [
-                    {"billId": 123, "shortTitle": "Test Bill",
-                     "currentStage": {"description": "Second Reading"},
-                     "lastUpdate": "2024-01-15"},
+                    {
+                        "billId": 123,
+                        "shortTitle": "Test Bill",
+                        "currentStage": {"description": "Second Reading"},
+                        "lastUpdate": "2024-01-15",
+                    },
                 ]
             }
         )
@@ -391,9 +394,7 @@ class TestCLIFormatterCSV:
 
     def test_csv_format_multiple_rows(self) -> None:
         """Test CSV with multiple rows."""
-        response = json.dumps(
-            {"items": [{"name": "Alice", "id": 1}, {"name": "Bob", "id": 2}]}
-        )
+        response = json.dumps({"items": [{"name": "Alice", "id": 1}, {"name": "Bob", "id": 2}]})
         formatter = CLIFormatter(OutputFormat.CSV)
         result = formatter.format_output(response)
         lines = result.strip().split("\n")
@@ -409,9 +410,7 @@ class TestCLIFormatterCSV:
 
     def test_csv_with_custom_fields(self) -> None:
         """Test CSV with custom fields selection."""
-        response = json.dumps(
-            {"items": [{"id": 1, "name": "Test", "extra": "data"}]}
-        )
+        response = json.dumps({"items": [{"id": 1, "name": "Test", "extra": "data"}]})
         formatter = CLIFormatter(OutputFormat.CSV, fields="id,name")
         result = formatter.format_output(response)
         lines = result.strip().split("\n")

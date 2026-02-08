@@ -61,7 +61,9 @@ class TestSearchWrittenQuestions:
     @pytest.mark.asyncio
     async def test_builds_correct_url_with_search_term(self):
         """search_written_questions builds correct URL with search term."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -80,7 +82,9 @@ class TestSearchWrittenQuestions:
     @pytest.mark.asyncio
     async def test_builds_correct_url_with_all_parameters(self):
         """search_written_questions builds correct URL with all parameters."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -116,7 +120,9 @@ class TestSearchWrittenQuestions:
     @pytest.mark.asyncio
     async def test_default_pagination(self):
         """search_written_questions uses default pagination values."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -136,7 +142,9 @@ class TestGetWrittenQuestion:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_written_question builds correct URL with question_id."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -155,7 +163,9 @@ class TestGetWrittenQuestion:
     @pytest.mark.asyncio
     async def test_expand_member_false(self):
         """get_written_question respects expand_member=False."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -177,7 +187,9 @@ class TestGetWrittenQuestionByUin:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_written_question_by_uin builds correct URL."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -190,7 +202,10 @@ class TestGetWrittenQuestionByUin:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert f"{WRITTEN_QUESTIONS_API_BASE}/writtenquestions/questions/2024-03-15/HL12345" in call_url
+            assert (
+                f"{WRITTEN_QUESTIONS_API_BASE}/writtenquestions/questions/2024-03-15/HL12345"
+                in call_url
+            )
             assert "expandMember=true" in call_url
 
 
@@ -200,7 +215,9 @@ class TestSearchWrittenStatements:
     @pytest.mark.asyncio
     async def test_builds_correct_url_with_search_term(self):
         """search_written_statements builds correct URL with search term."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -219,7 +236,9 @@ class TestSearchWrittenStatements:
     @pytest.mark.asyncio
     async def test_builds_correct_url_with_all_parameters(self):
         """search_written_statements builds correct URL with all parameters."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -257,7 +276,9 @@ class TestGetWrittenStatement:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_written_statement builds correct URL with statement_id."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -280,7 +301,9 @@ class TestGetWrittenStatementByUin:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_written_statement_by_uin builds correct URL."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -293,7 +316,10 @@ class TestGetWrittenStatementByUin:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert f"{WRITTEN_QUESTIONS_API_BASE}/writtenstatements/statements/2024-06-20/HCWS123" in call_url
+            assert (
+                f"{WRITTEN_QUESTIONS_API_BASE}/writtenstatements/statements/2024-06-20/HCWS123"
+                in call_url
+            )
             assert "expandMember=true" in call_url
 
 
@@ -303,7 +329,9 @@ class TestGetDailyReports:
     @pytest.mark.asyncio
     async def test_builds_correct_url_with_dates(self):
         """get_daily_reports builds correct URL with date range."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -323,7 +351,9 @@ class TestGetDailyReports:
     @pytest.mark.asyncio
     async def test_builds_correct_url_with_house_filter(self):
         """get_daily_reports builds correct URL with house filter."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -341,7 +371,9 @@ class TestGetDailyReports:
     @pytest.mark.asyncio
     async def test_default_pagination(self):
         """get_daily_reports uses default pagination values."""
-        with patch("uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.written_questions.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")

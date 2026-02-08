@@ -66,11 +66,16 @@ class TestGetCommitteeMeetings:
             mcp = FastMCP(name="test")
             committees.register_tools(mcp)
 
-            await mcp.call_tool("get_committee_meetings", {"from_date": "2024-01-01", "to_date": "2024-01-31"})
+            await mcp.call_tool(
+                "get_committee_meetings", {"from_date": "2024-01-01", "to_date": "2024-01-31"}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert call_url == f"{COMMITTEES_API_BASE}/Broadcast/Meetings?FromDate=2024-01-01&ToDate=2024-01-31"
+            assert (
+                call_url
+                == f"{COMMITTEES_API_BASE}/Broadcast/Meetings?FromDate=2024-01-01&ToDate=2024-01-31"
+            )
 
     @pytest.mark.asyncio
     async def test_url_encodes_special_characters(self):
@@ -81,7 +86,9 @@ class TestGetCommitteeMeetings:
             mcp = FastMCP(name="test")
             committees.register_tools(mcp)
 
-            await mcp.call_tool("get_committee_meetings", {"from_date": "2024-01-01 00:00", "to_date": "2024-01-31"})
+            await mcp.call_tool(
+                "get_committee_meetings", {"from_date": "2024-01-01 00:00", "to_date": "2024-01-31"}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -170,7 +177,9 @@ class TestGetCommitteeById:
             mcp = FastMCP(name="test")
             committees.register_tools(mcp)
 
-            await mcp.call_tool("get_committee_by_id", {"committee_id": 739, "include_banners": True})
+            await mcp.call_tool(
+                "get_committee_by_id", {"committee_id": 739, "include_banners": True}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -342,7 +351,9 @@ class TestGetCommitteeMembers:
             mcp = FastMCP(name="test")
             committees.register_tools(mcp)
 
-            await mcp.call_tool("get_committee_members", {"committee_id": 739, "membership_status": "Current"})
+            await mcp.call_tool(
+                "get_committee_members", {"committee_id": 739, "membership_status": "Current"}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]

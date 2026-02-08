@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 import json
 import sys
-from enum import Enum
+from enum import StrEnum
 from io import StringIO
 from typing import Any
 
@@ -14,7 +14,7 @@ from rich.json import JSON
 from rich.table import Table
 
 
-class OutputFormat(str, Enum):
+class OutputFormat(StrEnum):
     """Output format options for CLI commands."""
 
     JSON = "json"

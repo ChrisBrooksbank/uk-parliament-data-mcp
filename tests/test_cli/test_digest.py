@@ -53,7 +53,9 @@ def _mock_api_response(data: dict | list) -> str:
 
 def _mock_error_response() -> str:
     """Build a mock error API response."""
-    return json.dumps({"url": "https://test.example.com", "error": "Service unavailable", "statusCode": 503})
+    return json.dumps(
+        {"url": "https://test.example.com", "error": "Service unavailable", "statusCode": 503}
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -190,8 +192,10 @@ class TestFetchers:
             return json.dumps({"url": url, "data": bills_data})
 
         # Bills paginate the Sittings call, then use direct get_result for detail
-        with patch(_PAGINATION_GET_RESULT, side_effect=mock_get), \
-             patch(_DIGEST_GET_RESULT, side_effect=mock_get):
+        with (
+            patch(_PAGINATION_GET_RESULT, side_effect=mock_get),
+            patch(_DIGEST_GET_RESULT, side_effect=mock_get),
+        ):
             result = await _fetch_bills("2025-01-15", "2025-01-15", None)
             assert "items" in result
             assert "_bill_details" in result
@@ -264,8 +268,10 @@ class TestAggregator:
     async def test_fetch_digest_data_all(self) -> None:
         """_fetch_digest_data returns all 9 sections."""
         mock_resp = _mock_api_response({})
-        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
-             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
+        with (
+            patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+            patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+        ):
             result = await _fetch_digest_data("2025-01-15", "2025-01-15", None)
             assert "hansard" in result
             assert "commons_divisions" in result
@@ -281,8 +287,10 @@ class TestAggregator:
     async def test_fetch_digest_data_commons_only(self) -> None:
         """_fetch_digest_data with house=1 excludes lords divisions."""
         mock_resp = _mock_api_response({})
-        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
-             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
+        with (
+            patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+            patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+        ):
             result = await _fetch_digest_data("2025-01-15", "2025-01-15", 1)
             assert "commons_divisions" in result
             assert "lords_divisions" not in result
@@ -291,8 +299,10 @@ class TestAggregator:
     async def test_fetch_digest_data_lords_only(self) -> None:
         """_fetch_digest_data with house=2 excludes commons divisions."""
         mock_resp = _mock_api_response({})
-        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
-             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
+        with (
+            patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+            patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+        ):
             result = await _fetch_digest_data("2025-01-15", "2025-01-15", 2)
             assert "lords_divisions" in result
             assert "commons_divisions" not in result
@@ -300,11 +310,14 @@ class TestAggregator:
     @pytest.mark.asyncio
     async def test_fetch_digest_data_handles_exceptions(self) -> None:
         """_fetch_digest_data wraps exceptions as error dicts."""
+
         async def _fail(*args, **kwargs):
             raise ConnectionError("Network down")
 
-        with patch(_PAGINATION_GET_RESULT, side_effect=_fail), \
-             patch(_DIGEST_GET_RESULT, side_effect=_fail):
+        with (
+            patch(_PAGINATION_GET_RESULT, side_effect=_fail),
+            patch(_DIGEST_GET_RESULT, side_effect=_fail),
+        ):
             result = await _fetch_digest_data("2025-01-15", "2025-01-15", None)
             # At least some sections should have error dicts
             errors = [v for v in result.values() if isinstance(v, dict) and "error" in v]
@@ -323,8 +336,10 @@ class TestGetDigestAsync:
     async def test_returns_json(self) -> None:
         """_get_digest_async returns valid JSON."""
         mock_resp = _mock_api_response({})
-        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
-             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
+        with (
+            patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+            patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+        ):
             result = await _get_digest_async("2025-01-15", "day", None)
             data = json.loads(result)
             assert data["date"] == "2025-01-15"
@@ -335,8 +350,10 @@ class TestGetDigestAsync:
     async def test_week_period(self) -> None:
         """_get_digest_async sets correct dates for week period."""
         mock_resp = _mock_api_response({})
-        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
-             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
+        with (
+            patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+            patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+        ):
             result = await _get_digest_async("2025-01-15", "week", None)
             data = json.loads(result)
             assert data["start_date"] == "2025-01-13"
@@ -347,8 +364,10 @@ class TestGetDigestAsync:
     async def test_house_label(self) -> None:
         """_get_digest_async sets house label."""
         mock_resp = _mock_api_response({})
-        with patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp), \
-             patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp):
+        with (
+            patch(_PAGINATION_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+            patch(_DIGEST_GET_RESULT, new_callable=AsyncMock, return_value=mock_resp),
+        ):
             result = await _get_digest_async("2025-01-15", "day", 1)
             data = json.loads(result)
             assert data["house"] == "Commons"
@@ -435,13 +454,27 @@ class TestDivisionsSectionRenderer:
         assert isinstance(panel, Panel)
 
     def test_lords_divisions(self) -> None:
-        lords = [{"Title": "Lords Vote", "AuthorityCount": 150, "NonAuthorityCount": 100, "Date": "2025-01-15"}]
+        lords = [
+            {
+                "Title": "Lords Vote",
+                "AuthorityCount": 150,
+                "NonAuthorityCount": 100,
+                "Date": "2025-01-15",
+            }
+        ]
         panel = _render_divisions_section([], lords)
         assert isinstance(panel, Panel)
 
     def test_both_houses(self) -> None:
         commons = [{"Title": "Commons Vote", "AyeCount": 300, "NoCount": 200, "Date": "2025-01-15"}]
-        lords = [{"Title": "Lords Vote", "AuthorityCount": 150, "NonAuthorityCount": 100, "Date": "2025-01-15"}]
+        lords = [
+            {
+                "Title": "Lords Vote",
+                "AuthorityCount": 150,
+                "NonAuthorityCount": 100,
+                "Date": "2025-01-15",
+            }
+        ]
         panel = _render_divisions_section(commons, lords)
         assert isinstance(panel, Panel)
 
@@ -456,8 +489,18 @@ class TestHansardSectionRenderer:
     def test_results_from_debates_json(self) -> None:
         data = {
             "Results": [
-                {"Title": "Debate on NHS", "House": "Commons", "DebateSection": "Commons Chamber", "DebateSectionExtId": "ABC12345-1234-1234-1234-123456789012"},
-                {"Title": "Lords debate", "House": "Lords", "DebateSection": "Lords Chamber", "DebateSectionExtId": "DEF12345-1234-1234-1234-123456789012"},
+                {
+                    "Title": "Debate on NHS",
+                    "House": "Commons",
+                    "DebateSection": "Commons Chamber",
+                    "DebateSectionExtId": "ABC12345-1234-1234-1234-123456789012",
+                },
+                {
+                    "Title": "Lords debate",
+                    "House": "Lords",
+                    "DebateSection": "Lords Chamber",
+                    "DebateSectionExtId": "DEF12345-1234-1234-1234-123456789012",
+                },
             ],
             "TotalResultCount": 2,
         }
@@ -486,7 +529,10 @@ class TestBillsSectionRenderer:
         data = {
             "items": [{"billId": "42"}],
             "_bill_details": {
-                "42": {"shortTitle": "Online Safety Bill", "currentStage": {"description": "Royal Assent"}},
+                "42": {
+                    "shortTitle": "Online Safety Bill",
+                    "currentStage": {"description": "Royal Assent"},
+                },
             },
         }
         panel = _render_bills_section(data)
@@ -500,7 +546,15 @@ class TestCommitteesSectionRenderer:
         assert _render_committees_section(None) is None
 
     def test_with_events(self) -> None:
-        data = {"items": [{"committee": {"name": "Treasury"}, "description": "Inquiry", "startTime": "2025-01-15T10:00:00"}]}
+        data = {
+            "items": [
+                {
+                    "committee": {"name": "Treasury"},
+                    "description": "Inquiry",
+                    "startTime": "2025-01-15T10:00:00",
+                }
+            ]
+        }
         panel = _render_committees_section(data)
         assert isinstance(panel, Panel)
 
@@ -536,7 +590,11 @@ class TestEdmsSectionRenderer:
         assert _render_edms_section(None) is None
 
     def test_with_edms(self) -> None:
-        data = {"Response": [{"UIN": 123, "Title": "NHS Funding", "PrimarySponsor": {"Name": "J Smith"}}]}
+        data = {
+            "Response": [
+                {"UIN": 123, "Title": "NHS Funding", "PrimarySponsor": {"Name": "J Smith"}}
+            ]
+        }
         panel = _render_edms_section(data)
         assert isinstance(panel, Panel)
 
@@ -549,12 +607,42 @@ class TestWrittenQsSectionRenderer:
 
     def test_groups_by_department(self) -> None:
         """Questions are grouped by answeringBodyName with correct counts."""
-        data = {"results": [
-            {"uin": "12345", "questionText": "Q1", "dateAnswered": "2025-01-15", "answeringBodyName": "Treasury", "answeringBodyId": 14, "id": 1},
-            {"uin": "12346", "questionText": "Q2", "dateAnswered": None, "answeringBodyName": "Home Office", "answeringBodyId": 11, "id": 2},
-            {"uin": "12347", "questionText": "Q3", "dateAnswered": "2025-01-16", "answeringBodyName": "Treasury", "answeringBodyId": 14, "id": 3},
-            {"uin": "12348", "questionText": "Q4", "dateAnswered": None, "answeringBodyName": "Treasury", "answeringBodyId": 14, "id": 4},
-        ]}
+        data = {
+            "results": [
+                {
+                    "uin": "12345",
+                    "questionText": "Q1",
+                    "dateAnswered": "2025-01-15",
+                    "answeringBodyName": "Treasury",
+                    "answeringBodyId": 14,
+                    "id": 1,
+                },
+                {
+                    "uin": "12346",
+                    "questionText": "Q2",
+                    "dateAnswered": None,
+                    "answeringBodyName": "Home Office",
+                    "answeringBodyId": 11,
+                    "id": 2,
+                },
+                {
+                    "uin": "12347",
+                    "questionText": "Q3",
+                    "dateAnswered": "2025-01-16",
+                    "answeringBodyName": "Treasury",
+                    "answeringBodyId": 14,
+                    "id": 3,
+                },
+                {
+                    "uin": "12348",
+                    "questionText": "Q4",
+                    "dateAnswered": None,
+                    "answeringBodyName": "Treasury",
+                    "answeringBodyId": 14,
+                    "id": 4,
+                },
+            ]
+        }
         panel = _render_written_qs_section(data, start_date="2025-01-15", end_date="2025-01-15")
         assert isinstance(panel, Panel)
         # Treasury has 3 questions (1 tabled, 2 answered), Home Office has 1 (1 tabled)
@@ -565,22 +653,44 @@ class TestWrittenQsSectionRenderer:
 
     def test_value_wrapper(self) -> None:
         """Written questions wrapped in 'value' objects are grouped correctly."""
-        data = {"results": [
-            {"value": {"uin": "900001", "questionText": "What steps...", "dateAnswered": "2025-01-15", "answeringBodyName": "Treasury", "answeringBodyId": 14, "id": 1234}},
-            {"value": {"uin": "900002", "questionText": "Will the minister...", "dateAnswered": None, "answeringBodyName": "MoD", "answeringBodyId": 10, "id": 5678}},
-        ]}
+        data = {
+            "results": [
+                {
+                    "value": {
+                        "uin": "900001",
+                        "questionText": "What steps...",
+                        "dateAnswered": "2025-01-15",
+                        "answeringBodyName": "Treasury",
+                        "answeringBodyId": 14,
+                        "id": 1234,
+                    }
+                },
+                {
+                    "value": {
+                        "uin": "900002",
+                        "questionText": "Will the minister...",
+                        "dateAnswered": None,
+                        "answeringBodyName": "MoD",
+                        "answeringBodyId": 10,
+                        "id": 5678,
+                    }
+                },
+            ]
+        }
         panel = _render_written_qs_section(data)
         assert isinstance(panel, Panel)
         assert "2 departments" in str(panel.subtitle)
 
     def test_sorted_by_total_descending(self) -> None:
         """Departments are sorted by total count descending."""
-        data = {"results": [
-            {"uin": "1", "answeringBodyName": "Small", "answeringBodyId": 1, "id": 1},
-            {"uin": "2", "answeringBodyName": "Big", "answeringBodyId": 2, "id": 2},
-            {"uin": "3", "answeringBodyName": "Big", "answeringBodyId": 2, "id": 3},
-            {"uin": "4", "answeringBodyName": "Big", "answeringBodyId": 2, "id": 4},
-        ]}
+        data = {
+            "results": [
+                {"uin": "1", "answeringBodyName": "Small", "answeringBodyId": 1, "id": 1},
+                {"uin": "2", "answeringBodyName": "Big", "answeringBodyId": 2, "id": 2},
+                {"uin": "3", "answeringBodyName": "Big", "answeringBodyId": 2, "id": 3},
+                {"uin": "4", "answeringBodyName": "Big", "answeringBodyId": 2, "id": 4},
+            ]
+        }
         panel = _render_written_qs_section(data)
         assert isinstance(panel, Panel)
         # Render to string to check ordering
@@ -634,14 +744,54 @@ class TestRenderDigest:
             "house": None,
             "start_date": "2025-01-15",
             "end_date": "2025-01-15",
-            "commons_divisions": [{"Title": "Vote A", "AyeCount": 300, "NoCount": 200, "Date": "2025-01-15"}],
-            "lords_divisions": [{"Title": "Vote B", "AuthorityCount": 100, "NonAuthorityCount": 80, "Date": "2025-01-15"}],
-            "hansard": {"Results": [{"Title": "Debate X", "House": "Commons", "DebateSection": "Commons Chamber"}], "TotalResultCount": 1},
+            "commons_divisions": [
+                {"Title": "Vote A", "AyeCount": 300, "NoCount": 200, "Date": "2025-01-15"}
+            ],
+            "lords_divisions": [
+                {
+                    "Title": "Vote B",
+                    "AuthorityCount": 100,
+                    "NonAuthorityCount": 80,
+                    "Date": "2025-01-15",
+                }
+            ],
+            "hansard": {
+                "Results": [
+                    {"Title": "Debate X", "House": "Commons", "DebateSection": "Commons Chamber"}
+                ],
+                "TotalResultCount": 1,
+            },
             "bills": {"items": [{"billId": 100, "billShortTitle": "Bill Y", "date": "2025-01-15"}]},
-            "committees": {"items": [{"committee": {"name": "Treasury"}, "description": "Hearing", "startTime": "2025-01-15T10:00:00"}]},
-            "written_statements": {"results": [{"title": "Statement Z", "answeringBodyName": "DHSC"}]},
-            "oral_questions": {"Response": [{"AnsweringBodyName": "MoD", "AnswerDate": "2025-01-15"}]},
-            "edms": {"Response": [{"UIN": 42, "Title": "EDM on X", "PrimarySponsor": {"Name": "MP Name"}}]},
-            "written_questions": {"results": [{"uin": "12345", "questionText": "Q", "dateAnswered": "2025-01-15", "answeringBodyName": "Treasury", "id": 1}]},
+            "committees": {
+                "items": [
+                    {
+                        "committee": {"name": "Treasury"},
+                        "description": "Hearing",
+                        "startTime": "2025-01-15T10:00:00",
+                    }
+                ]
+            },
+            "written_statements": {
+                "results": [{"title": "Statement Z", "answeringBodyName": "DHSC"}]
+            },
+            "oral_questions": {
+                "Response": [{"AnsweringBodyName": "MoD", "AnswerDate": "2025-01-15"}]
+            },
+            "edms": {
+                "Response": [
+                    {"UIN": 42, "Title": "EDM on X", "PrimarySponsor": {"Name": "MP Name"}}
+                ]
+            },
+            "written_questions": {
+                "results": [
+                    {
+                        "uin": "12345",
+                        "questionText": "Q",
+                        "dateAnswered": "2025-01-15",
+                        "answeringBodyName": "Treasury",
+                        "id": 1,
+                    }
+                ]
+            },
         }
         render_digest(json.dumps(data))

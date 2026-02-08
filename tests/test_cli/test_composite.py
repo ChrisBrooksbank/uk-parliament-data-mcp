@@ -1,9 +1,9 @@
 """Tests for CLI composite commands."""
+
 from __future__ import annotations
 
 import json
-from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from typer.testing import CliRunner
@@ -16,11 +16,11 @@ class TestMpProfile:
 
     @pytest.fixture
     def mock_member_response(self) -> str:
-        """Mock member search response."""
-        return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/Search?Name=Test",
-            "data": json.dumps({
-                "items": [
+        """Mock member direct response."""
+        return json.dumps(
+            {
+                "url": "https://members-api.parliament.uk/api/Members/4514",
+                "data": json.dumps(
                     {
                         "value": {
                             "id": 4514,
@@ -28,42 +28,44 @@ class TestMpProfile:
                             "latestHouseMembership": {
                                 "house": 1,
                                 "membershipFrom": "Holborn and St Pancras",
-                            }
+                            },
                         }
                     }
-                ],
-                "totalResults": 1,
-            })
-        })
+                ),
+            }
+        )
 
     @pytest.fixture
     def mock_biography_response(self) -> str:
         """Mock biography response."""
-        return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/4514/Biography",
-            "data": json.dumps({
-                "value": {
-                    "nameDisplayAs": "Keir Starmer",
-                    "biographyEntries": []
-                }
-            })
-        })
+        return json.dumps(
+            {
+                "url": "https://members-api.parliament.uk/api/Members/4514/Biography",
+                "data": json.dumps(
+                    {"value": {"nameDisplayAs": "Keir Starmer", "biographyEntries": []}}
+                ),
+            }
+        )
 
     @pytest.fixture
     def mock_interests_response(self) -> str:
         """Mock interests response."""
-        return json.dumps({
-            "url": "https://interests-api.parliament.uk/api/Interests/?MemberId=4514",
-            "data": json.dumps({"items": []})
-        })
+        return json.dumps(
+            {
+                "url": "https://interests-api.parliament.uk/api/Interests/?MemberId=4514",
+                "data": json.dumps({"items": []}),
+            }
+        )
 
     @pytest.fixture
     def mock_voting_response(self) -> str:
         """Mock voting response."""
-        return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/4514/Voting?house=1&page=1",
-            "data": json.dumps({"items": []})
-        })
+        return json.dumps(
+            {
+                "url": "https://members-api.parliament.uk/api/Members/4514/Voting?house=1&page=1",
+                "data": json.dumps({"items": []}),
+            }
+        )
 
     def test_mp_profile_help(self, cli_runner: CliRunner):
         """Test that mp-profile --help shows command info."""
@@ -72,12 +74,10 @@ class TestMpProfile:
         assert "mp-profile" in result.stdout.lower()
         assert "comprehensive" in result.stdout.lower()
 
-    def test_mp_profile_requires_name(self, cli_runner: CliRunner):
-        """Test that mp-profile requires a name argument."""
+    def test_mp_profile_requires_member_id(self, cli_runner: CliRunner):
+        """Test that mp-profile requires a member_id argument."""
         result = cli_runner.invoke(app, ["composite", "mp-profile"])
         assert result.exit_code != 0
-        # Typer outputs help/error text which may vary
-        # Just verify command failed (exit code != 0)
 
     def test_mp_profile_success(
         self,
@@ -103,7 +103,7 @@ class TestMpProfile:
             return response
 
         with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["composite", "mp-profile", "Keir Starmer"])
+            result = cli_runner.invoke(app, ["composite", "mp-profile", "4514"])
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
@@ -139,30 +139,11 @@ class TestMpProfile:
             return response
 
         with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["composite", "mp-profile", "Test", "--pretty"])
+            result = cli_runner.invoke(app, ["composite", "mp-profile", "4514", "--pretty"])
 
         assert result.exit_code == 0
         # Pretty output has indentation
         assert "  " in result.stdout
-
-    def test_mp_profile_member_not_found(self, cli_runner: CliRunner):
-        """Test mp-profile when member not found."""
-        empty_response = json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/Search?Name=NonExistent",
-            "data": json.dumps({"items": [], "totalResults": 0})
-        })
-
-        async def mock_get_result(url: str) -> str:
-            """Mock async get_result."""
-            return empty_response
-
-        with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["composite", "mp-profile", "NonExistent"])
-
-        assert result.exit_code == 0
-        output = json.loads(result.stdout)
-        assert "error" in output
-        assert "No member found" in output["error"]
 
 
 class TestCheckVote:
@@ -170,38 +151,41 @@ class TestCheckVote:
 
     @pytest.fixture
     def mock_member_response(self) -> str:
-        """Mock member search response."""
-        return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/Search?Name=Test",
-            "data": json.dumps({
-                "items": [
+        """Mock member direct response."""
+        return json.dumps(
+            {
+                "url": "https://members-api.parliament.uk/api/Members/1234",
+                "data": json.dumps(
                     {
                         "value": {
                             "id": 1234,
                             "nameDisplayAs": "Test MP",
                         }
                     }
-                ],
-                "totalResults": 1,
-            })
-        })
+                ),
+            }
+        )
 
     @pytest.fixture
     def mock_divisions_response(self) -> str:
         """Mock divisions response."""
-        return json.dumps({
-            "url": "https://commonsvotes-api.parliament.uk/data/divisions.json/search",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://commonsvotes-api.parliament.uk/data/divisions.json/search",
+                "data": json.dumps(
                     {
-                        "DivisionId": 123,
-                        "Title": "Climate Change Act",
-                        "AyeCount": 300,
-                        "NoCount": 200,
+                        "items": [
+                            {
+                                "DivisionId": 123,
+                                "Title": "Climate Change Act",
+                                "AyeCount": 300,
+                                "NoCount": 200,
+                            }
+                        ]
                     }
-                ]
-            })
-        })
+                ),
+            }
+        )
 
     def test_check_vote_help(self, cli_runner: CliRunner):
         """Test that check-vote --help shows command info."""
@@ -211,11 +195,9 @@ class TestCheckVote:
         assert "topic" in result.stdout.lower()
 
     def test_check_vote_requires_two_args(self, cli_runner: CliRunner):
-        """Test that check-vote requires mp_name and topic."""
-        result = cli_runner.invoke(app, ["composite", "check-vote", "TestMP"])
+        """Test that check-vote requires member_id and topic."""
+        result = cli_runner.invoke(app, ["composite", "check-vote", "1234"])
         assert result.exit_code != 0
-        # Typer outputs help/error text which may vary
-        # Just verify command failed (exit code != 0)
 
     def test_check_vote_success(
         self,
@@ -224,14 +206,15 @@ class TestCheckVote:
         mock_divisions_response: str,
     ):
         """Test check-vote returns combined data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
-            if "Search" in url:
+            if "Members/" in url and "divisions" not in url:
                 return mock_member_response
             return mock_divisions_response
 
         with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["composite", "check-vote", "Test MP", "climate"])
+            result = cli_runner.invoke(app, ["composite", "check-vote", "1234", "climate"])
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
@@ -249,14 +232,15 @@ class TestCheckVote:
         mock_divisions_response: str,
     ):
         """Test check-vote with --data-only flag."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
-            if "Search" in url:
+            if "Members/" in url and "divisions" not in url:
                 return mock_member_response
             return mock_divisions_response
 
         with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["composite", "check-vote", "Test", "topic", "-d"])
+            result = cli_runner.invoke(app, ["composite", "check-vote", "1234", "topic", "-d"])
 
         assert result.exit_code == 0
         # Should still be valid JSON
@@ -270,42 +254,52 @@ class TestBillOverview:
     @pytest.fixture
     def mock_bills_search_response(self) -> str:
         """Mock bill search response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Bills?SearchTerm=Test",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Bills?SearchTerm=Test",
+                "data": json.dumps(
                     {
-                        "billId": 123,
-                        "shortTitle": "Online Safety Bill",
+                        "items": [
+                            {
+                                "billId": 123,
+                                "shortTitle": "Online Safety Bill",
+                            }
+                        ],
+                        "totalResults": 1,
                     }
-                ],
-                "totalResults": 1,
-            })
-        })
+                ),
+            }
+        )
 
     @pytest.fixture
     def mock_bill_details_response(self) -> str:
         """Mock bill details response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Bills/123",
-            "data": json.dumps({"value": {"billId": 123, "shortTitle": "Online Safety Bill"}})
-        })
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Bills/123",
+                "data": json.dumps({"value": {"billId": 123, "shortTitle": "Online Safety Bill"}}),
+            }
+        )
 
     @pytest.fixture
     def mock_bill_stages_response(self) -> str:
         """Mock bill stages response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Bills/123/Stages",
-            "data": json.dumps({"items": []})
-        })
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Bills/123/Stages",
+                "data": json.dumps({"items": []}),
+            }
+        )
 
     @pytest.fixture
     def mock_bill_publications_response(self) -> str:
         """Mock bill publications response."""
-        return json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Bills/123/Publications",
-            "data": json.dumps({"items": []})
-        })
+        return json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Bills/123/Publications",
+                "data": json.dumps({"items": []}),
+            }
+        )
 
     def test_bill_overview_help(self, cli_runner: CliRunner):
         """Test that bill-overview --help shows command info."""
@@ -359,10 +353,12 @@ class TestBillOverview:
 
     def test_bill_overview_no_bills_found(self, cli_runner: CliRunner):
         """Test bill-overview when no bills found."""
-        empty_response = json.dumps({
-            "url": "https://bills-api.parliament.uk/api/Bills?SearchTerm=NonExistent",
-            "data": json.dumps({"items": [], "totalResults": 0})
-        })
+        empty_response = json.dumps(
+            {
+                "url": "https://bills-api.parliament.uk/api/Bills?SearchTerm=NonExistent",
+                "data": json.dumps({"items": [], "totalResults": 0}),
+            }
+        )
 
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
@@ -383,50 +379,62 @@ class TestCommitteeSummary:
     @pytest.fixture
     def mock_committees_search_response(self) -> str:
         """Mock committee search response."""
-        return json.dumps({
-            "url": "https://committees-api.parliament.uk/api/Committees?SearchTerm=Test",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://committees-api.parliament.uk/api/Committees?SearchTerm=Test",
+                "data": json.dumps(
                     {
-                        "id": 42,
-                        "name": "Treasury Committee",
+                        "items": [
+                            {
+                                "id": 42,
+                                "name": "Treasury Committee",
+                            }
+                        ],
+                        "totalResults": 1,
                     }
-                ],
-                "totalResults": 1,
-            })
-        })
+                ),
+            }
+        )
 
     @pytest.fixture
     def mock_committee_details_response(self) -> str:
         """Mock committee details response."""
-        return json.dumps({
-            "url": "https://committees-api.parliament.uk/api/Committees/42",
-            "data": json.dumps({"value": {"id": 42, "name": "Treasury Committee"}})
-        })
+        return json.dumps(
+            {
+                "url": "https://committees-api.parliament.uk/api/Committees/42",
+                "data": json.dumps({"value": {"id": 42, "name": "Treasury Committee"}}),
+            }
+        )
 
     @pytest.fixture
     def mock_oral_evidence_response(self) -> str:
         """Mock oral evidence response."""
-        return json.dumps({
-            "url": "https://committees-api.parliament.uk/api/OralEvidence",
-            "data": json.dumps({"items": []})
-        })
+        return json.dumps(
+            {
+                "url": "https://committees-api.parliament.uk/api/OralEvidence",
+                "data": json.dumps({"items": []}),
+            }
+        )
 
     @pytest.fixture
     def mock_written_evidence_response(self) -> str:
         """Mock written evidence response."""
-        return json.dumps({
-            "url": "https://committees-api.parliament.uk/api/WrittenEvidence",
-            "data": json.dumps({"items": []})
-        })
+        return json.dumps(
+            {
+                "url": "https://committees-api.parliament.uk/api/WrittenEvidence",
+                "data": json.dumps({"items": []}),
+            }
+        )
 
     @pytest.fixture
     def mock_publications_response(self) -> str:
         """Mock publications response."""
-        return json.dumps({
-            "url": "https://committees-api.parliament.uk/api/Publications",
-            "data": json.dumps({"items": []})
-        })
+        return json.dumps(
+            {
+                "url": "https://committees-api.parliament.uk/api/Publications",
+                "data": json.dumps({"items": []}),
+            }
+        )
 
     def test_committee_summary_help(self, cli_runner: CliRunner):
         """Test that committee-summary --help shows command info."""
@@ -483,10 +491,12 @@ class TestCommitteeSummary:
 
     def test_committee_summary_no_committees_found(self, cli_runner: CliRunner):
         """Test committee-summary when no committees found."""
-        empty_response = json.dumps({
-            "url": "https://committees-api.parliament.uk/api/Committees?SearchTerm=NonExistent",
-            "data": json.dumps({"items": [], "totalResults": 0})
-        })
+        empty_response = json.dumps(
+            {
+                "url": "https://committees-api.parliament.uk/api/Committees?SearchTerm=NonExistent",
+                "data": json.dumps({"items": [], "totalResults": 0}),
+            }
+        )
 
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""

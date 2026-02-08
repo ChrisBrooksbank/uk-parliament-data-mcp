@@ -5,8 +5,6 @@ from __future__ import annotations
 import json
 from unittest.mock import patch
 
-import pytest
-
 from uk_parliament_mcp.pruning import (
     _compute_meta,
     _flatten_value_wrappers,
@@ -143,11 +141,7 @@ class TestFlattenValueWrappers:
         assert result == data
 
     def test_recursive_flattening(self) -> None:
-        data = {
-            "outer": {
-                "items": [{"value": {"id": 1, "nested": [{"value": {"x": 10}}]}}]
-            }
-        }
+        data = {"outer": {"items": [{"value": {"id": 1, "nested": [{"value": {"x": 10}}]}}]}}
         result = _flatten_value_wrappers(data)
         assert result["outer"]["items"] == [{"id": 1, "nested": [{"x": 10}]}]
 
@@ -220,9 +214,7 @@ class TestPruneResponse:
             {
                 "url": "https://api.parliament.uk/test",
                 "data": {
-                    "items": [
-                        {"value": {"id": 1, "name": "Test", "notes": None, "extra": ""}}
-                    ]
+                    "items": [{"value": {"id": 1, "name": "Test", "notes": None, "extra": ""}}]
                 },
             }
         )
@@ -269,7 +261,7 @@ class TestPruneResponse:
 
     def test_meta_shows_reduction(self) -> None:
         """Response with lots of nulls should show meaningful reduction."""
-        data = {k: None for k in range(50)}
+        data = dict.fromkeys(range(50))
         data["name"] = "Test"  # type: ignore[assignment]
         response = json.dumps({"url": "test", "data": data})
         result = json.loads(prune_response(response))

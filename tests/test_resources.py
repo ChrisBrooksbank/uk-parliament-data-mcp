@@ -165,9 +165,7 @@ class TestDynamicResources:
 
     @pytest.mark.asyncio
     async def test_bill_types_resource(self, resources: dict[str, object]) -> None:
-        mock_response = json.dumps(
-            {"url": "test", "data": [{"id": 1, "name": "Public Bill"}]}
-        )
+        mock_response = json.dumps({"url": "test", "data": [{"id": 1, "name": "Public Bill"}]})
 
         async def mock_cached(url: str, cache_key: str | None = None) -> str:
             return mock_response
@@ -180,9 +178,7 @@ class TestDynamicResources:
 
     @pytest.mark.asyncio
     async def test_bill_stages_resource(self, resources: dict[str, object]) -> None:
-        mock_response = json.dumps(
-            {"url": "test", "data": [{"id": 1, "name": "First Reading"}]}
-        )
+        mock_response = json.dumps({"url": "test", "data": [{"id": 1, "name": "First Reading"}]})
 
         async def mock_cached(url: str, cache_key: str | None = None) -> str:
             return mock_response

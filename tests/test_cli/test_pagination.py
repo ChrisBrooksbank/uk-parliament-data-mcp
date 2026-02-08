@@ -13,7 +13,6 @@ from uk_parliament_mcp.cli.pagination import (
     HANSARD_PAGINATION,
     MAX_TOTAL_ITEMS,
     MEMBERS_PAGINATION,
-    PaginationConfig,
     _replace_url_param,
     paginate_request,
 )
@@ -46,15 +45,19 @@ class TestPaginateRequestSinglePage:
     @pytest.mark.asyncio
     async def test_small_take_passthrough(self):
         """When take <= page_size, should make a single request."""
-        mock_response = json.dumps({
-            "url": "https://api.example.com/search?skip=0&take=10",
-            "data": {
-                "items": [{"id": i} for i in range(10)],
-                "totalResults": 100,
-            },
-        })
+        mock_response = json.dumps(
+            {
+                "url": "https://api.example.com/search?skip=0&take=10",
+                "data": {
+                    "items": [{"id": i} for i in range(10)],
+                    "totalResults": 100,
+                },
+            }
+        )
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.return_value = mock_response
             result = await paginate_request(
                 "https://api.example.com/search?skip=0&take=10",
@@ -71,14 +74,18 @@ class TestPaginateRequestSinglePage:
     @pytest.mark.asyncio
     async def test_none_desired_total_passthrough(self):
         """When desired_total is None, should make a single request."""
-        mock_response = json.dumps({
-            "url": "https://api.example.com/search",
-            "data": {"items": [{"id": 1}], "totalResults": 1},
-        })
+        mock_response = json.dumps(
+            {
+                "url": "https://api.example.com/search",
+                "data": {"items": [{"id": 1}], "totalResults": 1},
+            }
+        )
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.return_value = mock_response
-            result = await paginate_request(
+            await paginate_request(
                 "https://api.example.com/search",
                 MEMBERS_PAGINATION,
                 desired_total=None,
@@ -97,16 +104,22 @@ class TestPaginateRequestMultiPage:
         page1_items = [{"id": i} for i in range(20)]
         page2_items = [{"id": i} for i in range(20, 40)]
 
-        page1_response = json.dumps({
-            "url": "https://api.example.com/search?skip=0&take=20",
-            "data": {"items": page1_items, "totalResults": 100},
-        })
-        page2_response = json.dumps({
-            "url": "https://api.example.com/search?skip=20&take=20",
-            "data": {"items": page2_items, "totalResults": 100},
-        })
+        page1_response = json.dumps(
+            {
+                "url": "https://api.example.com/search?skip=0&take=20",
+                "data": {"items": page1_items, "totalResults": 100},
+            }
+        )
+        page2_response = json.dumps(
+            {
+                "url": "https://api.example.com/search?skip=20&take=20",
+                "data": {"items": page2_items, "totalResults": 100},
+            }
+        )
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.side_effect = [page1_response, page2_response]
             result = await paginate_request(
                 "https://api.example.com/search?skip=0&take=40",
@@ -131,10 +144,12 @@ class TestPaginateRequestMultiPage:
         page3_items = [{"id": i} for i in range(40, 50)]
 
         responses = [
-            json.dumps({
-                "url": f"https://api.example.com/search?skip={skip}&take={take}",
-                "data": {"items": items, "totalResults": 200},
-            })
+            json.dumps(
+                {
+                    "url": f"https://api.example.com/search?skip={skip}&take={take}",
+                    "data": {"items": items, "totalResults": 200},
+                }
+            )
             for skip, take, items in [
                 (0, 20, page1_items),
                 (20, 20, page2_items),
@@ -142,7 +157,9 @@ class TestPaginateRequestMultiPage:
             ]
         ]
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.side_effect = responses
             result = await paginate_request(
                 "https://api.example.com/search?skip=0&take=50",
@@ -165,16 +182,22 @@ class TestPaginateRequestTotalResults:
         page1_items = [{"id": i} for i in range(20)]
         page2_items = [{"id": i} for i in range(20, 30)]
 
-        page1_response = json.dumps({
-            "url": "https://api.example.com/search?skip=0&take=20",
-            "data": {"items": page1_items, "totalResults": 30},
-        })
-        page2_response = json.dumps({
-            "url": "https://api.example.com/search?skip=20&take=10",
-            "data": {"items": page2_items, "totalResults": 30},
-        })
+        page1_response = json.dumps(
+            {
+                "url": "https://api.example.com/search?skip=0&take=20",
+                "data": {"items": page1_items, "totalResults": 30},
+            }
+        )
+        page2_response = json.dumps(
+            {
+                "url": "https://api.example.com/search?skip=20&take=10",
+                "data": {"items": page2_items, "totalResults": 30},
+            }
+        )
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.side_effect = [page1_response, page2_response]
             result = await paginate_request(
                 "https://api.example.com/search?skip=0&take=100",
@@ -190,12 +213,16 @@ class TestPaginateRequestTotalResults:
     @pytest.mark.asyncio
     async def test_empty_first_page(self):
         """When first page has 0 items, return immediately."""
-        response = json.dumps({
-            "url": "https://api.example.com/search?skip=0&take=20",
-            "data": {"items": [], "totalResults": 0},
-        })
+        response = json.dumps(
+            {
+                "url": "https://api.example.com/search?skip=0&take=20",
+                "data": {"items": [], "totalResults": 0},
+            }
+        )
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.return_value = response
             result = await paginate_request(
                 "https://api.example.com/search?skip=0&take=50",
@@ -215,13 +242,17 @@ class TestPaginateRequestErrorHandling:
     @pytest.mark.asyncio
     async def test_error_on_first_page(self):
         """When first page returns error, return error response."""
-        error_response = json.dumps({
-            "url": "https://api.example.com/search",
-            "error": "Internal server error",
-            "statusCode": 500,
-        })
+        error_response = json.dumps(
+            {
+                "url": "https://api.example.com/search",
+                "error": "Internal server error",
+                "statusCode": 500,
+            }
+        )
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.return_value = error_response
             result = await paginate_request(
                 "https://api.example.com/search?skip=0&take=50",
@@ -237,16 +268,22 @@ class TestPaginateRequestErrorHandling:
     async def test_error_on_second_page(self):
         """When second page returns error, return items from first page."""
         page1_items = [{"id": i} for i in range(20)]
-        page1_response = json.dumps({
-            "url": "https://api.example.com/search?skip=0&take=20",
-            "data": {"items": page1_items, "totalResults": 100},
-        })
-        error_response = json.dumps({
-            "url": "https://api.example.com/search?skip=20&take=20",
-            "error": "Timeout",
-        })
+        page1_response = json.dumps(
+            {
+                "url": "https://api.example.com/search?skip=0&take=20",
+                "data": {"items": page1_items, "totalResults": 100},
+            }
+        )
+        error_response = json.dumps(
+            {
+                "url": "https://api.example.com/search?skip=20&take=20",
+                "error": "Timeout",
+            }
+        )
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.side_effect = [page1_response, error_response]
             result = await paginate_request(
                 "https://api.example.com/search?skip=0&take=50",
@@ -270,12 +307,16 @@ class TestPaginateRequestSafetyCap:
         # With a page size of 20 and cap of 1000, we'd need 50 pages.
         # We'll verify the cap works by checking the target is <= 1000.
         page1_items = [{"id": i} for i in range(20)]
-        page1_response = json.dumps({
-            "url": "https://api.example.com/search?skip=0&take=20",
-            "data": {"items": page1_items, "totalResults": 5},
-        })
+        page1_response = json.dumps(
+            {
+                "url": "https://api.example.com/search?skip=0&take=20",
+                "data": {"items": page1_items, "totalResults": 5},
+            }
+        )
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.return_value = page1_response
             result = await paginate_request(
                 "https://api.example.com/search?skip=0&take=5000",
@@ -299,17 +340,23 @@ class TestPaginateRequestDifferentConfigs:
         page2_items = [{"billId": i} for i in range(20, 40)]
 
         responses = [
-            json.dumps({
-                "url": "https://bills-api.parliament.uk/api/v1/Bills?Skip=0&Take=20",
-                "data": {"items": page1_items, "totalResults": 100},
-            }),
-            json.dumps({
-                "url": "https://bills-api.parliament.uk/api/v1/Bills?Skip=20&Take=20",
-                "data": {"items": page2_items, "totalResults": 100},
-            }),
+            json.dumps(
+                {
+                    "url": "https://bills-api.parliament.uk/api/v1/Bills?Skip=0&Take=20",
+                    "data": {"items": page1_items, "totalResults": 100},
+                }
+            ),
+            json.dumps(
+                {
+                    "url": "https://bills-api.parliament.uk/api/v1/Bills?Skip=20&Take=20",
+                    "data": {"items": page2_items, "totalResults": 100},
+                }
+            ),
         ]
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.side_effect = responses
             result = await paginate_request(
                 "https://bills-api.parliament.uk/api/v1/Bills?Skip=0&Take=40",
@@ -329,17 +376,23 @@ class TestPaginateRequestDifferentConfigs:
         page2_items = [{"title": f"debate-{i}"} for i in range(20, 40)]
 
         responses = [
-            json.dumps({
-                "url": "https://hansard-api.parliament.uk/search/debates.json?queryParameters.skip=0&queryParameters.take=20",
-                "data": {"Results": page1_items, "TotalResultCount": 100},
-            }),
-            json.dumps({
-                "url": "https://hansard-api.parliament.uk/search/debates.json?queryParameters.skip=20&queryParameters.take=20",
-                "data": {"Results": page2_items, "TotalResultCount": 100},
-            }),
+            json.dumps(
+                {
+                    "url": "https://hansard-api.parliament.uk/search/debates.json?queryParameters.skip=0&queryParameters.take=20",
+                    "data": {"Results": page1_items, "TotalResultCount": 100},
+                }
+            ),
+            json.dumps(
+                {
+                    "url": "https://hansard-api.parliament.uk/search/debates.json?queryParameters.skip=20&queryParameters.take=20",
+                    "data": {"Results": page2_items, "TotalResultCount": 100},
+                }
+            ),
         ]
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.side_effect = responses
             result = await paginate_request(
                 "https://hansard-api.parliament.uk/search/debates.json?queryParameters.skip=0&queryParameters.take=40",
@@ -356,12 +409,16 @@ class TestPaginateRequestDifferentConfigs:
     async def test_committees_pagination(self):
         """Test Committees API config with 30 page size."""
         page1_items = [{"id": i} for i in range(30)]
-        page1_response = json.dumps({
-            "url": "https://committees-api.parliament.uk/api/Events?Skip=0&Take=30",
-            "data": {"items": page1_items, "totalResults": 25},
-        })
+        page1_response = json.dumps(
+            {
+                "url": "https://committees-api.parliament.uk/api/Events?Skip=0&Take=30",
+                "data": {"items": page1_items, "totalResults": 25},
+            }
+        )
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.return_value = page1_response
             result = await paginate_request(
                 "https://committees-api.parliament.uk/api/Events?Skip=0&Take=60",
@@ -381,17 +438,23 @@ class TestPaginateRequestDifferentConfigs:
         page2_items = [{"id": i} for i in range(30, 50)]
 
         responses = [
-            json.dumps({
-                "url": "https://api.example.com/search?skip=10&take=20",
-                "data": {"items": page1_items, "totalResults": 100},
-            }),
-            json.dumps({
-                "url": "https://api.example.com/search?skip=30&take=20",
-                "data": {"items": page2_items, "totalResults": 100},
-            }),
+            json.dumps(
+                {
+                    "url": "https://api.example.com/search?skip=10&take=20",
+                    "data": {"items": page1_items, "totalResults": 100},
+                }
+            ),
+            json.dumps(
+                {
+                    "url": "https://api.example.com/search?skip=30&take=20",
+                    "data": {"items": page2_items, "totalResults": 100},
+                }
+            ),
         ]
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.side_effect = responses
             result = await paginate_request(
                 "https://api.example.com/search?skip=10&take=40",
@@ -414,17 +477,23 @@ class TestPaginateRequestStringData:
     async def test_string_data_first_page(self):
         """When data field is a JSON string, should still parse correctly."""
         inner_data = {"items": [{"id": i} for i in range(20)], "totalResults": 40}
-        page1_response = json.dumps({
-            "url": "https://api.example.com/search",
-            "data": json.dumps(inner_data),
-        })
+        page1_response = json.dumps(
+            {
+                "url": "https://api.example.com/search",
+                "data": json.dumps(inner_data),
+            }
+        )
         inner_data2 = {"items": [{"id": i} for i in range(20, 40)], "totalResults": 40}
-        page2_response = json.dumps({
-            "url": "https://api.example.com/search",
-            "data": json.dumps(inner_data2),
-        })
+        page2_response = json.dumps(
+            {
+                "url": "https://api.example.com/search",
+                "data": json.dumps(inner_data2),
+            }
+        )
 
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock) as mock_get:
+        with patch(
+            "uk_parliament_mcp.cli.pagination.get_result", new_callable=AsyncMock
+        ) as mock_get:
             mock_get.side_effect = [page1_response, page2_response]
             result = await paginate_request(
                 "https://api.example.com/search?skip=0&take=40",

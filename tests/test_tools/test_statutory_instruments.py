@@ -55,7 +55,9 @@ class TestSearchStatutoryInstruments:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """search_statutory_instruments builds correct URL with name parameter."""
-        with patch("uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -68,13 +70,17 @@ class TestSearchStatutoryInstruments:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            expected_url = f"{STATUTORY_INSTRUMENTS_API_BASE}/StatutoryInstrument?Name=Building%20Regulations"
+            expected_url = (
+                f"{STATUTORY_INSTRUMENTS_API_BASE}/StatutoryInstrument?Name=Building%20Regulations"
+            )
             assert call_url == expected_url
 
     @pytest.mark.asyncio
     async def test_handles_special_characters(self):
         """search_statutory_instruments properly URL-encodes special characters."""
-        with patch("uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -92,7 +98,9 @@ class TestSearchStatutoryInstruments:
     @pytest.mark.asyncio
     async def test_handles_single_quotes(self):
         """search_statutory_instruments handles single quotes in names."""
-        with patch("uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -114,7 +122,9 @@ class TestSearchActsOfParliament:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """search_acts_of_parliament builds correct URL with name parameter."""
-        with patch("uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -127,13 +137,17 @@ class TestSearchActsOfParliament:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            expected_url = f"{STATUTORY_INSTRUMENTS_API_BASE}/ActOfParliament?Name=Human%20Rights%20Act"
+            expected_url = (
+                f"{STATUTORY_INSTRUMENTS_API_BASE}/ActOfParliament?Name=Human%20Rights%20Act"
+            )
             assert call_url == expected_url
 
     @pytest.mark.asyncio
     async def test_handles_special_characters(self):
         """search_acts_of_parliament properly URL-encodes special characters."""
-        with patch("uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -151,7 +165,9 @@ class TestSearchActsOfParliament:
     @pytest.mark.asyncio
     async def test_handles_year_in_name(self):
         """search_acts_of_parliament handles act names with years."""
-        with patch("uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -164,5 +180,7 @@ class TestSearchActsOfParliament:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            expected_url = f"{STATUTORY_INSTRUMENTS_API_BASE}/ActOfParliament?Name=Companies%20Act%202006"
+            expected_url = (
+                f"{STATUTORY_INSTRUMENTS_API_BASE}/ActOfParliament?Name=Companies%20Act%202006"
+            )
             assert call_url == expected_url

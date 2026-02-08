@@ -1,4 +1,5 @@
 """Pytest fixtures for UK Parliament MCP Server tests."""
+
 from __future__ import annotations
 
 import pytest

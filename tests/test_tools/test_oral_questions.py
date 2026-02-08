@@ -107,9 +107,7 @@ class TestSearchEarlyDayMotions:
             mcp = FastMCP(name="test")
             oral_questions.register_tools(mcp)
 
-            await mcp.call_tool(
-                "search_early_day_motions", {"search_term": "climate change"}
-            )
+            await mcp.call_tool("search_early_day_motions", {"search_term": "climate change"})
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -128,9 +126,7 @@ class TestSearchEarlyDayMotions:
             mcp = FastMCP(name="test")
             oral_questions.register_tools(mcp)
 
-            await mcp.call_tool(
-                "search_early_day_motions", {"search_term": "NHS & care reforms"}
-            )
+            await mcp.call_tool("search_early_day_motions", {"search_term": "NHS & care reforms"})
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]

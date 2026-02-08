@@ -53,7 +53,9 @@ class TestSearchCommonsDivisions:
     @pytest.mark.asyncio
     async def test_builds_url_with_search_term_only(self):
         """search_commons_divisions builds URL with search term only."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -69,13 +71,17 @@ class TestSearchCommonsDivisions:
     @pytest.mark.asyncio
     async def test_builds_url_with_member_id(self):
         """search_commons_divisions builds URL with member_id parameter."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
             commons_votes.register_tools(mcp)
 
-            await mcp.call_tool("search_commons_divisions", {"search_term": "climate", "member_id": 4514})
+            await mcp.call_tool(
+                "search_commons_divisions", {"search_term": "climate", "member_id": 4514}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -85,7 +91,9 @@ class TestSearchCommonsDivisions:
     @pytest.mark.asyncio
     async def test_builds_url_with_date_range(self):
         """search_commons_divisions builds URL with date range parameters."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -108,13 +116,17 @@ class TestSearchCommonsDivisions:
     @pytest.mark.asyncio
     async def test_builds_url_with_division_number(self):
         """search_commons_divisions builds URL with division_number parameter."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
             commons_votes.register_tools(mcp)
 
-            await mcp.call_tool("search_commons_divisions", {"search_term": "test", "division_number": 100})
+            await mcp.call_tool(
+                "search_commons_divisions", {"search_term": "test", "division_number": 100}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -123,7 +135,9 @@ class TestSearchCommonsDivisions:
     @pytest.mark.asyncio
     async def test_filters_none_values(self):
         """search_commons_divisions filters out None parameter values."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -151,7 +165,9 @@ class TestSearchCommonsDivisions:
     @pytest.mark.asyncio
     async def test_url_encodes_special_characters(self):
         """search_commons_divisions URL-encodes special characters in search term."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -170,7 +186,9 @@ class TestGetCommonsVotingRecordForMember:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_commons_voting_record_for_member builds correct URL."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -180,7 +198,10 @@ class TestGetCommonsVotingRecordForMember:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert call_url == f"{COMMONS_VOTES_API_BASE}/divisions.json/membervoting?queryParameters.memberId=4514"
+            assert (
+                call_url
+                == f"{COMMONS_VOTES_API_BASE}/divisions.json/membervoting?queryParameters.memberId=4514"
+            )
 
 
 class TestGetCommonsDivisionById:
@@ -189,7 +210,9 @@ class TestGetCommonsDivisionById:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_commons_division_by_id builds correct URL."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -208,7 +231,9 @@ class TestGetCommonsDivisionsGroupedByParty:
     @pytest.mark.asyncio
     async def test_builds_url_with_no_params(self):
         """get_commons_divisions_grouped_by_party builds URL with no optional params."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -223,13 +248,17 @@ class TestGetCommonsDivisionsGroupedByParty:
     @pytest.mark.asyncio
     async def test_builds_url_with_search_term(self):
         """get_commons_divisions_grouped_by_party builds URL with search term."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
             commons_votes.register_tools(mcp)
 
-            await mcp.call_tool("get_commons_divisions_grouped_by_party", {"search_term": "education"})
+            await mcp.call_tool(
+                "get_commons_divisions_grouped_by_party", {"search_term": "education"}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -238,7 +267,9 @@ class TestGetCommonsDivisionsGroupedByParty:
     @pytest.mark.asyncio
     async def test_builds_url_with_all_params(self):
         """get_commons_divisions_grouped_by_party builds URL with all parameters."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -268,7 +299,9 @@ class TestGetCommonsDivisionsGroupedByParty:
     @pytest.mark.asyncio
     async def test_filters_none_values(self):
         """get_commons_divisions_grouped_by_party filters out None parameter values."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -298,7 +331,9 @@ class TestGetCommonsDivisionsSearchCount:
     @pytest.mark.asyncio
     async def test_builds_url_with_no_params(self):
         """get_commons_divisions_search_count builds URL with no optional params."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -313,13 +348,17 @@ class TestGetCommonsDivisionsSearchCount:
     @pytest.mark.asyncio
     async def test_builds_url_with_search_term(self):
         """get_commons_divisions_search_count builds URL with search term."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
             commons_votes.register_tools(mcp)
 
-            await mcp.call_tool("get_commons_divisions_search_count", {"search_term": "immigration"})
+            await mcp.call_tool(
+                "get_commons_divisions_search_count", {"search_term": "immigration"}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -328,7 +367,9 @@ class TestGetCommonsDivisionsSearchCount:
     @pytest.mark.asyncio
     async def test_builds_url_with_all_params(self):
         """get_commons_divisions_search_count builds URL with all parameters."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -358,7 +399,9 @@ class TestGetCommonsDivisionsSearchCount:
     @pytest.mark.asyncio
     async def test_filters_none_values(self):
         """get_commons_divisions_search_count filters out None parameter values."""
-        with patch("uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.commons_votes.get_result", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")

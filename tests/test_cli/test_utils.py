@@ -1,4 +1,5 @@
 """Tests for CLI utilities."""
+
 from __future__ import annotations
 
 import asyncio
@@ -86,9 +87,7 @@ class TestFormatOutput:
 
     def test_format_output_data_only_false_keeps_wrapper(self, sample_response: str):
         """Test data_only=False keeps the full wrapper."""
-        result = format_output(
-            sample_response, data_only=False, output_format=OutputFormat.JSON
-        )
+        result = format_output(sample_response, data_only=False, output_format=OutputFormat.JSON)
         parsed = json.loads(result)
         assert "url" in parsed
         assert parsed["data"]["id"] == 1234
@@ -135,9 +134,7 @@ class TestFormatOutput:
 
     def test_format_output_with_fields(self, sample_response: str):
         """Test --fields parameter selects specific columns."""
-        result = format_output(
-            sample_response, fields="id,name", output_format=OutputFormat.CSV
-        )
+        result = format_output(sample_response, fields="id,name", output_format=OutputFormat.CSV)
         assert "Id" in result
         assert "1234" in result
 

@@ -35,7 +35,11 @@ class TestInterestsToolsRegistration:
     async def test_tools_have_descriptions(self, mcp: FastMCP):
         """All interest tools have descriptions."""
         tools = await mcp.list_tools()
-        interest_tools = [t for t in tools if t.name in ["search_roi", "interests_categories", "get_registers_of_interests"]]
+        interest_tools = [
+            t
+            for t in tools
+            if t.name in ["search_roi", "interests_categories", "get_registers_of_interests"]
+        ]
 
         for tool in interest_tools:
             assert tool.description is not None

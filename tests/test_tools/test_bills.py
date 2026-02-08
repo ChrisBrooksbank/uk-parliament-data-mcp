@@ -79,7 +79,9 @@ class TestGetRecentlyUpdatedBills:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert call_url == f"{BILLS_API_BASE}/Bills?SortOrder=DateUpdatedDescending&skip=0&take=10"
+            assert (
+                call_url == f"{BILLS_API_BASE}/Bills?SortOrder=DateUpdatedDescending&skip=0&take=10"
+            )
 
     @pytest.mark.asyncio
     async def test_builds_url_with_custom_take(self):
@@ -235,7 +237,9 @@ class TestGetBillStageDetails:
             mcp = FastMCP(name="test")
             bills.register_tools(mcp)
 
-            await mcp.call_tool("get_bill_stage_details", {"bill_id": 12345, "bill_stage_id": 67890})
+            await mcp.call_tool(
+                "get_bill_stage_details", {"bill_id": 12345, "bill_stage_id": 67890}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -254,7 +258,9 @@ class TestGetBillStageAmendments:
             mcp = FastMCP(name="test")
             bills.register_tools(mcp)
 
-            await mcp.call_tool("get_bill_stage_amendments", {"bill_id": 12345, "bill_stage_id": 67890})
+            await mcp.call_tool(
+                "get_bill_stage_amendments", {"bill_id": 12345, "bill_stage_id": 67890}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -327,7 +333,9 @@ class TestGetBillStagePingPongItems:
             mcp = FastMCP(name="test")
             bills.register_tools(mcp)
 
-            await mcp.call_tool("get_bill_stage_ping_pong_items", {"bill_id": 12345, "bill_stage_id": 67890})
+            await mcp.call_tool(
+                "get_bill_stage_ping_pong_items", {"bill_id": 12345, "bill_stage_id": 67890}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -419,7 +427,9 @@ class TestGetBillStagePublications:
             mcp = FastMCP(name="test")
             bills.register_tools(mcp)
 
-            await mcp.call_tool("get_bill_stage_publications", {"bill_id": 12345, "stage_id": 67890})
+            await mcp.call_tool(
+                "get_bill_stage_publications", {"bill_id": 12345, "stage_id": 67890}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -438,7 +448,9 @@ class TestGetPublicationDocument:
             mcp = FastMCP(name="test")
             bills.register_tools(mcp)
 
-            await mcp.call_tool("get_publication_document", {"publication_id": 33333, "document_id": 44444})
+            await mcp.call_tool(
+                "get_publication_document", {"publication_id": 33333, "document_id": 44444}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]

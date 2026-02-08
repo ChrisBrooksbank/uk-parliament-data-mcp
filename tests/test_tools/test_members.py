@@ -308,7 +308,9 @@ class TestGetElectionResultsForConstituency:
             mcp = FastMCP(name="test")
             members.register_tools(mcp)
 
-            await mcp.call_tool("get_election_results_for_constituency", {"constituency_id": 143924})
+            await mcp.call_tool(
+                "get_election_results_for_constituency", {"constituency_id": 143924}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
@@ -416,7 +418,9 @@ class TestSearchMembers:
             mcp = FastMCP(name="test")
             members.register_tools(mcp)
 
-            await mcp.call_tool("search_members", {"name": "Test", "location": None, "skip": 0, "take": 20})
+            await mcp.call_tool(
+                "search_members", {"name": "Test", "location": None, "skip": 0, "take": 20}
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]

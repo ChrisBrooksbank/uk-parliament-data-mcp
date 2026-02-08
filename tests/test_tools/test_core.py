@@ -47,9 +47,7 @@ class TestCoreTools:
         assert "parliament_workflow" in tool_names
 
     @pytest.mark.asyncio
-    async def test_order_order_returns_system_prompt_and_quick_reference(
-        self, mcp: FastMCP
-    ):
+    async def test_order_order_returns_system_prompt_and_quick_reference(self, mcp: FastMCP):
         """order_order returns system prompt with quick reference."""
         content_list, _ = await mcp.call_tool("order_order", {})
         assert len(content_list) > 0
@@ -162,9 +160,7 @@ class TestParliamentGuide:
     @pytest.mark.asyncio
     async def test_guide_conventions_returns_content(self, mcp: FastMCP):
         """parliament_guide returns conventions documentation."""
-        content_list, _ = await mcp.call_tool(
-            "parliament_guide", {"topic": "conventions"}
-        )
+        content_list, _ = await mcp.call_tool("parliament_guide", {"topic": "conventions"})
         text = content_list[0].text
         assert "House 1" in text
         assert "House 2" in text
@@ -175,9 +171,7 @@ class TestParliamentGuide:
     @pytest.mark.asyncio
     async def test_guide_invalid_topic_returns_error(self, mcp: FastMCP):
         """parliament_guide returns error for invalid topic."""
-        content_list, _ = await mcp.call_tool(
-            "parliament_guide", {"topic": "invalid_topic"}
-        )
+        content_list, _ = await mcp.call_tool("parliament_guide", {"topic": "invalid_topic"})
         text = content_list[0].text
         assert "not recognized" in text
         assert "Available topics" in text

@@ -57,6 +57,20 @@ MEMBER_SEARCH_RESPONSE = json.dumps(
     }
 )
 
+# Member direct response for composite tools that take member_id
+MEMBER_DIRECT_RESPONSE = json.dumps(
+    {
+        "url": "https://test",
+        "data": {
+            "value": {
+                "id": 4514,
+                "nameDisplayAs": "Keir Starmer",
+                "latestHouseMembership": {"house": 1},
+            }
+        },
+    }
+)
+
 # Bills search response that composite tools can parse to extract a bill_id
 BILL_SEARCH_RESPONSE = json.dumps(
     {
@@ -216,24 +230,24 @@ class TestCompositeRequestBudgets:
 
     @pytest.mark.asyncio
     async def test_get_mp_profile_makes_4_requests(self, mcp: FastMCP):
-        """get_mp_profile: 1 search + 3 parallel detail fetches = 4 requests."""
+        """get_mp_profile: 1 member fetch + 3 parallel detail fetches = 4 requests."""
         with patch(
             "uk_parliament_mcp.tools.composite.get_result", new_callable=AsyncMock
         ) as mock_get:
-            mock_get.return_value = MEMBER_SEARCH_RESPONSE
-            await mcp.call_tool("get_mp_profile", {"name": "Keir Starmer"})
+            mock_get.return_value = MEMBER_DIRECT_RESPONSE
+            await mcp.call_tool("get_mp_profile", {"member_id": 4514})
             assert mock_get.call_count == 4, (
                 f"get_mp_profile made {mock_get.call_count} requests, expected 4"
             )
 
     @pytest.mark.asyncio
     async def test_check_mp_vote_makes_2_requests(self, mcp: FastMCP):
-        """check_mp_vote: 1 search + 1 divisions = 2 requests."""
+        """check_mp_vote: 1 member fetch + 1 divisions = 2 requests."""
         with patch(
             "uk_parliament_mcp.tools.composite.get_result", new_callable=AsyncMock
         ) as mock_get:
-            mock_get.return_value = MEMBER_SEARCH_RESPONSE
-            await mcp.call_tool("check_mp_vote", {"mp_name": "Boris Johnson", "topic": "climate"})
+            mock_get.return_value = MEMBER_DIRECT_RESPONSE
+            await mcp.call_tool("check_mp_vote", {"member_id": 4514, "topic": "climate"})
             assert mock_get.call_count == 2, (
                 f"check_mp_vote made {mock_get.call_count} requests, expected 2"
             )
@@ -314,15 +328,15 @@ class TestCompositeParallelExecution:
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                # First call is the search - return immediately
-                return MEMBER_SEARCH_RESPONSE
+                # First call is the member fetch - return immediately
+                return MEMBER_DIRECT_RESPONSE
             # Subsequent calls simulate slow API responses
             await asyncio.sleep(0.1)
             return MOCK_RESPONSE
 
         with patch("uk_parliament_mcp.tools.composite.get_result", side_effect=slow_mock):
             start = time.monotonic()
-            await mcp.call_tool("get_mp_profile", {"name": "Test"})
+            await mcp.call_tool("get_mp_profile", {"member_id": 4514})
             elapsed = time.monotonic() - start
 
         # With 3 parallel requests at 0.1s each, serial would be >= 0.3s.
@@ -411,8 +425,8 @@ class TestResponseSizes:
         with patch(
             "uk_parliament_mcp.tools.composite.get_result", new_callable=AsyncMock
         ) as mock_get:
-            mock_get.return_value = MEMBER_SEARCH_RESPONSE
-            result = await server.call_tool("get_mp_profile", {"name": "Keir Starmer"})
+            mock_get.return_value = MEMBER_DIRECT_RESPONSE
+            result = await server.call_tool("get_mp_profile", {"member_id": 4514})
 
         response_text = _extract_text(result)
         parsed = json.loads(response_text)
@@ -428,8 +442,8 @@ class TestResponseSizes:
         with patch(
             "uk_parliament_mcp.tools.composite.get_result", new_callable=AsyncMock
         ) as mock_get:
-            mock_get.return_value = MEMBER_SEARCH_RESPONSE
-            result = await server.call_tool("get_mp_profile", {"name": "Keir Starmer"})
+            mock_get.return_value = MEMBER_DIRECT_RESPONSE
+            result = await server.call_tool("get_mp_profile", {"member_id": 4514})
 
         response_text = _extract_text(result)
         parsed = json.loads(response_text)
@@ -454,31 +468,6 @@ class TestCompositeEarlyReturn:
         server = FastMCP(name="test-perf-early")
         composite.register_tools(server)
         return server
-
-    @pytest.mark.asyncio
-    async def test_get_mp_profile_stops_at_1_request_on_no_match(self, mcp: FastMCP):
-        """get_mp_profile should make only 1 request if no member found."""
-        with patch(
-            "uk_parliament_mcp.tools.composite.get_result", new_callable=AsyncMock
-        ) as mock_get:
-            mock_get.return_value = self.EMPTY_SEARCH
-            result = await mcp.call_tool("get_mp_profile", {"name": "Nobody"})
-            assert mock_get.call_count == 1, (
-                f"Expected 1 request for no-match, got {mock_get.call_count}"
-            )
-        response_text = _extract_text(result)
-        parsed = json.loads(response_text)
-        assert "error" in parsed
-
-    @pytest.mark.asyncio
-    async def test_check_mp_vote_stops_at_1_request_on_no_match(self, mcp: FastMCP):
-        """check_mp_vote should make only 1 request if no member found."""
-        with patch(
-            "uk_parliament_mcp.tools.composite.get_result", new_callable=AsyncMock
-        ) as mock_get:
-            mock_get.return_value = self.EMPTY_SEARCH
-            await mcp.call_tool("check_mp_vote", {"mp_name": "Nobody", "topic": "test"})
-            assert mock_get.call_count == 1
 
     @pytest.mark.asyncio
     async def test_get_bill_overview_stops_at_1_request_on_no_match(self, mcp: FastMCP):

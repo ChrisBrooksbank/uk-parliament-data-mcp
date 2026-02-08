@@ -169,9 +169,7 @@ class TestRenderMpProfile:
             },
             "biography": {
                 "value": {
-                    "biographyEntries": [
-                        {"category": "Education", "entry": "Leeds University"}
-                    ]
+                    "biographyEntries": [{"category": "Education", "entry": "Leeds University"}]
                 }
             },
             "registered_interests": {"items": []},
@@ -376,9 +374,7 @@ class TestRenderBillOverview:
             "details": {},
             "stages": {"items": []},
             "publications": {
-                "items": [
-                    {"title": "Impact Assessment", "publicationType": {"name": "Report"}}
-                ]
+                "items": [{"title": "Impact Assessment", "publicationType": {"name": "Report"}}]
             },
             "other_matches": 0,
             "sources": {},
@@ -480,17 +476,23 @@ class TestCliRunnerOutputsJson:
         from uk_parliament_mcp.cli.main import app
 
         runner = CliRunner()
-        member_resp = json.dumps({
-            "url": "test",
-            "data": json.dumps({
-                "items": [
-                    {"value": {"id": 4514, "nameDisplayAs": "Keir Starmer",
-                               "latestHouseMembership": {"house": 1}}}
-                ],
-                "totalResults": 1,
-            }),
-        })
-        bio_resp = json.dumps({"url": "test", "data": json.dumps({"value": {"biographyEntries": []}})})
+        member_resp = json.dumps(
+            {
+                "url": "test",
+                "data": json.dumps(
+                    {
+                        "value": {
+                            "id": 4514,
+                            "nameDisplayAs": "Keir Starmer",
+                            "latestHouseMembership": {"house": 1},
+                        }
+                    }
+                ),
+            }
+        )
+        bio_resp = json.dumps(
+            {"url": "test", "data": json.dumps({"value": {"biographyEntries": []}})}
+        )
         interests_resp = json.dumps({"url": "test", "data": json.dumps({"items": []})})
         voting_resp = json.dumps({"url": "test", "data": json.dumps({"items": []})})
 
@@ -503,7 +505,7 @@ class TestCliRunnerOutputsJson:
             return response
 
         with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
-            result = runner.invoke(app, ["composite", "mp-profile", "Starmer"])
+            result = runner.invoke(app, ["composite", "mp-profile", "4514"])
 
         assert result.exit_code == 0
         # Should be valid JSON (not rich markup)
@@ -517,10 +519,12 @@ class TestCliRunnerOutputsJson:
         from uk_parliament_mcp.cli.main import app
 
         runner = CliRunner()
-        mock_response = json.dumps({
-            "url": "test",
-            "data": {"slides": [{"type": "Debate"}], "scrollingMessages": []},
-        })
+        mock_response = json.dumps(
+            {
+                "url": "test",
+                "data": {"slides": [{"type": "Debate"}], "scrollingMessages": []},
+            }
+        )
 
         async def mock_get_result(url: str) -> str:
             return mock_response
@@ -540,10 +544,12 @@ class TestCliRunnerOutputsJson:
         from uk_parliament_mcp.cli.main import app
 
         runner = CliRunner()
-        mock_response = json.dumps({
-            "url": "test",
-            "data": {"slides": [{"type": "Debate"}], "scrollingMessages": []},
-        })
+        mock_response = json.dumps(
+            {
+                "url": "test",
+                "data": {"slides": [{"type": "Debate"}], "scrollingMessages": []},
+            }
+        )
 
         async def mock_get_result(url: str) -> str:
             return mock_response
@@ -562,10 +568,12 @@ class TestCliRunnerOutputsJson:
         from uk_parliament_mcp.cli.main import app
 
         runner = CliRunner()
-        mock_response = json.dumps({
-            "url": "test",
-            "data": json.dumps({"slides": [{"type": "Debate"}]}),
-        })
+        mock_response = json.dumps(
+            {
+                "url": "test",
+                "data": json.dumps({"slides": [{"type": "Debate"}]}),
+            }
+        )
 
         async def mock_get_result(url: str) -> str:
             return mock_response

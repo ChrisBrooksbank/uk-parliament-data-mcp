@@ -1,4 +1,5 @@
 """Tests for HTTP client with retry logic."""
+
 from __future__ import annotations
 
 import json
@@ -297,9 +298,7 @@ class TestGetResultCached:
             status_code=404,
         )
 
-        result1 = await get_result_cached(
-            "https://api.example.com/test", cache_key="test_key"
-        )
+        result1 = await get_result_cached("https://api.example.com/test", cache_key="test_key")
         parsed1 = json.loads(result1)
         assert "error" in parsed1
 
@@ -309,9 +308,7 @@ class TestGetResultCached:
             json={"data": "success"},
         )
 
-        result2 = await get_result_cached(
-            "https://api.example.com/test", cache_key="test_key"
-        )
+        result2 = await get_result_cached("https://api.example.com/test", cache_key="test_key")
         parsed2 = json.loads(result2)
         assert "data" in parsed2
         assert "error" not in parsed2
@@ -330,9 +327,7 @@ class TestGetResultCached:
         )
 
         # Cache a result
-        result1 = await get_result_cached(
-            "https://api.example.com/test", cache_key="test_key"
-        )
+        result1 = await get_result_cached("https://api.example.com/test", cache_key="test_key")
         assert "data" in json.loads(result1)
 
         # Clear cache
@@ -344,9 +339,7 @@ class TestGetResultCached:
             json={"data": "second"},
         )
 
-        result2 = await get_result_cached(
-            "https://api.example.com/test", cache_key="test_key"
-        )
+        result2 = await get_result_cached("https://api.example.com/test", cache_key="test_key")
         assert "data" in json.loads(result2)
 
         # Should have made two requests (before and after clear)
@@ -367,12 +360,8 @@ class TestGetResultCached:
         )
 
         # Cache two different results
-        result1 = await get_result_cached(
-            "https://api.example.com/test1", cache_key="key1"
-        )
-        result2 = await get_result_cached(
-            "https://api.example.com/test2", cache_key="key2"
-        )
+        result1 = await get_result_cached("https://api.example.com/test1", cache_key="key1")
+        result2 = await get_result_cached("https://api.example.com/test2", cache_key="key2")
 
         assert "data" in json.loads(result1)
         assert "data" in json.loads(result2)

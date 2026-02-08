@@ -85,16 +85,7 @@ class TestHelperFunctions:
 
     def test_extract_member_id_valid(self):
         """_extract_member_id extracts ID from valid response."""
-        member_response = {
-            "items": [
-                {
-                    "value": {
-                        "id": 4514,
-                        "nameDisplayAs": "Keir Starmer"
-                    }
-                }
-            ]
-        }
+        member_response = {"items": [{"value": {"id": 4514, "nameDisplayAs": "Keir Starmer"}}]}
         result = composite._extract_member_id(member_response)
         assert result == 4514
 
@@ -123,12 +114,12 @@ class TestGetMpProfile:
 
     @pytest.mark.asyncio
     async def test_get_mp_profile_has_required_parameters(self, mcp: FastMCP):
-        """get_mp_profile has required name parameter."""
+        """get_mp_profile has required member_id parameter."""
         tools = await mcp.list_tools()
         mp_profile_tool = next(t for t in tools if t.name == "get_mp_profile")
         assert mp_profile_tool.inputSchema is not None
         schema = mp_profile_tool.inputSchema
-        assert "name" in schema.get("required", [])
+        assert "member_id" in schema.get("required", [])
 
 
 class TestCheckMpVote:
@@ -143,13 +134,13 @@ class TestCheckMpVote:
 
     @pytest.mark.asyncio
     async def test_check_mp_vote_has_required_parameters(self, mcp: FastMCP):
-        """check_mp_vote has required mp_name and topic parameters."""
+        """check_mp_vote has required member_id and topic parameters."""
         tools = await mcp.list_tools()
         vote_tool = next(t for t in tools if t.name == "check_mp_vote")
         assert vote_tool.inputSchema is not None
         schema = vote_tool.inputSchema
         required = schema.get("required", [])
-        assert "mp_name" in required
+        assert "member_id" in required
         assert "topic" in required
 
 
@@ -199,11 +190,13 @@ class TestCompositeGuidance:
     def test_composite_topic_exists_in_guidance(self):
         """Composite topic exists in GUIDANCE_CONTENT."""
         from uk_parliament_mcp.tools.core import GUIDANCE_CONTENT
+
         assert "composite" in GUIDANCE_CONTENT
 
     def test_composite_guidance_mentions_all_tools(self):
         """Composite guidance mentions all 4 composite tools."""
         from uk_parliament_mcp.tools.core import GUIDANCE_CONTENT
+
         guidance = GUIDANCE_CONTENT["composite"]
         assert "get_mp_profile" in guidance
         assert "check_mp_vote" in guidance
@@ -213,5 +206,6 @@ class TestCompositeGuidance:
     def test_quick_reference_mentions_composite(self):
         """Quick reference mentions composite tools."""
         from uk_parliament_mcp.tools.core import QUICK_REFERENCE
+
         assert "composite" in QUICK_REFERENCE.lower()
         assert "get_mp_profile" in QUICK_REFERENCE
