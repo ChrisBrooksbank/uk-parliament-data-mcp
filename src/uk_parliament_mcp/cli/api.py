@@ -7,9 +7,11 @@ discover endpoints, parameters, schemas, and search across all APIs.
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 import typer
 from rich.console import Console
@@ -518,3 +520,269 @@ def _print_api_not_found(name: str) -> None:
     meta = _load_metadata()
     available = ", ".join(api["name"] for api in meta["apis"])
     typer.echo(f"API '{name}' not found. Available: {available}", err=True)
+
+
+# ── Explore helpers ──────────────────────────────────────────────────
+
+_API_CLI_GROUP: dict[str, str] = {
+    "members": "members",
+    "bills": "bills",
+    "committees": "committees",
+    "hansard": "hansard",
+    "commonsvotes": "votes",
+    "lordsvotes": "votes",
+    "interests": "interests",
+    "parliamentnow": "live",
+    "whatson": "live",
+    "statutoryinstruments": "legislation",
+    "treaties": "legislation",
+    "erskinemay": "procedures",
+    "oralquestions": "questions",
+    "writtenquestions": "questions",
+}
+
+
+def _parse_parliament_url(
+    url: str,
+) -> tuple[dict[str, Any], str, dict[str, list[str]]] | None:
+    """Parse a URL and match it to a known Parliament API.
+
+    Returns (api_dict, relative_path, query_params) or None.
+    """
+    parsed = urlparse(url)
+    hostname = parsed.hostname or ""
+    meta = _load_metadata()
+
+    for api in meta["apis"]:
+        base_parsed = urlparse(api["baseUrl"])
+        if hostname == base_parsed.hostname:
+            query_params = parse_qs(parsed.query)
+            return api, parsed.path, query_params
+
+    return None
+
+
+def _match_url_to_endpoint(
+    api: dict[str, Any], path: str
+) -> tuple[dict[str, Any], dict[str, str]] | None:
+    """Match a URL path against endpoint templates using regex.
+
+    Returns (endpoint_dict, extracted_path_params) or None.
+    """
+    for ep in api["endpoints"]:
+        template = ep["path"]
+        # Convert template params like {id} to named regex groups
+        regex = re.sub(r"\{([^}]+)\}", r"(?P<\1>[^/]+)", template)
+        match = re.fullmatch(regex, path)
+        if match:
+            return ep, match.groupdict()
+
+    # Fall back to substring matching
+    for ep in api["endpoints"]:
+        if _match_path(ep["path"], path):
+            return ep, {}
+
+    return None
+
+
+def _find_related_endpoints(
+    api: dict[str, Any], matched_endpoint: dict[str, Any], limit: int = 10
+) -> list[dict[str, Any]]:
+    """Find other endpoints sharing tags with the matched endpoint."""
+    matched_tags = set(matched_endpoint.get("tags", []))
+    if not matched_tags:
+        return []
+
+    matched_path = matched_endpoint["path"]
+    matched_method = matched_endpoint["method"]
+    related = []
+    for ep in api["endpoints"]:
+        if ep["path"] == matched_path and ep["method"] == matched_method:
+            continue
+        ep_tags = set(ep.get("tags", []))
+        if ep_tags & matched_tags:
+            related.append(
+                {
+                    "method": ep["method"],
+                    "path": ep["path"],
+                    **({"summary": ep["summary"]} if "summary" in ep else {}),
+                }
+            )
+            if len(related) >= limit:
+                break
+    return related
+
+
+@app.command("explore")
+def explore(
+    url: str = typer.Argument(..., help="A Parliament API URL to explore"),
+    call: bool = typer.Option(
+        False, "--call", "-c", help="Also call the URL and show the response"
+    ),
+    json_output: bool = typer.Option(False, "--json", "-j", help="Output raw JSON"),
+    pretty: bool = typer.Option(
+        False, "--pretty", "-p", help="Pretty-print JSON output"
+    ),
+) -> None:
+    """Explore a Parliament API URL — identify the API, endpoint, and parameters.
+
+    Parses a pasted URL and shows what API it belongs to, which endpoint
+    template it matches, extracted path/query parameters, the matching CLI
+    group, and related endpoints.
+
+    Examples:
+      parliament api explore "https://members-api.parliament.uk/api/Members/4514"
+      parliament api explore "https://bills-api.parliament.uk/api/v1/Bills?SearchTerm=Online+Safety" --pretty
+      parliament api explore "https://members-api.parliament.uk/api/Members/4514" --call
+    """
+    parsed = _parse_parliament_url(url)
+    if parsed is None:
+        meta = _load_metadata()
+        domains = [urlparse(a["baseUrl"]).hostname for a in meta["apis"]]
+        typer.echo(
+            f"URL does not match any known Parliament API domain.\n"
+            f"Supported domains: {', '.join(d for d in domains if d)}",
+            err=True,
+        )
+        raise typer.Exit(1)
+
+    api, rel_path, query_params = parsed
+    # Flatten single-value query params
+    flat_query: dict[str, str | list[str]] = {
+        k: v[0] if len(v) == 1 else v for k, v in query_params.items()
+    }
+
+    result: dict[str, Any] = {
+        "url": url,
+        "api": {
+            "name": api["name"],
+            "title": api["title"],
+            "description": api["description"],
+        },
+    }
+
+    endpoint_match = _match_url_to_endpoint(api, rel_path)
+    cli_group = _API_CLI_GROUP.get(api["name"])
+    related: list[dict[str, Any]] = []
+
+    if endpoint_match:
+        ep, extracted = endpoint_match
+        result["endpoint"] = {
+            "method": ep["method"],
+            "path": ep["path"],
+            **({"summary": ep["summary"]} if "summary" in ep else {}),
+            **({"parameters": ep["parameters"]} if ep.get("parameters") else {}),
+            **({"responseSchema": ep["responseSchema"]} if "responseSchema" in ep else {}),
+        }
+        result["extractedParams"] = extracted
+        related = _find_related_endpoints(api, ep)
+    else:
+        result["endpoint"] = None
+        result["extractedParams"] = {}
+
+    result["queryParams"] = flat_query
+    if cli_group:
+        result["cliGroup"] = cli_group
+        result["cliHint"] = f"parliament {cli_group} --help"
+    result["related"] = related
+
+    if call:
+        from uk_parliament_mcp.cli.utils import run_async
+        from uk_parliament_mcp.http_client import get_result
+
+        try:
+            raw_response = run_async(get_result(url))
+            result["response"] = json.loads(raw_response)
+        except Exception as exc:
+            result["response"] = {"error": str(exc)}
+
+    if not _use_rich(json_output):
+        echo_utf8(_format_json(result, pretty))
+        return
+
+    # Rich terminal output
+    console = Console()
+    console.print()
+    console.print(f"[bold]API:[/] [cyan]{api['title']}[/] ({api['name']})")
+    console.print(f"  [dim]{api['description']}[/]")
+    console.print(f"  Base: [dim]{api['baseUrl']}[/]")
+
+    if endpoint_match:
+        ep, extracted = endpoint_match
+        console.print()
+        console.print(
+            f"[bold]Endpoint:[/] [bold yellow]{ep['method']}[/] [cyan]{ep['path']}[/]"
+        )
+        if ep.get("summary"):
+            console.print(f"  [bold]{ep['summary']}[/]")
+        if ep.get("responseSchema"):
+            console.print(f"  Response: [green]{ep['responseSchema']}[/]")
+
+        if extracted:
+            console.print()
+            table = Table(title="Extracted Path Parameters", show_lines=False, padding=(0, 1))
+            table.add_column("Parameter", style="cyan")
+            table.add_column("Value", style="bold green")
+            for k, v in extracted.items():
+                table.add_row(k, v)
+            console.print(table)
+
+        if flat_query:
+            console.print()
+            table = Table(title="Query Parameters", show_lines=False, padding=(0, 1))
+            table.add_column("Parameter", style="cyan")
+            table.add_column("Value", style="green")
+            for k, v in flat_query.items():
+                table.add_row(k, str(v))
+            console.print(table)
+
+        params = ep.get("parameters", [])
+        if params:
+            console.print()
+            table = Table(title="Endpoint Parameters", show_lines=False, padding=(0, 1))
+            table.add_column("Name", style="cyan", no_wrap=True)
+            table.add_column("In", style="dim", width=5)
+            table.add_column("Type", style="green")
+            table.add_column("Req", width=3)
+            table.add_column("Description", max_width=50)
+            for p in params:
+                ptype = p.get("type", "")
+                if p.get("format"):
+                    ptype += f" ({p['format']})"
+                req = "[bold red]*[/]" if p.get("required") else ""
+                desc = p.get("description", "")
+                table.add_row(p["name"], p.get("in", ""), ptype, req, desc)
+            console.print(table)
+    else:
+        console.print()
+        console.print("[yellow]No matching endpoint template found for this path.[/]")
+        console.print(
+            f"  Try: [cyan]parliament api endpoints {api['name']}[/] to browse all endpoints"
+        )
+
+    if cli_group:
+        console.print()
+        console.print(
+            f"[bold]CLI group:[/] [cyan]parliament {cli_group}[/]"
+        )
+        console.print(f"  Run [cyan]parliament {cli_group} --help[/] for available commands")
+
+    if related:
+        console.print()
+        table = Table(title="Related Endpoints", show_lines=False)
+        table.add_column("Method", style="bold yellow", width=6)
+        table.add_column("Path", style="cyan")
+        table.add_column("Summary")
+        for ep in related:
+            table.add_row(ep["method"], ep["path"], ep.get("summary", ""))
+        console.print(table)
+
+    if call and "response" in result:
+        console.print()
+        if "error" in result["response"]:
+            console.print(
+                f"[bold red]Call error:[/] {result['response']['error']}"
+            )
+        else:
+            console.print("[bold]Response:[/]")
+            console.print(json.dumps(result["response"], indent=2, ensure_ascii=False))

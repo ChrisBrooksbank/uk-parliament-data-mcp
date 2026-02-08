@@ -225,7 +225,244 @@ class TestApiHelp:
         result = cli_runner.invoke(app, ["api", cmd, "--help"])
         assert result.exit_code == 0
 
+    @pytest.mark.parametrize(
+        "cmd",
+        ["list", "endpoints", "detail", "search", "schema", "params", "explore"],
+    )
+    def test_help_all_subcommands(self, cli_runner: CliRunner, cmd: str):
+        result = cli_runner.invoke(app, ["api", cmd, "--help"])
+        assert result.exit_code == 0
+
     def test_api_group_help(self, cli_runner: CliRunner):
         result = cli_runner.invoke(app, ["api", "--help"])
         assert result.exit_code == 0
         assert "api" in result.stdout.lower()
+
+
+class TestApiExplore:
+    """Tests for `parliament api explore`."""
+
+    def test_explore_members_url(self, cli_runner: CliRunner):
+        """Parse a Members API URL and check JSON output structure."""
+        result = cli_runner.invoke(
+            app,
+            ["api", "explore", "https://members-api.parliament.uk/api/Members/4514"],
+        )
+        assert result.exit_code == 0
+        data = json.loads(result.stdout)
+        assert data["api"]["name"] == "members"
+        assert data["endpoint"] is not None
+        assert data["endpoint"]["method"] == "GET"
+        assert "{id}" in data["endpoint"]["path"]
+        assert data["extractedParams"]["id"] == "4514"
+
+    def test_explore_bills_url(self, cli_runner: CliRunner):
+        """Parse a Bills API URL with a different base path."""
+        result = cli_runner.invoke(
+            app,
+            ["api", "explore", "https://bills-api.parliament.uk/api/v1/Bills/123"],
+        )
+        assert result.exit_code == 0
+        data = json.loads(result.stdout)
+        assert data["api"]["name"] == "bills"
+        assert data["endpoint"] is not None
+        assert data["extractedParams"].get("billId") == "123"
+
+    def test_explore_with_query_params(self, cli_runner: CliRunner):
+        """URL with query parameters extracts them."""
+        result = cli_runner.invoke(
+            app,
+            [
+                "api",
+                "explore",
+                "https://members-api.parliament.uk/api/Members/Search?Name=Starmer&skip=0&take=20",
+            ],
+        )
+        assert result.exit_code == 0
+        data = json.loads(result.stdout)
+        assert data["queryParams"]["Name"] == "Starmer"
+        assert data["queryParams"]["skip"] == "0"
+        assert data["queryParams"]["take"] == "20"
+
+    def test_explore_unknown_domain(self, cli_runner: CliRunner):
+        """Non-Parliament URL returns exit code 1."""
+        result = cli_runner.invoke(
+            app,
+            ["api", "explore", "https://example.com/api/something"],
+        )
+        assert result.exit_code == 1
+
+    def test_explore_no_endpoint_match(self, cli_runner: CliRunner):
+        """Valid domain but unrecognized path still shows API info."""
+        result = cli_runner.invoke(
+            app,
+            [
+                "api",
+                "explore",
+                "https://members-api.parliament.uk/some/nonexistent/path",
+            ],
+        )
+        assert result.exit_code == 0
+        data = json.loads(result.stdout)
+        assert data["api"]["name"] == "members"
+        assert data["endpoint"] is None
+
+    @pytest.mark.parametrize(
+        "api_name,expected_group",
+        [
+            ("members", "members"),
+            ("bills", "bills"),
+            ("committees", "committees"),
+            ("hansard", "hansard"),
+            ("commonsvotes", "votes"),
+            ("lordsvotes", "votes"),
+            ("interests", "interests"),
+            ("parliamentnow", "live"),
+            ("whatson", "live"),
+            ("statutoryinstruments", "legislation"),
+            ("treaties", "legislation"),
+            ("erskinemay", "procedures"),
+            ("oralquestions", "questions"),
+            ("writtenquestions", "questions"),
+        ],
+    )
+    def test_explore_cli_group_mapping(
+        self, cli_runner: CliRunner, api_name: str, expected_group: str
+    ):
+        """Verify cliGroup is correct for each API."""
+        from uk_parliament_mcp.cli.api import _API_CLI_GROUP
+
+        assert _API_CLI_GROUP[api_name] == expected_group
+
+    def test_explore_related_endpoints(self, cli_runner: CliRunner):
+        """Matched endpoint returns related endpoints sharing tags."""
+        result = cli_runner.invoke(
+            app,
+            ["api", "explore", "https://members-api.parliament.uk/api/Members/4514"],
+        )
+        assert result.exit_code == 0
+        data = json.loads(result.stdout)
+        related = data["related"]
+        assert isinstance(related, list)
+        assert len(related) > 0
+        # Related should have method and path
+        for ep in related:
+            assert "method" in ep
+            assert "path" in ep
+
+    def test_explore_pretty(self, cli_runner: CliRunner):
+        """Pretty output is valid JSON with indentation."""
+        result = cli_runner.invoke(
+            app,
+            [
+                "api",
+                "explore",
+                "https://members-api.parliament.uk/api/Members/4514",
+                "--pretty",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "\n" in result.stdout
+        data = json.loads(result.stdout)
+        assert data["api"]["name"] == "members"
+
+    def test_explore_has_cli_hint(self, cli_runner: CliRunner):
+        """Explore output includes CLI hint."""
+        result = cli_runner.invoke(
+            app,
+            ["api", "explore", "https://members-api.parliament.uk/api/Members/4514"],
+        )
+        data = json.loads(result.stdout)
+        assert data["cliGroup"] == "members"
+        assert "parliament members" in data["cliHint"]
+
+
+class TestTemplateMatching:
+    """Unit tests for URL-to-endpoint template matching."""
+
+    def test_match_simple_path_param(self):
+        from uk_parliament_mcp.cli.api import _match_url_to_endpoint
+
+        api = {
+            "endpoints": [
+                {"method": "GET", "path": "/api/Items/{id}", "tags": []},
+            ]
+        }
+        result = _match_url_to_endpoint(api, "/api/Items/42")
+        assert result is not None
+        ep, params = result
+        assert params["id"] == "42"
+
+    def test_match_multiple_path_params(self):
+        from uk_parliament_mcp.cli.api import _match_url_to_endpoint
+
+        api = {
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "/api/v1/Bills/{billId}/Stages/{stageId}",
+                    "tags": [],
+                },
+            ]
+        }
+        result = _match_url_to_endpoint(api, "/api/v1/Bills/55/Stages/3")
+        assert result is not None
+        ep, params = result
+        assert params["billId"] == "55"
+        assert params["stageId"] == "3"
+
+    def test_no_match(self):
+        from uk_parliament_mcp.cli.api import _match_url_to_endpoint
+
+        api = {
+            "endpoints": [
+                {"method": "GET", "path": "/api/Items/{id}", "tags": []},
+            ]
+        }
+        result = _match_url_to_endpoint(api, "/completely/different/path")
+        assert result is None
+
+    def test_match_no_params(self):
+        from uk_parliament_mcp.cli.api import _match_url_to_endpoint
+
+        api = {
+            "endpoints": [
+                {"method": "GET", "path": "/api/Members/Search", "tags": []},
+            ]
+        }
+        result = _match_url_to_endpoint(api, "/api/Members/Search")
+        assert result is not None
+        ep, params = result
+        assert params == {}
+
+
+class TestParseParliamentUrl:
+    """Unit tests for _parse_parliament_url."""
+
+    def test_parse_known_domain(self):
+        from uk_parliament_mcp.cli.api import _parse_parliament_url
+
+        result = _parse_parliament_url(
+            "https://members-api.parliament.uk/api/Members/Search?Name=Test"
+        )
+        assert result is not None
+        api, path, query = result
+        assert api["name"] == "members"
+        assert path == "/api/Members/Search"
+        assert query["Name"] == ["Test"]
+
+    def test_parse_unknown_domain(self):
+        from uk_parliament_mcp.cli.api import _parse_parliament_url
+
+        result = _parse_parliament_url("https://example.com/api/foo")
+        assert result is None
+
+    def test_parse_multiple_query_values(self):
+        from uk_parliament_mcp.cli.api import _parse_parliament_url
+
+        result = _parse_parliament_url(
+            "https://bills-api.parliament.uk/api/v1/Bills?tag=1&tag=2"
+        )
+        assert result is not None
+        _, _, query = result
+        assert query["tag"] == ["1", "2"]
