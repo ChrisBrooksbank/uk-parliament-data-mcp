@@ -9,6 +9,7 @@ import typer
 from rich.console import Console
 
 from uk_parliament_mcp.cli import (
+    api,
     bills,
     committees,
     composite,
@@ -34,6 +35,7 @@ app = typer.Typer(
 )
 
 # Register subcommand groups
+app.add_typer(api.app, name="api")
 app.add_typer(composite.app, name="composite")
 app.add_typer(members.app, name="members")
 app.add_typer(bills.app, name="bills")
