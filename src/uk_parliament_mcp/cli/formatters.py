@@ -433,6 +433,7 @@ class CLIFormatter:
         table = Table(
             show_header=True,
             header_style="bold",
+            row_styles=["", "dim"],
             caption=caption,
             caption_style=caption_style,
         )
