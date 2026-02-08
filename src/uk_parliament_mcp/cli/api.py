@@ -60,6 +60,11 @@ def _match_path(endpoint_path: str, search_path: str) -> bool:
     )
 
 
+def _full_url(api: dict[str, Any], path: str) -> str:
+    """Combine API baseUrl with endpoint path to form the full URL."""
+    return api["baseUrl"].rstrip("/") + path
+
+
 def _is_tty() -> bool:
     """Check if stdout is an interactive terminal."""
     return sys.stdout.isatty()
@@ -144,6 +149,7 @@ def endpoints(
         {
             "method": e["method"],
             "path": e["path"],
+            "url": _full_url(api, e["path"]),
             **({"summary": e["summary"]} if "summary" in e else {}),
             **({"tags": e["tags"]} if "tags" in e else {}),
         }
@@ -158,6 +164,7 @@ def endpoints(
     table = Table(title=f"{api_name} endpoints ({len(result)})")
     table.add_column("Method", style="bold yellow", no_wrap=True, width=6)
     table.add_column("Path", style="cyan")
+    table.add_column("URL", style="dim")
     table.add_column("Summary")
     table.add_column("Tags", style="dim")
 
@@ -165,6 +172,7 @@ def endpoints(
         table.add_row(
             ep["method"],
             ep["path"],
+            ep["url"],
             ep.get("summary", ""),
             ", ".join(ep.get("tags", [])),
         )
@@ -201,6 +209,9 @@ def detail(
         typer.echo(f"No {method_upper} endpoint matching '{path}' in {api_name}.", err=True)
         raise typer.Exit(1)
 
+    for ep in matches:
+        ep["url"] = _full_url(api, ep["path"])
+
     if not _use_rich(json_output):
         if len(matches) == 1:
             echo_utf8(_format_json(matches[0], pretty))
@@ -212,6 +223,7 @@ def detail(
     for ep in matches:
         console.print()
         console.print(f"[bold yellow]{ep['method']}[/] [cyan]{ep['path']}[/]")
+        console.print(f"  URL: [dim]{ep['url']}[/]")
         if ep.get("summary"):
             console.print(f"  [bold]{ep['summary']}[/]")
         if ep.get("description"):
@@ -283,6 +295,7 @@ def search(
                     {
                         "method": ep["method"],
                         "path": ep["path"],
+                        "url": _full_url(api, ep["path"]),
                         **({"summary": ep["summary"]} if "summary" in ep else {}),
                     }
                 )
@@ -303,9 +316,10 @@ def search(
         table = Table(title=f"{api_name} ({len(eps)})", show_lines=False)
         table.add_column("Method", style="bold yellow", width=6)
         table.add_column("Path", style="cyan")
+        table.add_column("URL", style="dim")
         table.add_column("Summary")
         for ep in eps:
-            table.add_row(ep["method"], ep["path"], ep.get("summary", ""))
+            table.add_row(ep["method"], ep["path"], ep["url"], ep.get("summary", ""))
         console.print(table)
         console.print()
 
@@ -453,8 +467,11 @@ def params(
     required_count = sum(1 for p in all_params if p.get("required"))
     optional_count = len(all_params) - required_count
 
+    url = _full_url(api, endpoint["path"])
+
     result = {
         "endpoint": f"{endpoint['method']} {endpoint['path']}",
+        "url": url,
         "totalParams": len(all_params),
         "required": required_count,
         "optional": optional_count,
@@ -467,6 +484,7 @@ def params(
 
     console = Console()
     console.print(f"\n[bold yellow]{endpoint['method']}[/] [cyan]{endpoint['path']}[/]")
+    console.print(f"  URL: [dim]{url}[/]")
     console.print(
         f"  {len(all_params)} parameters: "
         f"[bold red]{required_count} required[/], "
