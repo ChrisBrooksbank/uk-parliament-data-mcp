@@ -25,7 +25,6 @@ Add a CLI to the existing `uk-parliament-mcp` package, enabling direct terminal 
 Using [Typer](https://typer.tiangolo.com/) because:
 - Modern, type-hint based (matches existing codebase style)
 - Auto-generates `--help` at every level
-- Shell completion out of the box
 - Recommended by [Python Packaging Guide](https://packaging.python.org/en/latest/guides/creating-command-line-tools/)
 - Lightweight (~100KB with Click dependency)
 
@@ -282,8 +281,7 @@ All 161 tools will be mapped. See `tools/*.py` for complete function signatures.
 8. `cli/procedures.py` - 11 commands
 
 ### Phase 4: Polish
-1. Add shell completion instructions to README
-2. Add CLI usage examples to documentation
+1. Add CLI usage examples to documentation
 3. Add CLI-specific tests
 4. Update CLAUDE.md with CLI info
 
