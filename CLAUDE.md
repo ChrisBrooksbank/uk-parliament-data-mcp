@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-UK Parliament MCP Server (Unofficial) - A community-built Model Context Protocol server that bridges AI assistants with UK Parliament data APIs. Not affiliated with or endorsed by UK Parliament. Built with Python 3.11+, it provides 161 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
+UK Parliament MCP Server (Unofficial) - A community-built Model Context Protocol server that bridges AI assistants with UK Parliament data APIs. Not affiliated with or endorsed by UK Parliament. Built with Python 3.11+, it provides 163 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
 
 ## Installation
 
@@ -18,7 +18,7 @@ uvx uk-parliament-mcp
 
 ## CLI Usage
 
-The package includes a `parliament` CLI tool for terminal access to all 161 Parliament API tools:
+The package includes a `parliament` CLI tool for terminal access to all 163 Parliament API tools:
 
 ```bash
 # Search for an MP
@@ -38,6 +38,12 @@ parliament live commons-now
 
 # Search Hansard debates
 parliament hansard search-debates "NHS" --house 1
+
+# Find your MP by postcode
+parliament my-mp "SW1A 1AA"
+
+# Browse the API catalogue
+parliament api list
 ```
 
 ### Command Structure
@@ -47,17 +53,18 @@ parliament <group> <command> [options]
 ```
 
 **Available command groups:**
-- `composite` - 4 high-level tools combining multiple API calls
-- `members` - 30 tools for MPs, Lords, constituencies, parties
-- `bills` - 21 tools for legislation, amendments, stages
-- `votes` - 10 tools for Commons and Lords divisions
-- `committees` - 26 tools for committee info, evidence
-- `hansard` - 20 tools for parliamentary record
-- `questions` - 11 tools for oral, written questions, and EDMs
-- `interests` - 3 tools for register of interests
-- `live` - 10 tools for live activity and calendar
-- `legislation` - 11 tools for SIs and treaties
-- `procedures` - 11 tools for Erskine May procedure rules
+- `api` - 6 commands for browsing the Parliament API catalogue
+- `composite` - 5 high-level tools combining multiple API calls
+- `members` - 29 commands for MPs, Lords, constituencies, parties
+- `bills` - 21 commands for legislation, amendments, stages
+- `votes` - 5 commands for Commons and Lords divisions
+- `committees` - 26 commands for committee info, evidence
+- `hansard` - 20 commands for parliamentary record
+- `questions` - 11 commands for oral, written questions, and EDMs
+- `interests` - 3 commands for register of interests
+- `live` - 10 commands for live activity and calendar
+- `legislation` - 10 commands for SIs and treaties
+- `procedures` - 11 commands for Erskine May procedure rules
 - `digest` - Daily/weekly parliamentary summary (aggregates 9 APIs)
 - `watch` - Live Parliament dashboard with auto-refresh
 - `guide` - Help and guidance commands
@@ -65,8 +72,20 @@ parliament <group> <command> [options]
 ### Output Modes
 
 ```bash
-# Default: compact JSON (pipeable)
-parliament members search "Starmer" | jq '.data[0].id'
+# Default: auto (rich table in terminal, JSON when piped)
+parliament members search "Starmer"
+
+# Explicit format selection
+parliament members search "Starmer" --format table
+parliament members search "Starmer" --format markdown
+parliament members search "Starmer" --format csv
+parliament members search "Starmer" --format json
+
+# Select specific fields (case-insensitive)
+parliament members search "Starmer" --fields "id,nameDisplayAs,latestParty.name"
+
+# Raw JSON with full {url, data} wrapper
+parliament members search "Starmer" --raw
 
 # Pretty-printed JSON
 parliament members search "Starmer" --pretty
@@ -76,6 +95,9 @@ parliament members search "Starmer" --data-only | jq '.items[0]'
 ```
 
 **Global flags:**
+- `--format` / `-f` - Output format: `json`, `table`, `markdown`, `csv`, `auto` (default: `auto`)
+- `--fields` - Comma-separated field paths for column selection (case-insensitive)
+- `--raw` - Output full wrapper JSON (url + data), disabling auto-formatting
 - `--pretty` / `-p` - Pretty-print JSON output
 - `--data-only` / `-d` - Return only the data field, not the {url, data} wrapper
 
@@ -264,7 +286,7 @@ AI Assistant ──(MCP/stdio)──> uk_parliament_mcp ──(HTTP)──> UK P
   - URL building with parameter filtering (`build_url`)
   - Consistent response format: `{url, data}` or `{url, error, statusCode}`
 
-- **`tools/*.py`**: 16 tool modules (161 total tools) each targeting a specific Parliament API:
+- **`tools/*.py`**: 16 tool modules (163 total tools) each targeting a specific Parliament API:
   | Module | API Domain | Purpose |
   |--------|------------|---------|
   | composite.py | Multiple APIs | High-level tools combining multiple API calls |
@@ -395,9 +417,14 @@ Get comprehensive committee summary. Combines committee search + details + evide
 - Returns: Committee info, witness testimonies, written submissions, reports
 - Example: `get_committee_summary("Treasury")`
 
+### `get_my_mp(postcode, topic)`
+Find MP by UK postcode. Combines constituency lookup + member search + biography + interests + votes.
+- Returns: Constituency, MP profile, biography, registered interests, election result, recent votes
+- Example: `get_my_mp("SW1A 1AA", "climate")`
+
 ## Agent Guidance Tools
 
-The server also includes guidance **tools** to help AI assistants navigate the 161 available tools:
+The server also includes guidance **tools** to help AI assistants navigate the 163 available tools:
 
 ### `order_order()`
 Start a UK Parliament research session. Say "Order Order" (like the Speaker) to activate. Returns:
@@ -407,7 +434,7 @@ Start a UK Parliament research session. Say "Order Order" (like the Speaker) to 
 
 ### `parliament_guide(topic)`
 Get detailed guidance for a specific domain. Available topics:
-- `composite` - 4 high-level tools combining multiple API calls
+- `composite` - 5 high-level tools combining multiple API calls
 - `members` - 30 tools for MPs, Lords, constituencies, parties
 - `bills` - 21 tools for legislation, amendments, stages
 - `votes` - 10 tools for Commons and Lords divisions
@@ -418,7 +445,7 @@ Get detailed guidance for a specific domain. Available topics:
 - `live` - Current activity, calendar (now + whatson)
 - `legislation` - SIs, treaties
 - `procedures` - 13 tools for Erskine May, bill types, stage definitions
-- `all` - Condensed reference of all 161 tools
+- `all` - Condensed reference of all 163 tools
 - `conventions` - Date formats, house IDs, pagination
 - `workflows` - Overview of common research patterns
 
@@ -430,6 +457,10 @@ Get step-by-step workflow for a research task. Matches queries to predefined pat
 - "Does MP have conflicts of interest?" → Interests workflow
 - "What's happening now?" → Live activity workflow
 - And more (backgrounds, Hansard, elections, EDMs, treaties)
+
+### `get_cli_reference(group, search)`
+Get CLI command reference. Returns all command groups, or details for a specific group, or search results matching a keyword.
+- Example: `get_cli_reference()`, `get_cli_reference(group="members")`, `get_cli_reference(search="vote")`
 
 Example usage:
 ```
@@ -470,24 +501,29 @@ src/uk_parliament_mcp/
 │   ├── __init__.py
 │   ├── main.py         # CLI entry point and app assembly
 │   ├── utils.py        # Output formatting, async runner
-│   ├── composite.py    # Composite commands (4 commands)
-│   ├── members.py      # Member commands (30 commands)
+│   ├── formatters.py   # Output format handling (table, markdown, csv)
+│   ├── pagination.py   # Auto-pagination for CLI commands
+│   ├── renderers.py    # Rich terminal rendering for composite results
+│   ├── api.py          # API explorer commands (6 commands)
+│   ├── api_metadata.json # API catalogue metadata
+│   ├── composite.py    # Composite commands (5 commands)
+│   ├── members.py      # Member commands (29 commands)
 │   ├── bills.py        # Bill commands (21 commands)
-│   ├── votes.py        # Votes commands (10 commands)
+│   ├── votes.py        # Votes commands (5 commands)
 │   ├── committees.py   # Committee commands (26 commands)
 │   ├── hansard.py      # Hansard commands (20 commands)
-│   ├── questions.py    # Questions commands (12 commands)
+│   ├── questions.py    # Questions commands (11 commands)
 │   ├── interests.py    # Interests commands (3 commands)
 │   ├── live.py         # Live/calendar commands (10 commands)
-│   ├── legislation.py  # SI/treaty commands (11 commands)
+│   ├── legislation.py  # SI/treaty commands (10 commands)
 │   ├── procedures.py   # Erskine May commands (11 commands)
 │   ├── digest.py       # Daily/weekly digest (aggregates 9 APIs)
 │   ├── watch.py        # Live dashboard with auto-refresh
-│   └── guide.py        # Help/guidance commands (3 commands)
+│   └── guide.py        # Help/guidance commands (4 commands)
 └── tools/              # MCP tool modules
     ├── __init__.py
-    ├── core.py         # Session management & guidance (3 tools)
-    ├── composite.py    # High-level composite tools (4 tools)
+    ├── core.py         # Session management & guidance (4 tools)
+    ├── composite.py    # High-level composite tools (5 tools)
     ├── members.py      # Member tools (30 tools)
     ├── bills.py        # Bills tools (21 tools)
     ├── committees.py   # Committees tools (26 tools)

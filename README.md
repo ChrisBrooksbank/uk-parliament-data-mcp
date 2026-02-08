@@ -13,7 +13,7 @@ An MCP (Model Context Protocol) server that gives AI assistants access to UK Par
 
 ## MCP Server for AI Assistants
 
-Connect your AI assistant to 161 UK Parliament API tools for comprehensive parliamentary research.
+Connect your AI assistant to 163 UK Parliament API tools for comprehensive parliamentary research.
 
 ## Table of Contents
 
@@ -31,7 +31,11 @@ Connect your AI assistant to 161 UK Parliament API tools for comprehensive parli
   - [Quick Start](#quick-start)
   - [Common Commands](#common-commands)
   - [Daily/Weekly Digest](#dailyweekly-digest)
-  - [Output Modes](#output-modes)
+  - [My MP Lookup](#my-mp-lookup)
+  - [API Explorer](#api-explorer)
+  - [CLI Reference](#cli-reference)
+  - [Output Formats](#output-formats)
+  - [URL Transparency](#url-transparency)
   - [Help System](#help-system)
 - [Alternative Installation Methods](#alternative-installation-methods)
 - [Final Thoughts](#final-thoughts)
@@ -44,11 +48,11 @@ Connect your AI assistant to 161 UK Parliament API tools for comprehensive parli
 - Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
 - Or say **"Order Order"** (like the Speaker) to initialize the session
 
-This gives your AI assistant the context it needs to effectively use the 161 available tools.
+This gives your AI assistant the context it needs to effectively use the 163 available tools.
 
 ## Starting a Session
 
-Say **"Order Order"** to initialize your parliamentary research session. This gives Claude the context needed to effectively use the 161 available tools.
+Say **"Order Order"** to initialize your parliamentary research session. This gives Claude the context needed to effectively use the 163 available tools.
 
 If that doesn't work, copy and paste this system prompt:
 
@@ -365,7 +369,7 @@ Show me the JSON returned from the last MCP call.
 
 ## CLI Usage
 
-The package also includes a `parliament` CLI for terminal access to all 161 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
+The package also includes a `parliament` CLI for terminal access to all 163 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
 
 ### Quick Start
 
@@ -391,7 +395,7 @@ parliament live commons-now --pretty
 
 ### Common Commands
 
-The CLI organizes 161 tools into 14 command groups:
+The CLI organizes 163 tools into 15 command groups:
 
 ```bash
 # MP and Lords research
@@ -439,11 +443,19 @@ parliament digest --house 1                # Commons only
 
 # Live dashboard with auto-refresh
 parliament watch
+
+# API explorer
+parliament api list                        # List all Parliament APIs
+parliament api search "bill"               # Search across APIs
 ```
 
 **High-level composite tools** (combine multiple API calls):
 
 ```bash
+# Find your MP by postcode
+parliament my-mp "SW1A 1AA"
+parliament my-mp "N1 9GU" --votes climate
+
 # Get everything about an MP in one call
 parliament composite mp-profile "Keir Starmer" --pretty
 
@@ -486,33 +498,116 @@ The rich output includes:
 - **Committee meetings** with date, time, and topic, linked to committees.parliament.uk
 - **Written statements**, **oral questions**, **EDMs**, and **written questions** summaries
 
-### Output Modes
+### My MP Lookup
 
-The CLI outputs JSON by default, making it easy to pipe to other tools:
+Find your MP by postcode with a single command:
 
 ```bash
-# Default: compact JSON (for piping)
-parliament members search "Starmer" | jq '.data[0].id'
+# Basic lookup — constituency, MP bio, interests, election result, recent votes
+parliament my-mp "SW1A 1AA"
+
+# Filter votes by topic
+parliament my-mp "N1 9GU" --votes climate
+
+# JSON output for scripting
+parliament my-mp "SW1A 1AA" --format json | jq '.basic_info'
+
+# Pretty-printed
+parliament my-mp "SW1A 1AA" --pretty
+```
+
+### API Explorer
+
+Browse and search the Parliament API catalogue interactively:
+
+```bash
+# List all Parliament APIs
+parliament api list
+
+# Show endpoints for a specific API
+parliament api endpoints members
+
+# Get full details for an API
+parliament api detail members
+
+# Search across all APIs
+parliament api search "bill"
+
+# Show OpenAPI schema for an API
+parliament api schema members
+
+# Show parameters for a specific endpoint
+parliament api params members "/api/Members/Search"
+```
+
+### CLI Reference
+
+View the full command reference without leaving the terminal:
+
+```bash
+# Overview of all command groups
+parliament reference
+
+# Detailed view of a specific group
+parliament reference members
+
+# Search for commands by keyword
+parliament reference --search vote
+
+# Export as JSON
+parliament reference --json
+```
+
+### Output Formats
+
+The CLI supports multiple output formats via the `--format` flag:
+
+```bash
+# Auto-detect: rich table in terminal, JSON when piped (default)
+parliament members search "Starmer"
+
+# Explicit formats
+parliament members search "Starmer" --format table
+parliament members search "Starmer" --format markdown
+parliament members search "Starmer" --format csv
+parliament members search "Starmer" --format json
+
+# Select specific fields (case-insensitive matching)
+parliament members search "Starmer" --fields "id,nameDisplayAs,latestParty.name"
+
+# Raw JSON with full {url, data} wrapper
+parliament members search "Starmer" --raw
 
 # Pretty-printed JSON
 parliament members search "Starmer" --pretty
 
 # Just the data (strips url wrapper)
 parliament members search "Starmer" --data-only | jq '.items[0]'
-
-# Count results
-parliament bills search "education" | jq '.items | length'
-
-# Filter and extract
-parliament votes search "climate" --house 1 | jq '.data[] | select(.ayes > 300)'
-
-# Save to file
-parliament composite mp-profile "Sunak" --pretty > profile.json
 ```
 
+When using `--fields`, the CLI shows available fields on stderr if none match, so you can discover the correct field paths.
+
 **Global flags:**
+- `--format` / `-f` - Output format: `json`, `table`, `markdown`, `csv`, `auto` (default: `auto`)
+- `--fields` - Comma-separated field paths for column selection (case-insensitive)
+- `--raw` - Output full wrapper JSON (url + data), disabling auto-formatting
 - `--pretty` / `-p` - Pretty-print JSON output
 - `--data-only` / `-d` - Return only the data field, not the {url, data} wrapper
+
+### URL Transparency
+
+Every API request logs the source URL to stderr, so you can always see exactly which Parliament API endpoint was called:
+
+```bash
+# URL appears on stderr, data on stdout
+parliament members search "Starmer"
+# stderr: GET https://members-api.parliament.uk/api/Members/Search?Name=Starmer
+
+# Capture just the data (URLs go to stderr, not stdout)
+parliament members search "Starmer" > results.json
+```
+
+This makes it easy to verify data sources, debug issues, or construct your own API calls.
 
 ### Help System
 
@@ -525,6 +620,15 @@ parliament members --help
 
 # Show command details
 parliament members search --help
+
+# Full command reference (all groups and commands)
+parliament reference
+parliament reference members
+parliament reference --search vote
+
+# Browse the API catalogue
+parliament api list
+parliament api search "member"
 
 # Get tool reference
 parliament guide tools
