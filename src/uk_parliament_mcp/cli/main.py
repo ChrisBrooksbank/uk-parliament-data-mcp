@@ -59,7 +59,9 @@ app.command("completion")(completion)
 # Top-level reference command for easy discoverability
 @app.command("reference")
 def reference(
-    group: str | None = typer.Argument(None, help="Group to show details for", autocompletion=complete_command_groups),
+    group: str | None = typer.Argument(
+        None, help="Group to show details for", autocompletion=complete_command_groups
+    ),
     search: str | None = typer.Option(None, "--search", "-s", help="Search commands by keyword"),
     output_format: OutputFormat = typer.Option(
         OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"

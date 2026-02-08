@@ -315,7 +315,9 @@ def tools(
 
 @app.command("topic")
 def topic(
-    domain: str = typer.Argument(..., help="Domain to get guidance for", autocompletion=complete_guide_topics),
+    domain: str = typer.Argument(
+        ..., help="Domain to get guidance for", autocompletion=complete_guide_topics
+    ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print output"),
 ) -> None:
     """
@@ -354,7 +356,9 @@ def workflow(
 
 @app.command("reference")
 def reference(
-    group: str | None = typer.Argument(None, help="Group to show details for", autocompletion=complete_command_groups),
+    group: str | None = typer.Argument(
+        None, help="Group to show details for", autocompletion=complete_command_groups
+    ),
     search: str | None = typer.Option(None, "--search", "-s", help="Search commands by keyword"),
     output_format: OutputFormat = typer.Option(
         OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"

@@ -222,7 +222,9 @@ def _format_hint_text(hint: FieldsHint) -> str:
     if hint.available:
         lines.append(f"  Available: {', '.join(hint.available)}")
     example_fields = hint.showing[:2] + hint.available[:1] if hint.available else hint.showing[:3]
-    lines.append(f'  Tip: use --fields to select columns, e.g. --fields "{",".join(example_fields)}"')
+    lines.append(
+        f'  Tip: use --fields to select columns, e.g. --fields "{",".join(example_fields)}"'
+    )
     return "\n".join(lines)
 
 

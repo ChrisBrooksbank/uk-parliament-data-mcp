@@ -76,9 +76,7 @@ def complete_guide_topics(incomplete: str) -> list[tuple[str, str]]:
 
 def complete_command_groups(incomplete: str) -> list[tuple[str, str]]:
     """Return command group names matching the incomplete prefix."""
-    return [
-        (name, desc) for name, desc in _COMMAND_GROUPS if name.startswith(incomplete.lower())
-    ]
+    return [(name, desc) for name, desc in _COMMAND_GROUPS if name.startswith(incomplete.lower())]
 
 
 def complete_api_names(incomplete: str) -> list[tuple[str, str]]:
@@ -155,9 +153,13 @@ def _detect_shell() -> str:
 
 
 def completion(
-    install: bool = typer.Option(False, "--install", "-i", help="Install completion for detected shell"),
+    install: bool = typer.Option(
+        False, "--install", "-i", help="Install completion for detected shell"
+    ),
     show: bool = typer.Option(False, "--show", "-s", help="Print the completion script"),
-    shell: str | None = typer.Option(None, "--shell", help="Override shell detection (bash, zsh, fish, powershell)"),
+    shell: str | None = typer.Option(
+        None, "--shell", help="Override shell detection (bash, zsh, fish, powershell)"
+    ),
 ) -> None:
     """Set up shell tab completion for the parliament CLI.
 
@@ -177,8 +179,7 @@ def completion(
 
     if detected_lower not in _SHELL_INSTRUCTIONS:
         typer.echo(
-            f"Unsupported shell: {detected}\n"
-            f"Supported shells: {', '.join(_SHELL_INSTRUCTIONS)}",
+            f"Unsupported shell: {detected}\nSupported shells: {', '.join(_SHELL_INSTRUCTIONS)}",
             err=True,
         )
         raise typer.Exit(1)
@@ -187,7 +188,13 @@ def completion(
         # Delegate to Typer's built-in --show-completion
         try:
             result = subprocess.run(
-                [sys.executable, "-m", "uk_parliament_mcp.cli", "--show-completion", detected_lower],
+                [
+                    sys.executable,
+                    "-m",
+                    "uk_parliament_mcp.cli",
+                    "--show-completion",
+                    detected_lower,
+                ],
                 capture_output=True,
                 text=True,
             )
@@ -204,7 +211,13 @@ def completion(
         typer.echo(f"Installing completion for {detected_lower}...")
         try:
             result = subprocess.run(
-                [sys.executable, "-m", "uk_parliament_mcp.cli", "--install-completion", detected_lower],
+                [
+                    sys.executable,
+                    "-m",
+                    "uk_parliament_mcp.cli",
+                    "--install-completion",
+                    detected_lower,
+                ],
                 capture_output=True,
                 text=True,
             )
