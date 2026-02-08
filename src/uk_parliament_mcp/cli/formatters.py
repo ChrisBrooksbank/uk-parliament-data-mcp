@@ -461,7 +461,7 @@ class CLIFormatter:
 
         # Render to string
         string_io = StringIO()
-        console = Console(file=string_io, force_terminal=False, width=120)
+        console = Console(file=string_io, force_terminal=True, width=120)
         console.print(table)
         return string_io.getvalue().rstrip()
 
