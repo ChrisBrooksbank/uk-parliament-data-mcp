@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import json
 import re
-import sys
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -17,7 +16,9 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import echo_utf8
+from uk_parliament_mcp.cli.utils import should_render_rich as _should_render_rich
 
 app = typer.Typer(
     name="api",
@@ -67,26 +68,18 @@ def _full_url(api: dict[str, Any], path: str) -> str:
     return api["baseUrl"].rstrip("/") + path
 
 
-def _is_tty() -> bool:
-    """Check if stdout is an interactive terminal."""
-    return sys.stdout.isatty()
-
-
-def _use_rich(json_flag: bool) -> bool:
-    """Determine whether to use rich rendering."""
-    return not json_flag and _is_tty()
-
-
 @app.command("list")
 def list_apis(
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output raw JSON"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
 ) -> None:
     """List all 14 Parliament APIs with endpoint and schema counts.
 
     Examples:
       parliament api list
-      parliament api list --json
+      parliament api list --format json
     """
     meta = _load_metadata()
     apis = [
@@ -101,7 +94,7 @@ def list_apis(
         for api in meta["apis"]
     ]
 
-    if not _use_rich(json_output):
+    if not _should_render_rich(output_format, raw=False):
         echo_utf8(_format_json(apis, pretty))
         return
 
@@ -128,7 +121,9 @@ def list_apis(
 def endpoints(
     api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
     tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by tag"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output raw JSON"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
 ) -> None:
     """List all endpoints for an API.
@@ -158,7 +153,7 @@ def endpoints(
         for e in eps
     ]
 
-    if not _use_rich(json_output):
+    if not _should_render_rich(output_format, raw=False):
         echo_utf8(_format_json(result, pretty))
         return
 
@@ -186,7 +181,9 @@ def detail(
     api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
     path: str = typer.Argument(..., help="Endpoint path (supports partial matching)"),
     method: str = typer.Option("GET", "--method", "-m", help="HTTP method"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output raw JSON"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
 ) -> None:
     """Show full details for a specific endpoint.
@@ -214,7 +211,7 @@ def detail(
     for ep in matches:
         ep["url"] = _full_url(api, ep["path"])
 
-    if not _use_rich(json_output):
+    if not _should_render_rich(output_format, raw=False):
         if len(matches) == 1:
             echo_utf8(_format_json(matches[0], pretty))
         else:
@@ -263,7 +260,9 @@ def detail(
 @app.command("search")
 def search(
     term: str = typer.Argument(..., help="Search term"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output raw JSON"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
 ) -> None:
     """Search all APIs for endpoints matching a term.
@@ -304,7 +303,7 @@ def search(
         if matches:
             results[api["name"]] = matches
 
-    if not _use_rich(json_output):
+    if not _should_render_rich(output_format, raw=False):
         echo_utf8(_format_json(results, pretty))
         return
 
@@ -330,7 +329,9 @@ def search(
 def schema(
     api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
     schema_name: str | None = typer.Argument(None, help="Schema name (omit to list all)"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output raw JSON"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
 ) -> None:
     """Show schema definitions for an API.
@@ -361,7 +362,7 @@ def schema(
             for s in schemas
         ]
 
-        if not _use_rich(json_output):
+        if not _should_render_rich(output_format, raw=False):
             echo_utf8(_format_json(result, pretty))
             return
 
@@ -389,7 +390,7 @@ def schema(
         typer.echo(f"Schema '{schema_name}' not found in {api_name}.", err=True)
         raise typer.Exit(1)
 
-    if not _use_rich(json_output):
+    if not _should_render_rich(output_format, raw=False):
         echo_utf8(_format_json(match, pretty))
         return
 
@@ -431,7 +432,9 @@ def params(
     api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
     path: str = typer.Argument(..., help="Endpoint path (supports partial matching)"),
     method: str = typer.Option("GET", "--method", "-m", help="HTTP method"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output raw JSON"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
 ) -> None:
     """Quick parameter reference for an endpoint.
@@ -480,7 +483,7 @@ def params(
         "byLocation": grouped,
     }
 
-    if not _use_rich(json_output):
+    if not _should_render_rich(output_format, raw=False):
         echo_utf8(_format_json(result, pretty))
         return
 
@@ -619,7 +622,9 @@ def explore(
     call: bool = typer.Option(
         False, "--call", "-c", help="Also call the URL and show the response"
     ),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output raw JSON"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
     pretty: bool = typer.Option(
         False, "--pretty", "-p", help="Pretty-print JSON output"
     ),
@@ -696,7 +701,7 @@ def explore(
         except Exception as exc:
             result["response"] = {"error": str(exc)}
 
-    if not _use_rich(json_output):
+    if not _should_render_rich(output_format, raw=False):
         echo_utf8(_format_json(result, pretty))
         return
 

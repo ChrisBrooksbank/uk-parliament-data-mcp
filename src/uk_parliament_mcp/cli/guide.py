@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -12,6 +13,7 @@ import typer.main
 from rich.console import Console
 from rich.panel import Panel
 
+from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import echo_utf8, run_async
 from uk_parliament_mcp.tools.core import (
     GUIDANCE_CONTENT,
@@ -353,7 +355,9 @@ def workflow(
 def reference(
     group: str | None = typer.Argument(None, help="Group to show details for"),
     search: str | None = typer.Option(None, "--search", "-s", help="Search commands by keyword"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
 ) -> None:
     """
     Show comprehensive CLI command reference.
@@ -366,12 +370,14 @@ def reference(
       parliament guide reference              # Overview of all groups
       parliament guide reference members      # Detailed view of members commands
       parliament guide reference --search vote # Search for vote-related commands
-      parliament guide reference --json       # Export as JSON
+      parliament guide reference --format json # Export as JSON
     """
     console = Console()
     groups = _get_all_commands()
 
-    if json_output:
+    if output_format == OutputFormat.JSON or (
+        output_format == OutputFormat.AUTO and not sys.stdout.isatty()
+    ):
         echo_utf8(_format_json_output(groups))
         return
 

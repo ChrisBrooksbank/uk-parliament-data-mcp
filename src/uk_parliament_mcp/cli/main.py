@@ -57,7 +57,9 @@ app.add_typer(digest.app, name="digest")
 def reference(
     group: str | None = typer.Argument(None, help="Group to show details for"),
     search: str | None = typer.Option(None, "--search", "-s", help="Search commands by keyword"),
-    json_output: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
+    output_format: OutputFormat = typer.Option(
+        OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+    ),
 ) -> None:
     """
     Show comprehensive CLI command reference.
@@ -70,7 +72,7 @@ def reference(
       parliament reference              # Overview of all groups
       parliament reference members      # Detailed view of members commands
       parliament reference --search vote # Search for vote-related commands
-      parliament reference --json       # Export as JSON
+      parliament reference --format json # Export as JSON
     """
     # Import here to avoid circular imports at module load time
     from uk_parliament_mcp.cli.guide import (
@@ -84,7 +86,9 @@ def reference(
     console = Console()
     groups = _get_all_commands()
 
-    if json_output:
+    if output_format == OutputFormat.JSON or (
+        output_format == OutputFormat.AUTO and not sys.stdout.isatty()
+    ):
         echo_utf8(_format_json_output(groups))
         return
 
