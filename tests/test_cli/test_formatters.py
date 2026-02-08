@@ -52,6 +52,23 @@ class TestGetNestedValue:
         obj = {"name": "Test"}
         assert _get_nested_value(obj, "name.nested") is None
 
+    def test_case_insensitive_fallback(self) -> None:
+        """Test case-insensitive fallback when exact key not found."""
+        obj = {"name": "Test", "id": 123}
+        assert _get_nested_value(obj, "Name") == "Test"
+        assert _get_nested_value(obj, "ID") == 123
+
+    def test_case_insensitive_nested(self) -> None:
+        """Test case-insensitive fallback on nested keys."""
+        obj = {"Party": {"Name": "Labour"}}
+        assert _get_nested_value(obj, "party.name") == "Labour"
+
+    def test_exact_match_preferred_over_case_insensitive(self) -> None:
+        """Test exact match is preferred when both exist."""
+        obj = {"Name": "exact", "name": "lower"}
+        assert _get_nested_value(obj, "Name") == "exact"
+        assert _get_nested_value(obj, "name") == "lower"
+
 
 class TestExtractItems:
     """Tests for _extract_items helper."""
@@ -571,17 +588,15 @@ class TestFormatHintText:
         assert "Available: extra, score" in text
         assert "Tip: use --fields" in text
 
-    def test_truncation_at_15(self) -> None:
-        """Test available fields are truncated at 15."""
+    def test_all_available_fields_shown(self) -> None:
+        """Test all available fields are shown without truncation."""
         available = [f"field{i}" for i in range(20)]
         hint = FieldsHint(showing=["id"], available=available)
         text = _format_hint_text(hint)
-        assert "(+5 more)" in text
-        # First 15 should be present
+        # All fields should be present
         assert "field0" in text
-        assert "field14" in text
-        # 16th should not be listed directly
-        assert "field15" not in text.split("(+5 more)")[0]
+        assert "field19" in text
+        assert "(+" not in text
 
     def test_no_available_fields(self) -> None:
         """Test hint when no extra fields are available."""

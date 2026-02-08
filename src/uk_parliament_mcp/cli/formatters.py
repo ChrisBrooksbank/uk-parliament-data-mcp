@@ -67,12 +67,30 @@ COMMITTEE_COLUMNS = [
 
 
 def _get_nested_value(obj: dict[str, Any], path: str) -> Any:
-    """Get a value from a nested dict using dot notation."""
+    """Get a value from a nested dict using dot notation.
+
+    Tries exact key match first, then falls back to case-insensitive match
+    so that --fields "Name" resolves to a "name" key.
+    """
     keys = path.split(".")
     value: Any = obj
     for key in keys:
         if isinstance(value, dict):
-            value = value.get(key)
+            # Exact match first
+            if key in value:
+                value = value[key]
+            else:
+                # Case-insensitive fallback
+                key_lower = key.lower()
+                matched = None
+                for k in value:
+                    if k.lower() == key_lower:
+                        matched = k
+                        break
+                if matched is not None:
+                    value = value[matched]
+                else:
+                    return None
         else:
             return None
     return value
@@ -193,10 +211,7 @@ def _format_hint_text(hint: FieldsHint) -> str:
     lines: list[str] = []
     lines.append(f"  Showing: {', '.join(hint.showing)}")
     if hint.available:
-        max_show = 15
-        avail = hint.available[:max_show]
-        suffix = f", (+{len(hint.available) - max_show} more)" if len(hint.available) > max_show else ""
-        lines.append(f"  Available: {', '.join(avail)}{suffix}")
+        lines.append(f"  Available: {', '.join(hint.available)}")
     example_fields = hint.showing[:2] + hint.available[:1] if hint.available else hint.showing[:3]
     lines.append(f'  Tip: use --fields to select columns, e.g. --fields "{",".join(example_fields)}"')
     return "\n".join(lines)
