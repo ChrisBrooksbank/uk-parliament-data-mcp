@@ -44,6 +44,9 @@ parliament my-mp "SW1A 1AA"
 
 # Browse the API catalogue
 parliament api list
+
+# Interactively try an API endpoint
+parliament api try
 ```
 
 ### Command Structure
@@ -53,7 +56,7 @@ parliament <group> <command> [options]
 ```
 
 **Available command groups:**
-- `api` - 6 commands for browsing the Parliament API catalogue
+- `api` - 7 commands for browsing and trying the Parliament API catalogue
 - `composite` - 5 high-level tools combining multiple API calls
 - `members` - 29 commands for MPs, Lords, constituencies, parties
 - `bills` - 21 commands for legislation, amendments, stages
@@ -207,7 +210,33 @@ parliament guide topic members
 
 # Get research workflow
 parliament guide workflow "How did my MP vote on X?"
+
+# Interactive API explorer
+parliament api try --help
 ```
+
+### Interactive Try It Mode
+
+Browse APIs, select endpoints, fill in parameters, call the API, and view results interactively:
+
+```bash
+# Full interactive flow — select API, endpoint, fill params
+parliament api try
+
+# Jump to endpoint selection for a specific API
+parliament api try members
+
+# Jump straight to parameter input for a specific endpoint
+parliament api try members "Members/Search"
+parliament api try bills "Bills/{billId}"
+```
+
+After each API call, an action menu lets you:
+- **[T]ry again** — re-prompt all parameters for the same endpoint
+- **[M]odify params** — edit previous values (shown as defaults)
+- **[R]elated endpoints** — browse related endpoints sharing the same tags
+- **[N]ew endpoint** — pick a different endpoint from the same API
+- **[Q]uit** — exit
 
 ### Piping and Scripting
 
@@ -504,7 +533,8 @@ src/uk_parliament_mcp/
 │   ├── formatters.py   # Output format handling (table, markdown, csv)
 │   ├── pagination.py   # Auto-pagination for CLI commands
 │   ├── renderers.py    # Rich terminal rendering for composite results
-│   ├── api.py          # API explorer commands (6 commands)
+│   ├── api.py          # API explorer commands (7 commands)
+│   ├── try_it.py       # Interactive "Try It" mode for API endpoints
 │   ├── api_metadata.json # API catalogue metadata
 │   ├── composite.py    # Composite commands (5 commands)
 │   ├── members.py      # Member commands (29 commands)
