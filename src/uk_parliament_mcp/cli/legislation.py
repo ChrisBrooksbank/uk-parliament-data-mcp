@@ -128,46 +128,20 @@ def search_treaties(
     search_text: str = typer.Argument(
         ..., help="Search term (e.g. 'trade', 'EU', 'climate', 'Brexit')"
     ),
-    pretty: PrettyOpt = False,
-    data_only: DataOnlyOpt = True,
-    output_format: FormatOpt = OutputFormat.AUTO,
-    raw: RawOpt = False,
-    fields: FieldsOpt = None,
-) -> None:
-    """
-    Search UK international treaties and agreements under parliamentary scrutiny.
-
-    Use for researching international relations, trade agreements, or diplomatic
-    commitments. Returns treaty details including titles, countries involved,
-    and parliamentary scrutiny status.
-    """
-    url = build_url(f"{TREATIES_API_BASE}/Treaty", {"SearchText": search_text})
-    output_result(url, pretty, data_only, output_format, fields, raw)
-
-
-@app.command("search-treaties-advanced")
-def search_treaties_advanced(
-    search_text: str | None = typer.Option(
-        None, "--search", help="Search term for treaty titles/content"
-    ),
-    government_organisation_id: int | None = typer.Option(
-        None, "--org-id", help="Filter by laying department ID"
-    ),
+    org_id: int | None = typer.Option(None, "--org-id", help="Filter by laying department ID"),
     series: str | None = typer.Option(
         None,
         "--series",
         help="Treaty series type (CountrySeriesMembership, EuropeanUnionSeriesMembership, MiscellaneousSeriesMembership)",
     ),
-    parliamentary_process: str | None = typer.Option(
-        None, "--process", help="NotConcluded or Concluded"
-    ),
+    process: str | None = typer.Option(None, "--process", help="NotConcluded or Concluded"),
     debate_scheduled: bool | None = typer.Option(
         None, "--debate-scheduled", help="Filter to treaties with scheduled debate"
     ),
     motions_tabled: bool | None = typer.Option(
         None, "--motions-tabled", help="Filter to treaties with tabled motions"
     ),
-    committee_raised_concerns: bool | None = typer.Option(
+    concerns: bool | None = typer.Option(
         None, "--concerns", help="Filter to treaties with committee concerns"
     ),
     house: str | None = typer.Option(None, "--house", help="Commons or Lords"),
@@ -180,21 +154,22 @@ def search_treaties_advanced(
     fields: FieldsOpt = None,
 ) -> None:
     """
-    Advanced treaty search with full filtering.
+    Search UK international treaties and agreements under parliamentary scrutiny.
 
-    Use to find treaties by department, scrutiny status, or with parliamentary
-    concerns. Returns treaties matching all specified filters.
+    Use for researching international relations, trade agreements, or diplomatic
+    commitments. Returns treaty details including titles, countries involved,
+    and parliamentary scrutiny status. Supports pagination and advanced filtering.
     """
     url = build_url(
         f"{TREATIES_API_BASE}/Treaty",
         {
             "SearchText": search_text,
-            "GovernmentOrganisationId": government_organisation_id,
+            "GovernmentOrganisationId": org_id,
             "Series": series,
-            "ParliamentaryProcess": parliamentary_process,
+            "ParliamentaryProcess": process,
             "DebateScheduled": debate_scheduled,
             "MotionsTabledAboutATreaty": motions_tabled,
-            "CommitteeRaisedConcerns": committee_raised_concerns,
+            "CommitteeRaisedConcerns": concerns,
             "House": house,
             "Skip": skip,
             "Take": take,

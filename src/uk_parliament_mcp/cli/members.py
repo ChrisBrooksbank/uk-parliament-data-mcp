@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from urllib.parse import quote
-
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
@@ -26,6 +24,49 @@ app = typer.Typer(help="MP and Lords member tools", no_args_is_help=True)
 @app.command("search")
 def search_member(
     name: str = typer.Argument(..., help="Full or partial name to search"),
+    location: str | None = typer.Option(None, "--location", help="Location or constituency name"),
+    post_title: str | None = typer.Option(
+        None, "--post-title", help="Post title (e.g. 'Minister')"
+    ),
+    party_id: int | None = typer.Option(None, "--party-id", help="Party ID"),
+    house: int | None = typer.Option(None, "--house", help="House number (1=Commons, 2=Lords)"),
+    constituency_id: int | None = typer.Option(None, "--constituency-id", help="Constituency ID"),
+    name_starts_with: str | None = typer.Option(
+        None, "--name-starts-with", help="Name starting letter(s)"
+    ),
+    gender: str | None = typer.Option(None, "--gender", help="Gender filter (M or F)"),
+    membership_started_since: str | None = typer.Option(
+        None, "--membership-started-since", help="Membership started since (YYYY-MM-DD)"
+    ),
+    membership_ended_since: str | None = typer.Option(
+        None, "--membership-ended-since", help="Membership ended since (YYYY-MM-DD)"
+    ),
+    membership_end_reason_ids: str | None = typer.Option(
+        None, "--end-reason-ids", help="Comma-separated reason IDs for leaving"
+    ),
+    was_member_on_or_after: str | None = typer.Option(
+        None, "--was-member-on-or-after", help="Was member on or after (YYYY-MM-DD)"
+    ),
+    was_member_on_or_before: str | None = typer.Option(
+        None, "--was-member-on-or-before", help="Was member on or before (YYYY-MM-DD)"
+    ),
+    was_member_of_house: int | None = typer.Option(
+        None, "--was-member-of-house", help="Was member of house (1=Commons, 2=Lords)"
+    ),
+    is_eligible: bool | None = typer.Option(
+        None, "--is-eligible", help="Filter by eligibility status"
+    ),
+    is_current_member: bool | None = typer.Option(
+        None, "--is-current-member", help="Filter by current membership"
+    ),
+    policy_interest_id: int | None = typer.Option(
+        None, "--policy-interest-id", help="Policy interest ID"
+    ),
+    experience: str | None = typer.Option(
+        None, "--experience", help="Professional experience search term"
+    ),
+    skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
+    take: int = typer.Option(20, "--take", help="Number of records to return"),
     pretty: PrettyOpt = False,
     data_only: DataOnlyOpt = True,
     output_format: FormatOpt = OutputFormat.AUTO,
@@ -33,12 +74,39 @@ def search_member(
     fields: FieldsOpt = None,
 ) -> None:
     """
-    Search for MPs and Lords by name.
+    Search for MPs and Lords by name, with optional filters.
 
     Returns member profiles with names, parties, constituencies, and current status.
+    Supports pagination and advanced filtering by house, party, location, and more.
     """
-    url = f"{MEMBERS_API_BASE}/Members/Search?Name={quote(name)}"
-    output_result(url, pretty, data_only, output_format, fields, raw)
+    url = build_url(
+        f"{MEMBERS_API_BASE}/Members/Search",
+        {
+            "Name": name,
+            "Location": location,
+            "PostTitle": post_title,
+            "PartyId": party_id,
+            "House": house,
+            "ConstituencyId": constituency_id,
+            "NameStartsWith": name_starts_with,
+            "Gender": gender,
+            "MembershipStartedSince": membership_started_since,
+            "MembershipEnded.MembershipEndedSince": membership_ended_since,
+            "MembershipEnded.MembershipEndReasonIds": membership_end_reason_ids,
+            "MembershipInDateRange.WasMemberOnOrAfter": was_member_on_or_after,
+            "MembershipInDateRange.WasMemberOnOrBefore": was_member_on_or_before,
+            "MembershipInDateRange.WasMemberOfHouse": was_member_of_house,
+            "IsEligible": is_eligible,
+            "IsCurrentMember": is_current_member,
+            "PolicyInterestId": policy_interest_id,
+            "Experience": experience,
+            "skip": skip,
+            "take": take,
+        },
+    )
+    output_paginated(
+        url, MEMBERS_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
+    )
 
 
 @app.command("get")
@@ -356,93 +424,6 @@ def get_thumbnail_url(
     """
     url = f"{MEMBERS_API_BASE}/Members/{member_id}/ThumbnailUrl"
     output_result(url, pretty, data_only, output_format, fields, raw)
-
-
-@app.command("search-advanced")
-def search_members_advanced(
-    name: str | None = typer.Option(None, "--name", help="Full or partial name"),
-    location: str | None = typer.Option(None, "--location", help="Location or constituency name"),
-    post_title: str | None = typer.Option(
-        None, "--post-title", help="Post title (e.g. 'Minister')"
-    ),
-    party_id: int | None = typer.Option(None, "--party-id", help="Party ID"),
-    house: int | None = typer.Option(None, "--house", help="House number (1=Commons, 2=Lords)"),
-    constituency_id: int | None = typer.Option(None, "--constituency-id", help="Constituency ID"),
-    name_starts_with: str | None = typer.Option(
-        None, "--name-starts-with", help="Name starting letter(s)"
-    ),
-    gender: str | None = typer.Option(None, "--gender", help="Gender filter (M or F)"),
-    membership_started_since: str | None = typer.Option(
-        None, "--membership-started-since", help="Membership started since (YYYY-MM-DD)"
-    ),
-    membership_ended_since: str | None = typer.Option(
-        None, "--membership-ended-since", help="Membership ended since (YYYY-MM-DD)"
-    ),
-    membership_end_reason_ids: str | None = typer.Option(
-        None, "--end-reason-ids", help="Comma-separated reason IDs for leaving"
-    ),
-    was_member_on_or_after: str | None = typer.Option(
-        None, "--was-member-on-or-after", help="Was member on or after (YYYY-MM-DD)"
-    ),
-    was_member_on_or_before: str | None = typer.Option(
-        None, "--was-member-on-or-before", help="Was member on or before (YYYY-MM-DD)"
-    ),
-    was_member_of_house: int | None = typer.Option(
-        None, "--was-member-of-house", help="Was member of house (1=Commons, 2=Lords)"
-    ),
-    is_eligible: bool | None = typer.Option(
-        None, "--is-eligible", help="Filter by eligibility status"
-    ),
-    is_current_member: bool | None = typer.Option(
-        None, "--is-current-member", help="Filter by current membership"
-    ),
-    policy_interest_id: int | None = typer.Option(
-        None, "--policy-interest-id", help="Policy interest ID"
-    ),
-    experience: str | None = typer.Option(
-        None, "--experience", help="Professional experience search term"
-    ),
-    skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
-    take: int = typer.Option(20, "--take", help="Number of records to return"),
-    pretty: PrettyOpt = False,
-    data_only: DataOnlyOpt = True,
-    output_format: FormatOpt = OutputFormat.AUTO,
-    raw: RawOpt = False,
-    fields: FieldsOpt = None,
-) -> None:
-    """
-    Advanced search for members with comprehensive filtering.
-
-    Returns matching member profiles with all specified filters applied.
-    """
-    url = build_url(
-        f"{MEMBERS_API_BASE}/Members/Search",
-        {
-            "Name": name,
-            "Location": location,
-            "PostTitle": post_title,
-            "PartyId": party_id,
-            "House": house,
-            "ConstituencyId": constituency_id,
-            "NameStartsWith": name_starts_with,
-            "Gender": gender,
-            "MembershipStartedSince": membership_started_since,
-            "MembershipEnded.MembershipEndedSince": membership_ended_since,
-            "MembershipEnded.MembershipEndReasonIds": membership_end_reason_ids,
-            "MembershipInDateRange.WasMemberOnOrAfter": was_member_on_or_after,
-            "MembershipInDateRange.WasMemberOnOrBefore": was_member_on_or_before,
-            "MembershipInDateRange.WasMemberOfHouse": was_member_of_house,
-            "IsEligible": is_eligible,
-            "IsCurrentMember": is_current_member,
-            "PolicyInterestId": policy_interest_id,
-            "Experience": experience,
-            "skip": skip,
-            "take": take,
-        },
-    )
-    output_paginated(
-        url, MEMBERS_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
-    )
 
 
 @app.command("constituencies")

@@ -30,7 +30,7 @@
 - ✅ Procedures command group implemented (11 commands)
 - ✅ CLI test infrastructure created (conftest, test_main, test_utils)
 - ✅ Composite command tests created (18 tests covering all 4 commands)
-- ✅ Members command tests created (25 tests covering key commands: search, get, biography, contact, search-advanced, parties, constituencies)
+- ✅ Members command tests created (25 tests covering key commands: search, get, biography, contact, parties, constituencies)
 - ✅ Bills command tests created (40 tests covering key commands: recent, search, get, stages, amendments, publications, types, stages-list, RSS feeds, sittings)
 - ✅ README.md and CLAUDE.md have comprehensive CLI documentation
 

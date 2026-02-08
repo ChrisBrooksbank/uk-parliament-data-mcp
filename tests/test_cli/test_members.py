@@ -1,8 +1,8 @@
 """Tests for CLI members commands."""
+
 from __future__ import annotations
 
 import json
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -17,24 +17,28 @@ class TestSearchMember:
     @pytest.fixture
     def mock_search_response(self) -> str:
         """Mock member search response."""
-        return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/Search?Name=Starmer",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://members-api.parliament.uk/api/Members/Search?Name=Starmer",
+                "data": json.dumps(
                     {
-                        "value": {
-                            "id": 4514,
-                            "nameDisplayAs": "Keir Starmer",
-                            "latestHouseMembership": {
-                                "house": 1,
-                                "membershipFrom": "Holborn and St Pancras",
+                        "items": [
+                            {
+                                "value": {
+                                    "id": 4514,
+                                    "nameDisplayAs": "Keir Starmer",
+                                    "latestHouseMembership": {
+                                        "house": 1,
+                                        "membershipFrom": "Holborn and St Pancras",
+                                    },
+                                }
                             }
-                        }
+                        ],
+                        "totalResults": 1,
                     }
-                ],
-                "totalResults": 1,
-            })
-        })
+                ),
+            }
+        )
 
     def test_search_help(self, cli_runner: CliRunner):
         """Test that search --help shows command info."""
@@ -54,11 +58,12 @@ class TestSearchMember:
         mock_search_response: str,
     ):
         """Test search returns member data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_search_response
 
-        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["members", "search", "Starmer"])
 
         assert result.exit_code == 0
@@ -73,11 +78,12 @@ class TestSearchMember:
         mock_search_response: str,
     ):
         """Test search with --pretty flag formats output."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_search_response
 
-        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["members", "search", "Test", "--pretty"])
 
         assert result.exit_code == 0
@@ -90,17 +96,39 @@ class TestSearchMember:
         mock_search_response: str,
     ):
         """Test search with --data-only flag strips wrapper."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_search_response
 
-        with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["members", "search", "Test", "-d"])
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
         # Should not have url wrapper
         assert "url" not in output or isinstance(output, str)
+
+    def test_search_with_filters(
+        self,
+        cli_runner: CliRunner,
+        mock_search_response: str,
+    ):
+        """Test search with advanced filter flags."""
+
+        async def mock_get_result(url: str) -> str:
+            """Mock async get_result."""
+            return mock_search_response
+
+        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
+            result = cli_runner.invoke(
+                app,
+                ["members", "search", "Test", "--house", "1", "--is-current-member"],
+            )
+
+        assert result.exit_code == 0
+        output = json.loads(result.stdout)
+        assert "items" in output
 
 
 class TestGetMember:
@@ -109,19 +137,23 @@ class TestGetMember:
     @pytest.fixture
     def mock_member_response(self) -> str:
         """Mock member get response."""
-        return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/4514",
-            "data": json.dumps({
-                "value": {
-                    "id": 4514,
-                    "nameDisplayAs": "Keir Starmer",
-                    "latestHouseMembership": {
-                        "house": 1,
-                        "membershipFrom": "Holborn and St Pancras",
+        return json.dumps(
+            {
+                "url": "https://members-api.parliament.uk/api/Members/4514",
+                "data": json.dumps(
+                    {
+                        "value": {
+                            "id": 4514,
+                            "nameDisplayAs": "Keir Starmer",
+                            "latestHouseMembership": {
+                                "house": 1,
+                                "membershipFrom": "Holborn and St Pancras",
+                            },
+                        }
                     }
-                }
-            })
-        })
+                ),
+            }
+        )
 
     def test_get_help(self, cli_runner: CliRunner):
         """Test that get --help shows command info."""
@@ -141,6 +173,7 @@ class TestGetMember:
         mock_member_response: str,
     ):
         """Test get returns member data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_member_response
@@ -160,6 +193,7 @@ class TestGetMember:
         mock_member_response: str,
     ):
         """Test get with --pretty flag formats output."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_member_response
@@ -178,20 +212,21 @@ class TestGetBiography:
     @pytest.fixture
     def mock_biography_response(self) -> str:
         """Mock biography response."""
-        return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/4514/Biography",
-            "data": json.dumps({
-                "value": {
-                    "nameDisplayAs": "Keir Starmer",
-                    "biographyEntries": [
-                        {
-                            "category": "Education",
-                            "entry": "University of Leeds"
+        return json.dumps(
+            {
+                "url": "https://members-api.parliament.uk/api/Members/4514/Biography",
+                "data": json.dumps(
+                    {
+                        "value": {
+                            "nameDisplayAs": "Keir Starmer",
+                            "biographyEntries": [
+                                {"category": "Education", "entry": "University of Leeds"}
+                            ],
                         }
-                    ]
-                }
-            })
-        })
+                    }
+                ),
+            }
+        )
 
     def test_biography_help(self, cli_runner: CliRunner):
         """Test that biography --help shows command info."""
@@ -210,6 +245,7 @@ class TestGetBiography:
         mock_biography_response: str,
     ):
         """Test biography returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_biography_response
@@ -230,16 +266,14 @@ class TestGetContact:
     @pytest.fixture
     def mock_contact_response(self) -> str:
         """Mock contact response."""
-        return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/4514/Contact",
-            "data": json.dumps({
-                "value": {
-                    "id": 4514,
-                    "email": "test@parliament.uk",
-                    "phone": "020 7219 0000"
-                }
-            })
-        })
+        return json.dumps(
+            {
+                "url": "https://members-api.parliament.uk/api/Members/4514/Contact",
+                "data": json.dumps(
+                    {"value": {"id": 4514, "email": "test@parliament.uk", "phone": "020 7219 0000"}}
+                ),
+            }
+        )
 
     def test_contact_help(self, cli_runner: CliRunner):
         """Test that contact --help shows command info."""
@@ -258,6 +292,7 @@ class TestGetContact:
         mock_contact_response: str,
     ):
         """Test contact returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_contact_response
@@ -272,107 +307,36 @@ class TestGetContact:
         assert output["value"]["id"] == 4514
 
 
-class TestSearchAdvanced:
-    """Tests for search-advanced command."""
-
-    @pytest.fixture
-    def mock_advanced_search_response(self) -> str:
-        """Mock advanced search response."""
-        return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Members/Search?House=1&IsCurrentMember=true",
-            "data": json.dumps({
-                "items": [
-                    {
-                        "value": {
-                            "id": 1,
-                            "nameDisplayAs": "MP One",
-                        }
-                    },
-                    {
-                        "value": {
-                            "id": 2,
-                            "nameDisplayAs": "MP Two",
-                        }
-                    }
-                ],
-                "totalResults": 2,
-            })
-        })
-
-    def test_search_advanced_help(self, cli_runner: CliRunner):
-        """Test that search-advanced --help shows command info."""
-        result = cli_runner.invoke(app, ["members", "search-advanced", "--help"])
-        assert result.exit_code == 0
-        assert "search" in result.stdout.lower()
-
-    def test_search_advanced_success(
-        self,
-        cli_runner: CliRunner,
-        mock_advanced_search_response: str,
-    ):
-        """Test search-advanced returns data."""
-        async def mock_get_result(url: str) -> str:
-            """Mock async get_result."""
-            return mock_advanced_search_response
-
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["members", "search-advanced"])
-
-        assert result.exit_code == 0
-        output = json.loads(result.stdout)
-        # data_only=True by default, so wrapper is stripped and inner data is returned
-        assert "items" in output
-        assert output["totalResults"] == 2
-
-    def test_search_advanced_with_filters(
-        self,
-        cli_runner: CliRunner,
-        mock_advanced_search_response: str,
-    ):
-        """Test search-advanced with filters."""
-        async def mock_get_result(url: str) -> str:
-            """Mock async get_result."""
-            return mock_advanced_search_response
-
-        with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
-            result = cli_runner.invoke(
-                app,
-                ["members", "search-advanced", "--house", "1", "--is-current-member"]
-            )
-
-        assert result.exit_code == 0
-        output = json.loads(result.stdout)
-        # data_only=True by default, so wrapper is stripped and inner data is returned
-        assert "items" in output
-        assert output["totalResults"] == 2
-
-
 class TestParties:
     """Tests for parties command."""
 
     @pytest.fixture
     def mock_parties_response(self) -> str:
         """Mock parties response."""
-        return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Parties/GetActive/1",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://members-api.parliament.uk/api/Parties/GetActive/1",
+                "data": json.dumps(
                     {
-                        "value": {
-                            "id": 15,
-                            "name": "Labour",
-                        }
-                    },
-                    {
-                        "value": {
-                            "id": 4,
-                            "name": "Conservative",
-                        }
+                        "items": [
+                            {
+                                "value": {
+                                    "id": 15,
+                                    "name": "Labour",
+                                }
+                            },
+                            {
+                                "value": {
+                                    "id": 4,
+                                    "name": "Conservative",
+                                }
+                            },
+                        ],
+                        "totalResults": 2,
                     }
-                ],
-                "totalResults": 2,
-            })
-        })
+                ),
+            }
+        )
 
     def test_parties_help(self, cli_runner: CliRunner):
         """Test that parties --help shows command info."""
@@ -391,6 +355,7 @@ class TestParties:
         mock_parties_response: str,
     ):
         """Test parties returns data for Commons."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_parties_response
@@ -410,6 +375,7 @@ class TestParties:
         mock_parties_response: str,
     ):
         """Test parties returns data for Lords."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_parties_response
@@ -430,26 +396,30 @@ class TestConstituencies:
     @pytest.fixture
     def mock_constituencies_response(self) -> str:
         """Mock constituencies response."""
-        return json.dumps({
-            "url": "https://members-api.parliament.uk/api/Location/Constituency/Search",
-            "data": json.dumps({
-                "items": [
+        return json.dumps(
+            {
+                "url": "https://members-api.parliament.uk/api/Location/Constituency/Search",
+                "data": json.dumps(
                     {
-                        "value": {
-                            "id": 123,
-                            "name": "Holborn and St Pancras",
-                        }
-                    },
-                    {
-                        "value": {
-                            "id": 124,
-                            "name": "Westminster",
-                        }
+                        "items": [
+                            {
+                                "value": {
+                                    "id": 123,
+                                    "name": "Holborn and St Pancras",
+                                }
+                            },
+                            {
+                                "value": {
+                                    "id": 124,
+                                    "name": "Westminster",
+                                }
+                            },
+                        ],
+                        "totalResults": 2,
                     }
-                ],
-                "totalResults": 2,
-            })
-        })
+                ),
+            }
+        )
 
     def test_constituencies_help(self, cli_runner: CliRunner):
         """Test that constituencies --help shows command info."""
@@ -463,6 +433,7 @@ class TestConstituencies:
         mock_constituencies_response: str,
     ):
         """Test constituencies returns data."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_constituencies_response
@@ -482,12 +453,15 @@ class TestConstituencies:
         mock_constituencies_response: str,
     ):
         """Test constituencies with pagination options."""
+
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
             return mock_constituencies_response
 
         with patch("uk_parliament_mcp.cli.pagination.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["members", "constituencies", "--skip", "0", "--take", "20"])
+            result = cli_runner.invoke(
+                app, ["members", "constituencies", "--skip", "0", "--take", "20"]
+            )
 
         assert result.exit_code == 0
         output = json.loads(result.stdout)
