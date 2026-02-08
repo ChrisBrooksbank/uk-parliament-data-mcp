@@ -25,13 +25,12 @@ from uk_parliament_mcp.cli import (
     votes,
     watch,
 )
-from uk_parliament_mcp.cli.completion import complete_command_groups, completion
 from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async, should_render_rich
 
 app = typer.Typer(
     name="parliament",
-    help="UK Parliament CLI (Unofficial) - not affiliated with UK Parliament.\n\nAccess 163 Parliament API tools from the terminal.\nData sourced from publicly available parliament.uk APIs.\nhttps://github.com/ChrisBrooksbank/uk-parliament-mcp-lab\n\nRun 'parliament completion' to enable tab completion.",
+    help="UK Parliament CLI (Unofficial) - not affiliated with UK Parliament.\n\nAccess 163 Parliament API tools from the terminal.\nData sourced from publicly available parliament.uk APIs.\nhttps://github.com/ChrisBrooksbank/uk-parliament-mcp-lab",
     no_args_is_help=True,
 )
 
@@ -52,16 +51,11 @@ app.add_typer(guide.app, name="guide")
 app.add_typer(watch.app, name="watch")
 app.add_typer(digest.app, name="digest")
 
-# Top-level completion command for discoverability
-app.command("completion")(completion)
-
 
 # Top-level reference command for easy discoverability
 @app.command("reference")
 def reference(
-    group: str | None = typer.Argument(
-        None, help="Group to show details for", autocompletion=complete_command_groups
-    ),
+    group: str | None = typer.Argument(None, help="Group to show details for"),
     search: str | None = typer.Option(None, "--search", "-s", help="Search commands by keyword"),
     output_format: OutputFormat = typer.Option(
         OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"

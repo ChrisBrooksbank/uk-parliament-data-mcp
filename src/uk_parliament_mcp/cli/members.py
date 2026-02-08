@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import typer
 
-from uk_parliament_mcp.cli.completion import complete_house
 from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.pagination import MEMBERS_PAGINATION
 from uk_parliament_mcp.cli.utils import (
@@ -30,9 +29,7 @@ def search_member(
         None, "--post-title", help="Post title (e.g. 'Minister')"
     ),
     party_id: int | None = typer.Option(None, "--party-id", help="Party ID"),
-    house: int | None = typer.Option(
-        None, "--house", help="House number (1=Commons, 2=Lords)", autocompletion=complete_house
-    ),
+    house: int | None = typer.Option(None, "--house", help="House number (1=Commons, 2=Lords)"),
     constituency_id: int | None = typer.Option(None, "--constituency-id", help="Constituency ID"),
     name_starts_with: str | None = typer.Option(
         None, "--name-starts-with", help="Name starting letter(s)"
@@ -216,7 +213,6 @@ def get_registered_interests(
         "--house",
         "-h",
         help="House number (1=Commons, 2=Lords)",
-        autocompletion=complete_house,
     ),
     pretty: PrettyOpt = False,
     data_only: DataOnlyOpt = True,
@@ -280,7 +276,6 @@ def get_voting(
         "--house",
         "-h",
         help="House number (1=Commons, 2=Lords)",
-        autocompletion=complete_house,
     ),
     page: int | None = typer.Option(None, "--page", help="Page number for pagination"),
     pretty: PrettyOpt = False,
@@ -486,9 +481,7 @@ def get_constituency_elections(
 
 @app.command("parties")
 def list_parties(
-    house: int = typer.Argument(
-        ..., help="House number (1=Commons, 2=Lords)", autocompletion=complete_house
-    ),
+    house: int = typer.Argument(..., help="House number (1=Commons, 2=Lords)"),
     pretty: PrettyOpt = False,
     data_only: DataOnlyOpt = True,
     output_format: FormatOpt = OutputFormat.AUTO,
@@ -506,9 +499,7 @@ def list_parties(
 
 @app.command("party-state")
 def get_party_state(
-    house: int = typer.Argument(
-        ..., help="House number (1=Commons, 2=Lords)", autocompletion=complete_house
-    ),
+    house: int = typer.Argument(..., help="House number (1=Commons, 2=Lords)"),
     for_date: str = typer.Argument(..., help="Date for composition (YYYY-MM-DD)"),
     pretty: PrettyOpt = False,
     data_only: DataOnlyOpt = True,

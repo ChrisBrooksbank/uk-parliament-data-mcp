@@ -13,7 +13,6 @@ import typer.main
 from rich.console import Console
 from rich.panel import Panel
 
-from uk_parliament_mcp.cli.completion import complete_command_groups, complete_guide_topics
 from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import echo_utf8, run_async
 from uk_parliament_mcp.tools.core import (
@@ -315,9 +314,7 @@ def tools(
 
 @app.command("topic")
 def topic(
-    domain: str = typer.Argument(
-        ..., help="Domain to get guidance for", autocompletion=complete_guide_topics
-    ),
+    domain: str = typer.Argument(..., help="Domain to get guidance for"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print output"),
 ) -> None:
     """
@@ -356,9 +353,7 @@ def workflow(
 
 @app.command("reference")
 def reference(
-    group: str | None = typer.Argument(
-        None, help="Group to show details for", autocompletion=complete_command_groups
-    ),
+    group: str | None = typer.Argument(None, help="Group to show details for"),
     search: str | None = typer.Option(None, "--search", "-s", help="Search commands by keyword"),
     output_format: OutputFormat = typer.Option(
         OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"

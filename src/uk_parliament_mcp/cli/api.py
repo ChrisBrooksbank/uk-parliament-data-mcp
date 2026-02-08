@@ -16,7 +16,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from uk_parliament_mcp.cli.completion import complete_api_names
 from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import echo_utf8
 from uk_parliament_mcp.cli.utils import should_render_rich as _should_render_rich
@@ -44,9 +43,10 @@ def _find_api(name: str) -> dict[str, Any] | None:
     """Find an API by name (case-insensitive)."""
     meta = _load_metadata()
     name_lower = name.lower()
-    for api in meta["apis"]:
-        if api["name"].lower() == name_lower:
-            return api
+    api_entry: dict[str, Any]
+    for api_entry in meta["apis"]:
+        if api_entry["name"].lower() == name_lower:
+            return api_entry
     return None
 
 
@@ -66,7 +66,7 @@ def _match_path(endpoint_path: str, search_path: str) -> bool:
 
 def _full_url(api: dict[str, Any], path: str) -> str:
     """Combine API baseUrl with endpoint path to form the full URL."""
-    return api["baseUrl"].rstrip("/") + path
+    return str(api["baseUrl"]).rstrip("/") + path
 
 
 @app.command("list")
@@ -120,9 +120,7 @@ def list_apis(
 
 @app.command("endpoints")
 def endpoints(
-    api_name: str = typer.Argument(
-        ..., help="API name (e.g., 'members', 'bills')", autocompletion=complete_api_names
-    ),
+    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
     tag: str | None = typer.Option(None, "--tag", "-t", help="Filter by tag"),
     output_format: OutputFormat = typer.Option(
         OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
@@ -181,9 +179,7 @@ def endpoints(
 
 @app.command("detail")
 def detail(
-    api_name: str = typer.Argument(
-        ..., help="API name (e.g., 'members', 'bills')", autocompletion=complete_api_names
-    ),
+    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
     path: str = typer.Argument(..., help="Endpoint path (supports partial matching)"),
     method: str = typer.Option("GET", "--method", "-m", help="HTTP method"),
     output_format: OutputFormat = typer.Option(
@@ -280,7 +276,7 @@ def search(
     """
     meta = _load_metadata()
     term_lower = term.lower()
-    results: dict[str, list[dict]] = {}
+    results: dict[str, list[dict[str, Any]]] = {}
 
     for api in meta["apis"]:
         matches = []
@@ -332,9 +328,7 @@ def search(
 
 @app.command("schema")
 def schema(
-    api_name: str = typer.Argument(
-        ..., help="API name (e.g., 'members', 'bills')", autocompletion=complete_api_names
-    ),
+    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
     schema_name: str | None = typer.Argument(None, help="Schema name (omit to list all)"),
     output_format: OutputFormat = typer.Option(
         OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
@@ -436,9 +430,7 @@ def schema(
 
 @app.command("params")
 def params(
-    api_name: str = typer.Argument(
-        ..., help="API name (e.g., 'members', 'bills')", autocompletion=complete_api_names
-    ),
+    api_name: str = typer.Argument(..., help="API name (e.g., 'members', 'bills')"),
     path: str = typer.Argument(..., help="Endpoint path (supports partial matching)"),
     method: str = typer.Option("GET", "--method", "-m", help="HTTP method"),
     output_format: OutputFormat = typer.Option(
@@ -473,7 +465,7 @@ def params(
     all_params = endpoint.get("parameters", [])
 
     # Group by location
-    grouped: dict[str, list[dict]] = {}
+    grouped: dict[str, list[dict[str, Any]]] = {}
     for p in all_params:
         loc = p.get("in", "unknown")
         grouped.setdefault(loc, []).append(p)
