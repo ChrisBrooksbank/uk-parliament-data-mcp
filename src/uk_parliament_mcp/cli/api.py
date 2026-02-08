@@ -625,9 +625,7 @@ def explore(
     output_format: OutputFormat = typer.Option(
         OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
     ),
-    pretty: bool = typer.Option(
-        False, "--pretty", "-p", help="Pretty-print JSON output"
-    ),
+    pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
 ) -> None:
     """Explore a Parliament API URL — identify the API, endpoint, and parameters.
 
@@ -715,9 +713,7 @@ def explore(
     if endpoint_match:
         ep, extracted = endpoint_match
         console.print()
-        console.print(
-            f"[bold]Endpoint:[/] [bold yellow]{ep['method']}[/] [cyan]{ep['path']}[/]"
-        )
+        console.print(f"[bold]Endpoint:[/] [bold yellow]{ep['method']}[/] [cyan]{ep['path']}[/]")
         if ep.get("summary"):
             console.print(f"  [bold]{ep['summary']}[/]")
         if ep.get("responseSchema"):
@@ -767,9 +763,7 @@ def explore(
 
     if cli_group:
         console.print()
-        console.print(
-            f"[bold]CLI group:[/] [cyan]parliament {cli_group}[/]"
-        )
+        console.print(f"[bold]CLI group:[/] [cyan]parliament {cli_group}[/]")
         console.print(f"  Run [cyan]parliament {cli_group} --help[/] for available commands")
 
     if related:
@@ -785,9 +779,13 @@ def explore(
     if call and "response" in result:
         console.print()
         if "error" in result["response"]:
-            console.print(
-                f"[bold red]Call error:[/] {result['response']['error']}"
-            )
+            console.print(f"[bold red]Call error:[/] {result['response']['error']}")
         else:
             console.print("[bold]Response:[/]")
             console.print(json.dumps(result["response"], indent=2, ensure_ascii=False))
+
+
+# Register the interactive "try" command from its own module
+from uk_parliament_mcp.cli.try_it import try_endpoint  # noqa: E402
+
+app.command("try")(try_endpoint)
