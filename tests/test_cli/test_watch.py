@@ -1535,19 +1535,39 @@ class TestKeyReaderThread:
         key_q: queue.Queue[str] = queue.Queue()
         stop = threading.Event()
         stop.set()  # Immediately signal stop
-        thread = _start_key_reader(key_q, stop)
-        assert thread.daemon is True
-        thread.join(timeout=2.0)
+
+        def _fake_reader(q: queue.Queue[str], ev: threading.Event) -> None:
+            while not ev.is_set():
+                import time
+
+                time.sleep(0.01)
+
+        with patch("uk_parliament_mcp.cli.watch._read_keys_windows", _fake_reader), patch(
+            "uk_parliament_mcp.cli.watch._read_keys_unix", _fake_reader
+        ):
+            thread = _start_key_reader(key_q, stop)
+            assert thread.daemon is True
+            thread.join(timeout=2.0)
 
     def test_thread_stops_on_signal(self) -> None:
         """Key reader thread should stop when stop_reading is set."""
         key_q: queue.Queue[str] = queue.Queue()
         stop = threading.Event()
-        thread = _start_key_reader(key_q, stop)
-        assert thread.is_alive()
-        stop.set()
-        thread.join(timeout=2.0)
-        assert not thread.is_alive()
+
+        def _fake_reader(q: queue.Queue[str], ev: threading.Event) -> None:
+            while not ev.is_set():
+                import time
+
+                time.sleep(0.01)
+
+        with patch("uk_parliament_mcp.cli.watch._read_keys_windows", _fake_reader), patch(
+            "uk_parliament_mcp.cli.watch._read_keys_unix", _fake_reader
+        ):
+            thread = _start_key_reader(key_q, stop)
+            assert thread.is_alive()
+            stop.set()
+            thread.join(timeout=2.0)
+            assert not thread.is_alive()
 
 
 # ---------------------------------------------------------------------------
