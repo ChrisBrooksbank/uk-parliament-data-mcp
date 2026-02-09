@@ -22,6 +22,7 @@ from uk_parliament_mcp.cli.renderers import (
     _parse_api_response,
     _render_calendar_table,
     _render_chamber_panel,
+    _split_events_by_house,
 )
 from uk_parliament_mcp.config import NOW_API_BASE, WHATSON_API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
@@ -29,6 +30,7 @@ from uk_parliament_mcp.http_client import build_url, get_result
 app = typer.Typer(help="Live Parliament dashboard with auto-refresh")
 
 MIN_INTERVAL = 30  # Minimum refresh interval in seconds
+SCROLL_INTERVAL = 5  # Seconds between scroll steps
 
 
 async def _fetch_commons_now() -> dict[str, Any] | None:
@@ -115,11 +117,17 @@ def _estimate_chamber_height(panel: Panel) -> int:
     return _CHAMBER_MIN_HEIGHT
 
 
-def _render_dashboard(data: dict[str, Any]) -> Layout:
+def _render_dashboard(
+    data: dict[str, Any],
+    scroll_offset_commons: int = 0,
+    scroll_offset_lords: int = 0,
+) -> Layout:
     """Render the full dashboard layout.
 
     Args:
         data: Dict with commons, lords, and calendar data.
+        scroll_offset_commons: Scroll position for Commons calendar auto-scrolling.
+        scroll_offset_lords: Scroll position for Lords calendar auto-scrolling.
 
     Returns:
         Rich Layout for the dashboard.
@@ -135,6 +143,7 @@ def _render_dashboard(data: dict[str, Any]) -> Layout:
     # Chamber panels — build and measure
     chamber_panels: list[Panel] = []
     chambers = Layout()
+    both_houses = "commons" in data and "lords" in data
     if "commons" in data:
         commons_panel = _render_chamber_panel(data.get("commons"), "House of Commons")
         chamber_panels.append(commons_panel)
@@ -163,21 +172,90 @@ def _render_dashboard(data: dict[str, Any]) -> Layout:
     available_rows = max(terminal_height - 3 - chamber_size - 5, 3)
 
     calendar_events = data.get("calendar", [])
-    calendar_content, total_count = _render_calendar_table(
-        calendar_events, max_rows=available_rows, now=datetime.now()
-    )
-    displayed = min(len(calendar_events), available_rows) if calendar_events else 0
-    subtitle = _calendar_subtitle(displayed, total_count)
-    calendar_panel = Panel(
-        calendar_content,
-        title="[bold]Today's Business[/bold]",
-        subtitle=subtitle,
-    )
+    now_dt = datetime.now()
+
+    if both_houses and calendar_events:
+        # Split into two side-by-side calendar panels
+        commons_events, lords_events = _split_events_by_house(calendar_events)
+
+        commons_content, commons_total = _render_calendar_table(
+            commons_events,
+            max_rows=available_rows,
+            now=now_dt,
+            scroll_offset=scroll_offset_commons,
+            include_house_column=False,
+        )
+        commons_displayed = min(len(commons_events), available_rows) if commons_events else 0
+        commons_scrolling = scroll_offset_commons > 0 and commons_total > available_rows
+        commons_subtitle = _calendar_subtitle(
+            commons_displayed,
+            commons_total,
+            scrolling=commons_scrolling,
+            scroll_offset=scroll_offset_commons,
+        )
+        commons_cal_panel = Panel(
+            commons_content,
+            title="[bold green]Commons Business[/bold green]",
+            subtitle=commons_subtitle,
+            border_style="green",
+        )
+
+        lords_content, lords_total = _render_calendar_table(
+            lords_events,
+            max_rows=available_rows,
+            now=now_dt,
+            scroll_offset=scroll_offset_lords,
+            include_house_column=False,
+        )
+        lords_displayed = min(len(lords_events), available_rows) if lords_events else 0
+        lords_scrolling = scroll_offset_lords > 0 and lords_total > available_rows
+        lords_subtitle = _calendar_subtitle(
+            lords_displayed,
+            lords_total,
+            scrolling=lords_scrolling,
+            scroll_offset=scroll_offset_lords,
+        )
+        lords_cal_panel = Panel(
+            lords_content,
+            title="[bold red]Lords Business[/bold red]",
+            subtitle=lords_subtitle,
+            border_style="red",
+        )
+
+        calendar_layout = Layout()
+        calendar_layout.split_row(
+            Layout(commons_cal_panel),
+            Layout(lords_cal_panel),
+        )
+    else:
+        # Single house or no events — full-width calendar with House column
+        scroll_offset = scroll_offset_commons if "commons" in data else scroll_offset_lords
+        calendar_content, total_count = _render_calendar_table(
+            calendar_events,
+            max_rows=available_rows,
+            now=now_dt,
+            scroll_offset=scroll_offset,
+        )
+        displayed = min(len(calendar_events), available_rows) if calendar_events else 0
+        is_scrolling = scroll_offset > 0 and total_count > available_rows
+        subtitle = _calendar_subtitle(
+            displayed,
+            total_count,
+            scrolling=is_scrolling,
+            scroll_offset=scroll_offset,
+        )
+        calendar_layout = Layout(
+            Panel(
+                calendar_content,
+                title="[bold]Today's Business[/bold]",
+                subtitle=subtitle,
+            )
+        )
 
     layout.split_column(
         Layout(Panel(header, style=""), size=3),
         Layout(chambers, size=chamber_size),
-        Layout(calendar_panel, ratio=1),
+        Layout(calendar_layout, ratio=1),
     )
 
     return layout
@@ -205,22 +283,64 @@ async def _run_watch(house: str | None = None, interval: int = 30) -> None:
         loop.add_signal_handler(signal.SIGTERM, _handle_signal)
 
     try:
+        data: dict[str, Any] | None = None
+        last_fetch_time = 0.0
+        scroll_offset_commons = 0
+        scroll_offset_lords = 0
+
         with Live(console=console, screen=True, refresh_per_second=1) as live:
             while not stop_event.is_set():
                 try:
-                    data = await _fetch_all_data(house)
-                    dashboard = _render_dashboard(data)
+                    # Fetch new data when interval has elapsed
+                    now_mono = asyncio.get_event_loop().time()
+                    if data is None or (now_mono - last_fetch_time) >= interval:
+                        data = await _fetch_all_data(house)
+                        last_fetch_time = now_mono
+                        scroll_offset_commons = 0
+                        scroll_offset_lords = 0
+
+                    dashboard = _render_dashboard(
+                        data,
+                        scroll_offset_commons=scroll_offset_commons,
+                        scroll_offset_lords=scroll_offset_lords,
+                    )
                     live.update(dashboard)
+
+                    # Compute whether scrolling is needed
+                    calendar_events = data.get("calendar", [])
+                    terminal_height = shutil.get_terminal_size().lines
+                    chamber_panels_exist = "commons" in data or "lords" in data
+                    if chamber_panels_exist:
+                        max_chamber = int(terminal_height * _CHAMBER_MAX_FRACTION)
+                        chamber_size = max(_CHAMBER_MIN_HEIGHT, min(max_chamber, max_chamber))
+                    else:
+                        chamber_size = _CHAMBER_MIN_HEIGHT
+                    available_rows = max(terminal_height - 3 - chamber_size - 5, 3)
+
+                    both_houses = "commons" in data and "lords" in data
+                    if both_houses and calendar_events:
+                        commons_events, lords_events = _split_events_by_house(calendar_events)
+                        if len(commons_events) > available_rows:
+                            scroll_offset_commons += 1
+                        if len(lords_events) > available_rows:
+                            scroll_offset_lords += 1
+                    else:
+                        total_events = len(calendar_events)
+                        if total_events > available_rows:
+                            if "commons" in data:
+                                scroll_offset_commons += 1
+                            else:
+                                scroll_offset_lords += 1
                 except Exception:
                     # Don't crash on transient errors
                     pass
 
-                # Wait for interval or stop signal
+                # Wait for scroll interval or stop signal
                 try:
-                    await asyncio.wait_for(stop_event.wait(), timeout=interval)
+                    await asyncio.wait_for(stop_event.wait(), timeout=SCROLL_INTERVAL)
                     break  # Stop event was set
                 except TimeoutError:
-                    continue  # Timeout expired, refresh
+                    continue  # Timeout expired, continue
     except KeyboardInterrupt:
         pass  # Clean exit on Ctrl+C
 

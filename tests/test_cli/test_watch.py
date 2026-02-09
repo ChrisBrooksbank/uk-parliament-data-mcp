@@ -21,11 +21,13 @@ from uk_parliament_mcp.cli.renderers import (
     _parse_api_response,
     _render_calendar_table,
     _render_chamber_panel,
+    _split_events_by_house,
 )
 from uk_parliament_mcp.cli.watch import (
     _CHAMBER_MAX_FRACTION,
     _CHAMBER_MIN_HEIGHT,
     MIN_INTERVAL,
+    SCROLL_INTERVAL,
     _estimate_chamber_height,
     _fetch_all_data,
     _fetch_calendar_today,
@@ -1027,3 +1029,371 @@ class TestChamberPanelSubtitle:
         subtitle = panel.subtitle
         assert isinstance(subtitle, Text)
         assert "parliamentlive.tv/Commons" in subtitle.plain
+
+
+# ---------------------------------------------------------------------------
+# 00:00 time handling (all-day events)
+# ---------------------------------------------------------------------------
+
+
+class TestExtractEventTimeZero:
+    """Tests for 00:00 handling in _extract_event_time."""
+
+    def test_returns_empty_for_midnight_iso(self) -> None:
+        """T00:00:00 timestamps should return '' (all-day events)."""
+        assert _extract_event_time({"StartTime": "2024-01-15T00:00:00"}) == ""
+
+    def test_returns_empty_for_midnight_with_tz(self) -> None:
+        """T00:00 with timezone offset should also return ''."""
+        assert _extract_event_time({"startTime": "2024-01-15T00:00:00+00:00"}) == ""
+
+    def test_normal_times_unaffected(self) -> None:
+        """Non-midnight times should still work."""
+        assert _extract_event_time({"StartTime": "2024-01-15T09:30:00"}) == "09:30"
+        assert _extract_event_time({"StartTime": "2024-01-15T14:00:00"}) == "14:00"
+        assert _extract_event_time({"StartTime": "2024-01-15T00:15:00"}) == "00:15"
+
+    def test_all_day_events_sort_to_bottom(self) -> None:
+        """Events with 00:00 (blank time) should sort after timed events."""
+        events = [
+            {"StartTime": "2024-01-15T00:00:00", "Description": "All-day"},
+            {"StartTime": "2024-01-15T14:00:00", "Description": "Afternoon"},
+            {"StartTime": "2024-01-15T09:00:00", "Description": "Morning"},
+        ]
+        now = datetime(2024, 1, 15, 12, 0)
+        result, _ = _render_calendar_table(events, now=now)
+        assert isinstance(result, Table)
+        assert result.row_count == 3
+        # Last row should have no time (all-day event sorts to bottom via "99:99")
+        # The first two rows should have times, last row blank
+
+
+# ---------------------------------------------------------------------------
+# Scroll offset behavior
+# ---------------------------------------------------------------------------
+
+
+class TestScrollOffset:
+    """Tests for scroll_offset in _render_calendar_table."""
+
+    def _make_events(self, count: int) -> list[dict]:
+        """Create events with distinct times."""
+        return [
+            {
+                "StartTime": f"2024-01-15T{9 + i}:00:00",
+                "House": "Commons",
+                "Description": f"Event {i}",
+            }
+            for i in range(count)
+        ]
+
+    def test_offset_zero_matches_default(self) -> None:
+        """scroll_offset=0 should produce same result as default behavior."""
+        events = self._make_events(10)
+        now = datetime(2024, 1, 15, 12, 0)
+        result_default, _ = _render_calendar_table(events, max_rows=5, now=now, scroll_offset=0)
+        result_explicit, _ = _render_calendar_table(events, max_rows=5, now=now)
+        assert isinstance(result_default, Table)
+        assert isinstance(result_explicit, Table)
+        assert result_default.row_count == result_explicit.row_count
+
+    def test_offset_shifts_window(self) -> None:
+        """scroll_offset > 0 should shift the visible window."""
+        events = self._make_events(10)
+        now = datetime(2024, 1, 15, 12, 0)
+        result_0, _ = _render_calendar_table(events, max_rows=3, now=now, scroll_offset=0)
+        result_5, _ = _render_calendar_table(events, max_rows=3, now=now, scroll_offset=5)
+        assert isinstance(result_0, Table)
+        assert isinstance(result_5, Table)
+        assert result_0.row_count == 3
+        assert result_5.row_count == 3
+
+    def test_offset_wraps_around(self) -> None:
+        """When offset + max_rows > total, events should wrap from the start."""
+        events = self._make_events(5)
+        now = datetime(2024, 1, 15, 12, 0)
+        # offset=4, max_rows=3 -> should show events[4] + events[0] + events[1]
+        result, total = _render_calendar_table(events, max_rows=3, now=now, scroll_offset=4)
+        assert isinstance(result, Table)
+        assert result.row_count == 3
+        assert total == 5
+
+    def test_offset_modulo_wraps(self) -> None:
+        """Offset larger than total should wrap via modulo."""
+        events = self._make_events(5)
+        now = datetime(2024, 1, 15, 12, 0)
+        # offset=7 is equivalent to offset=2 (7 % 5 = 2)
+        result_7, _ = _render_calendar_table(events, max_rows=3, now=now, scroll_offset=7)
+        result_2, _ = _render_calendar_table(events, max_rows=3, now=now, scroll_offset=2)
+        assert isinstance(result_7, Table)
+        assert isinstance(result_2, Table)
+        assert result_7.row_count == result_2.row_count
+
+    def test_offset_ignored_when_all_fit(self) -> None:
+        """When all events fit, scroll_offset should have no effect."""
+        events = self._make_events(3)
+        now = datetime(2024, 1, 15, 12, 0)
+        result_0, _ = _render_calendar_table(events, max_rows=10, now=now, scroll_offset=0)
+        result_5, _ = _render_calendar_table(events, max_rows=10, now=now, scroll_offset=5)
+        assert isinstance(result_0, Table)
+        assert isinstance(result_5, Table)
+        assert result_0.row_count == result_5.row_count == 3
+
+
+# ---------------------------------------------------------------------------
+# Calendar subtitle with scrolling
+# ---------------------------------------------------------------------------
+
+
+class TestCalendarSubtitleScrolling:
+    """Tests for _calendar_subtitle scrolling parameter."""
+
+    def test_scrolling_indicator_appended(self) -> None:
+        """When scrolling=True and events truncated, subtitle shows scrolling."""
+        result = _calendar_subtitle(5, 20, scrolling=True)
+        assert result is not None
+        assert "scrolling" in result
+        assert "showing 5 of 20 events" in result
+
+    def test_scrolling_only_when_not_truncated(self) -> None:
+        """When scrolling=True but all events shown, still shows scrolling."""
+        result = _calendar_subtitle(10, 10, scrolling=True)
+        assert result is not None
+        assert "scrolling" in result
+
+    def test_no_scrolling_no_truncation(self) -> None:
+        """No scrolling and no truncation returns None."""
+        result = _calendar_subtitle(10, 10, scrolling=False)
+        assert result is None
+
+
+# ---------------------------------------------------------------------------
+# _render_dashboard with scroll_offset
+# ---------------------------------------------------------------------------
+
+
+class TestRenderDashboardScrollOffset:
+    """Tests for _render_dashboard accepting dual scroll offsets."""
+
+    def test_accepts_scroll_offsets(self) -> None:
+        """_render_dashboard should accept dual scroll_offset parameters."""
+        msg = _make_message(slides=[_make_slide("Debate")])
+        data = {"commons": msg, "lords": msg, "calendar": []}
+        result = _render_dashboard(data, scroll_offset_commons=5, scroll_offset_lords=3)
+        assert isinstance(result, Layout)
+
+    def test_scroll_offset_zero_matches_default(self) -> None:
+        """scroll_offset=0 should produce a valid layout like the default."""
+        msg = _make_message(slides=[_make_slide("NotSitting")])
+        data = {"commons": msg, "lords": msg, "calendar": []}
+        result_default = _render_dashboard(data)
+        result_zero = _render_dashboard(data, scroll_offset_commons=0, scroll_offset_lords=0)
+        assert isinstance(result_default, Layout)
+        assert isinstance(result_zero, Layout)
+
+    def test_scroll_interval_constant(self) -> None:
+        """SCROLL_INTERVAL should be 5 seconds."""
+        assert SCROLL_INTERVAL == 5
+
+
+# ---------------------------------------------------------------------------
+# _split_events_by_house
+# ---------------------------------------------------------------------------
+
+
+class TestSplitEventsByHouse:
+    """Tests for _split_events_by_house helper."""
+
+    def test_splits_commons_and_lords(self) -> None:
+        events = [
+            {"House": "Commons", "Description": "Commons Event"},
+            {"House": "Lords", "Description": "Lords Event"},
+        ]
+        commons, lords = _split_events_by_house(events)
+        assert len(commons) == 1
+        assert len(lords) == 1
+        assert commons[0]["Description"] == "Commons Event"
+        assert lords[0]["Description"] == "Lords Event"
+
+    def test_joint_goes_to_both(self) -> None:
+        events = [{"House": "Joint", "Description": "Joint Event"}]
+        commons, lords = _split_events_by_house(events)
+        assert len(commons) == 1
+        assert len(lords) == 1
+
+    def test_empty_house_goes_to_both(self) -> None:
+        events = [{"Description": "No house event"}]
+        commons, lords = _split_events_by_house(events)
+        assert len(commons) == 1
+        assert len(lords) == 1
+
+    def test_case_insensitive(self) -> None:
+        events = [
+            {"House": "COMMONS", "Description": "Upper case commons"},
+            {"house": "lords", "Description": "Lower case lords"},
+            {"House": "House of Commons", "Description": "Full name"},
+        ]
+        commons, lords = _split_events_by_house(events)
+        assert len(commons) == 2
+        assert len(lords) == 1
+
+    def test_empty_list(self) -> None:
+        commons, lords = _split_events_by_house([])
+        assert commons == []
+        assert lords == []
+
+    def test_mixed_events_preserves_all(self) -> None:
+        events = [
+            {"House": "Commons", "Description": "C1"},
+            {"House": "Lords", "Description": "L1"},
+            {"House": "Joint", "Description": "J1"},
+            {"House": "Commons", "Description": "C2"},
+            {"Description": "No house"},
+        ]
+        commons, lords = _split_events_by_house(events)
+        # 2 commons + 1 joint + 1 no-house = 4
+        assert len(commons) == 4
+        # 1 lords + 1 joint + 1 no-house = 3
+        assert len(lords) == 3
+
+
+# ---------------------------------------------------------------------------
+# _render_calendar_table with include_house_column=False
+# ---------------------------------------------------------------------------
+
+
+class TestRenderCalendarTableNoHouseColumn:
+    """Tests for _render_calendar_table with include_house_column=False."""
+
+    def test_five_columns_when_no_house(self) -> None:
+        events = [
+            {
+                "StartTime": "2024-01-15T11:30:00",
+                "House": "Commons",
+                "Description": "Oral Questions",
+                "Type": "Oral evidence",
+                "Location": "Chamber",
+                "Category": "Questions",
+            },
+        ]
+        result, count = _render_calendar_table(events, include_house_column=False)
+        assert isinstance(result, Table)
+        assert len(result.columns) == 5
+        assert count == 1
+
+    def test_six_columns_by_default(self) -> None:
+        events = [{"Description": "Test"}]
+        result, _ = _render_calendar_table(events)
+        assert isinstance(result, Table)
+        assert len(result.columns) == 6
+
+    def test_no_house_column_header(self) -> None:
+        events = [{"Description": "Test"}]
+        result, _ = _render_calendar_table(events, include_house_column=False)
+        assert isinstance(result, Table)
+        col_headers = [str(col.header) for col in result.columns]
+        assert "House" not in col_headers
+        assert "Time" in col_headers
+        assert "Event" in col_headers
+
+
+# ---------------------------------------------------------------------------
+# _render_dashboard split calendar
+# ---------------------------------------------------------------------------
+
+
+class TestRenderDashboardSplitCalendar:
+    """Tests for _render_dashboard split calendar layout."""
+
+    def test_both_houses_creates_split_layout(self) -> None:
+        """When both houses present, calendar should split into two panels."""
+        msg = _make_message(slides=[_make_slide("Debate")])
+        events = [
+            {
+                "House": "Commons",
+                "Description": "Commons Event",
+                "StartTime": "2024-01-15T11:00:00",
+            },
+            {"House": "Lords", "Description": "Lords Event", "StartTime": "2024-01-15T14:00:00"},
+        ]
+        data = {"commons": msg, "lords": msg, "calendar": events}
+        result = _render_dashboard(data)
+        assert isinstance(result, Layout)
+        # 3 top-level children: header, chambers, calendar
+        assert len(result.children) == 3
+
+    def test_single_house_full_width(self) -> None:
+        """When single house, calendar should be full-width with House column."""
+        msg = _make_message(slides=[_make_slide("Debate")])
+        events = [
+            {"House": "Commons", "Description": "Event", "StartTime": "2024-01-15T11:00:00"},
+        ]
+        data = {"commons": msg, "calendar": events}
+        result = _render_dashboard(data)
+        assert isinstance(result, Layout)
+        assert len(result.children) == 3
+
+    def test_independent_scroll_offsets_accepted(self) -> None:
+        """Both scroll offsets should be accepted without error."""
+        msg = _make_message(slides=[_make_slide("Debate")])
+        events = [
+            {"House": "Commons", "Description": f"C{i}", "StartTime": f"2024-01-15T{9 + i}:00:00"}
+            for i in range(10)
+        ] + [
+            {"House": "Lords", "Description": f"L{i}", "StartTime": f"2024-01-15T{9 + i}:00:00"}
+            for i in range(10)
+        ]
+        data = {"commons": msg, "lords": msg, "calendar": events}
+        result = _render_dashboard(data, scroll_offset_commons=3, scroll_offset_lords=7)
+        assert isinstance(result, Layout)
+
+    def test_no_calendar_events_both_houses(self) -> None:
+        """Empty calendar with both houses should not crash."""
+        msg = _make_message(slides=[_make_slide("Debate")])
+        data = {"commons": msg, "lords": msg, "calendar": []}
+        result = _render_dashboard(data)
+        assert isinstance(result, Layout)
+
+
+# ---------------------------------------------------------------------------
+# _calendar_subtitle scroll position indicator
+# ---------------------------------------------------------------------------
+
+
+class TestCalendarSubtitleScrollPosition:
+    """Tests for scroll position bar in _calendar_subtitle."""
+
+    def test_scroll_bar_rendered_when_scrolling(self) -> None:
+        """When scrolling active and events truncated, bar should appear."""
+        result = _calendar_subtitle(5, 20, scrolling=True, scroll_offset=3)
+        assert result is not None
+        assert "\u2588" in result  # filled block
+        assert "\u2591" in result  # empty block
+        assert "scrolling" in result
+
+    def test_scroll_bar_position_at_start(self) -> None:
+        """Offset 0 should place block at start of bar."""
+        result = _calendar_subtitle(5, 20, scrolling=True, scroll_offset=0)
+        assert result is not None
+        # First char of the bar should be filled
+        assert "\u2588\u2591" in result
+
+    def test_scroll_bar_position_at_end(self) -> None:
+        """Offset near total should place block at end of bar."""
+        # offset=19, total=20 → slot = int(19/20 * 5) = 4 (last slot)
+        result = _calendar_subtitle(5, 20, scrolling=True, scroll_offset=19)
+        assert result is not None
+        assert "\u2591\u2588" in result
+
+    def test_no_bar_when_not_scrolling(self) -> None:
+        """No scroll bar when scrolling=False."""
+        result = _calendar_subtitle(5, 20, scrolling=False)
+        assert result is not None
+        assert "\u2588" not in result
+        assert "\u2591" not in result
+
+    def test_auto_scrolling_fallback_when_no_events(self) -> None:
+        """When scrolling but total=0, should show auto-scrolling fallback."""
+        result = _calendar_subtitle(0, 0, scrolling=True, scroll_offset=0)
+        assert result is not None
+        assert "auto-scrolling" in result

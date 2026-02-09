@@ -288,20 +288,41 @@ def _render_chamber_panel(data: dict[str, Any] | None, house_name: str) -> Panel
 # ---------------------------------------------------------------------------
 
 
-def _calendar_subtitle(displayed: int, total: int) -> str | None:
+def _calendar_subtitle(
+    displayed: int,
+    total: int,
+    *,
+    scrolling: bool = False,
+    scroll_offset: int = 0,
+) -> str | None:
     """Return a subtitle string when calendar rows are truncated.
 
     Args:
         displayed: Number of rows actually shown.
         total: Total number of events available.
+        scrolling: Whether auto-scrolling is active.
+        scroll_offset: Current scroll position (used for scroll indicator bar).
 
     Returns:
         Rich markup string, or None when not truncated.
     """
-    if total <= displayed:
+    if total <= displayed and not scrolling:
         return None
-    hidden = total - displayed
-    return f"[dim]showing {displayed} of {total} events ({hidden} more)[/dim]"
+    parts: list[str] = []
+    if total > displayed:
+        hidden = total - displayed
+        parts.append(f"showing {displayed} of {total} events ({hidden} more)")
+    if scrolling and total > 0:
+        # Build a 5-char scroll position bar
+        track_len = 5
+        position = scroll_offset % total if total > 0 else 0
+        slot = int(position / total * track_len) if total > 0 else 0
+        slot = min(slot, track_len - 1)
+        bar = "".join("\u2588" if i == slot else "\u2591" for i in range(track_len))
+        parts.append(f"{bar} scrolling")
+    elif scrolling:
+        parts.append("auto-scrolling")
+    return "[dim]" + " | ".join(parts) + "[/dim]" if parts else None
 
 
 def _extract_event_time(event: dict[str, Any]) -> str:
@@ -312,22 +333,62 @@ def _extract_event_time(event: dict[str, Any]) -> str:
 
     Returns:
         Time string like "14:30", or "" if no parseable time found.
+        Returns "" for "00:00" (all-day events with no real time).
     """
     for key in ["StartTime", "startTime", "StartDate", "startDate"]:
         if key in event and event[key]:
             raw = str(event[key])
             if "T" in raw:
-                return raw.split("T")[1][:5]
+                time_part = raw.split("T")[1][:5]
+                if time_part == "00:00":
+                    return ""
+                return time_part
             if len(raw) > 5:
                 return raw[:5]
             return raw
     return ""
 
 
+def _split_events_by_house(
+    events: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Split calendar events into Commons and Lords lists.
+
+    Events with no house, empty house, or unrecognised house (e.g. "Joint")
+    are included in **both** lists so no events are lost.
+
+    Args:
+        events: List of calendar event dicts.
+
+    Returns:
+        Tuple of (commons_events, lords_events).
+    """
+    commons: list[dict[str, Any]] = []
+    lords: list[dict[str, Any]] = []
+    for event in events:
+        house_str = ""
+        for key in ["House", "house"]:
+            if key in event and event[key]:
+                house_str = str(event[key])
+                break
+        lower = house_str.lower()
+        if "commons" in lower:
+            commons.append(event)
+        elif "lords" in lower:
+            lords.append(event)
+        else:
+            # Joint / empty / unrecognised → both lists
+            commons.append(event)
+            lords.append(event)
+    return commons, lords
+
+
 def _render_calendar_table(
     events: list[dict[str, Any]],
     max_rows: int | None = None,
     now: datetime | None = None,
+    scroll_offset: int = 0,
+    include_house_column: bool = True,
 ) -> tuple[Table | Text, int]:
     """Render today's business as a Rich table.
 
@@ -336,6 +397,9 @@ def _render_calendar_table(
         max_rows: Maximum number of rows to display. None means show all.
         now: Current datetime for time-tracking highlight. None disables
             sorting/highlighting (backward-compatible).
+        scroll_offset: When > 0 and events are truncated, use as the window
+            start position with wrap-around (carousel effect). When 0, use
+            existing current-event-centered behavior.
 
     Returns:
         Tuple of (Rich Table or Text if no events, total event count).
@@ -370,7 +434,30 @@ def _render_calendar_table(
 
     # Window events around current index when truncating
     if max_rows is not None and max_rows < total_count:
-        if now is not None and current_idx is not None:
+        if scroll_offset > 0:
+            # Carousel-style scrolling: use offset as window start, wrap around
+            start = scroll_offset % total_count
+            end = start + max_rows
+            if end <= total_count:
+                display_events = events[start:end]
+            else:
+                # Wrap around
+                display_events = events[start:] + events[: end - total_count]
+            # Adjust current_idx relative to the window
+            if current_idx is not None:
+                # Check if current_idx is in the visible window
+                if end <= total_count:
+                    current_idx = current_idx - start if start <= current_idx < end else None
+                else:
+                    # Wrapped window
+                    wrap_end = end - total_count
+                    if current_idx >= start:
+                        current_idx = current_idx - start
+                    elif current_idx < wrap_end:
+                        current_idx = (total_count - start) + current_idx
+                    else:
+                        current_idx = None
+        elif now is not None and current_idx is not None:
             half = max_rows // 2
             start = max(0, current_idx - half)
             end = start + max_rows
@@ -391,7 +478,8 @@ def _render_calendar_table(
         expand=True,
     )
     table.add_column("Time", width=7, style="cyan", no_wrap=True)
-    table.add_column("House", width=7, no_wrap=True)
+    if include_house_column:
+        table.add_column("House", width=7, no_wrap=True)
     table.add_column("Event", ratio=1, overflow="ellipsis")
     table.add_column("Type", max_width=16)
     table.add_column("Location", max_width=20)
@@ -439,16 +527,26 @@ def _render_calendar_table(
             time_display = f"  {time_str}" if time_str else ""
             row_style = "" if row_idx % 2 == 0 else "dim"
 
-        house_text = Text(house_str, style=_house_color(house_str))
-        table.add_row(
-            time_display,
-            house_text,
-            event_str,
-            type_str,
-            location_str,
-            category_str,
-            style=row_style,
-        )
+        if include_house_column:
+            house_text = Text(house_str, style=_house_color(house_str))
+            table.add_row(
+                time_display,
+                house_text,
+                event_str,
+                type_str,
+                location_str,
+                category_str,
+                style=row_style,
+            )
+        else:
+            table.add_row(
+                time_display,
+                event_str,
+                type_str,
+                location_str,
+                category_str,
+                style=row_style,
+            )
 
     return table, total_count
 
@@ -760,7 +858,7 @@ def render_bill_overview(result_json: str) -> None:
     current_stage = ""
     stage_info = summary.get("currentStage", detail_value.get("currentStage"))
     if isinstance(stage_info, dict):
-        current_stage = stage_info.get("description", stage_info.get("stageName", ""))
+        current_stage = str(stage_info.get("description", stage_info.get("stageName", "")))
     elif isinstance(stage_info, str):
         current_stage = stage_info
 
@@ -800,7 +898,7 @@ def render_bill_overview(result_json: str) -> None:
                 sittings = stage.get("stageSittings", [])
                 s_info = stage.get("stageType") or stage.get("description") or {}
                 if isinstance(s_info, dict):
-                    stage_name = s_info.get("name", s_info.get("description", ""))
+                    stage_name = str(s_info.get("name", s_info.get("description", "")))
                 elif isinstance(s_info, str):
                     stage_name = s_info
                 house = ""
@@ -1403,7 +1501,7 @@ def _render_hansard_section(data: Any) -> Panel | None:
 
     total = 0
     if isinstance(data, dict):
-        total = data.get("TotalResultCount", data.get("totalResultCount", 0))
+        total = int(data.get("TotalResultCount") or data.get("totalResultCount") or 0)
 
     table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
     table.add_column("ID", width=10, style="cyan", no_wrap=True)
@@ -1552,7 +1650,7 @@ def _render_committees_section(data: Any) -> Panel | None:
             # Single committee object
             comm = item.get("committee", item.get("Committee"))
             if isinstance(comm, dict):
-                committee_name = comm.get("name", comm.get("Name", ""))
+                committee_name = str(comm.get("name", comm.get("Name", "")))
                 committee_id = str(comm.get("id", comm.get("Id", "")))
             elif isinstance(comm, str):
                 committee_name = comm
@@ -1562,7 +1660,7 @@ def _render_committees_section(data: Any) -> Panel | None:
                 if isinstance(comms, list) and comms:
                     first = comms[0]
                     if isinstance(first, dict):
-                        committee_name = first.get("name", first.get("Name", ""))
+                        committee_name = str(first.get("name", first.get("Name", "")))
                         if not committee_id:
                             committee_id = str(first.get("id", first.get("Id", "")))
             if not committee_name:
