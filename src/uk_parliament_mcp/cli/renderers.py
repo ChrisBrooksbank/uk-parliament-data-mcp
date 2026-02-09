@@ -294,6 +294,7 @@ def _calendar_subtitle(
     *,
     scrolling: bool = False,
     scroll_offset: int = 0,
+    paused: bool = False,
 ) -> str | None:
     """Return a subtitle string when calendar rows are truncated.
 
@@ -302,11 +303,12 @@ def _calendar_subtitle(
         total: Total number of events available.
         scrolling: Whether auto-scrolling is active.
         scroll_offset: Current scroll position (used for scroll indicator bar).
+        paused: Whether auto-scrolling is paused by the user.
 
     Returns:
         Rich markup string, or None when not truncated.
     """
-    if total <= displayed and not scrolling:
+    if total <= displayed and not scrolling and not paused:
         return None
     parts: list[str] = []
     if total > displayed:
@@ -319,9 +321,13 @@ def _calendar_subtitle(
         slot = int(position / total * track_len) if total > 0 else 0
         slot = min(slot, track_len - 1)
         bar = "".join("\u2588" if i == slot else "\u2591" for i in range(track_len))
-        parts.append(f"{bar} scrolling")
+        label = "paused" if paused else "scrolling"
+        parts.append(f"{bar} {label}")
     elif scrolling:
-        parts.append("auto-scrolling")
+        label = "paused" if paused else "auto-scrolling"
+        parts.append(label)
+    elif paused:
+        parts.append("paused")
     return "[dim]" + " | ".join(parts) + "[/dim]" if parts else None
 
 

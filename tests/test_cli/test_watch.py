@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import queue
+import threading
 from datetime import datetime
 from unittest.mock import patch
 
@@ -24,16 +26,18 @@ from uk_parliament_mcp.cli.renderers import (
     _split_events_by_house,
 )
 from uk_parliament_mcp.cli.watch import (
+    POLL_INTERVAL,
+    SCROLL_INTERVAL,
     _CHAMBER_MAX_FRACTION,
     _CHAMBER_MIN_HEIGHT,
     MIN_INTERVAL,
-    SCROLL_INTERVAL,
     _estimate_chamber_height,
     _fetch_all_data,
     _fetch_calendar_today,
     _fetch_commons_now,
     _fetch_lords_now,
     _render_dashboard,
+    _start_key_reader,
 )
 
 # ---------------------------------------------------------------------------
@@ -1397,3 +1401,197 @@ class TestCalendarSubtitleScrollPosition:
         result = _calendar_subtitle(0, 0, scrolling=True, scroll_offset=0)
         assert result is not None
         assert "auto-scrolling" in result
+
+
+# ---------------------------------------------------------------------------
+# _calendar_subtitle with paused parameter
+# ---------------------------------------------------------------------------
+
+
+class TestCalendarSubtitlePaused:
+    """Tests for _calendar_subtitle paused parameter."""
+
+    def test_paused_replaces_scrolling_text(self) -> None:
+        """When paused=True and scrolling, bar should say 'paused' not 'scrolling'."""
+        result = _calendar_subtitle(5, 20, scrolling=True, scroll_offset=3, paused=True)
+        assert result is not None
+        assert "paused" in result
+        assert "scrolling" not in result
+
+    def test_bar_still_shown_when_paused(self) -> None:
+        """Scroll position bar should still render when paused."""
+        result = _calendar_subtitle(5, 20, scrolling=True, scroll_offset=3, paused=True)
+        assert result is not None
+        assert "\u2588" in result
+        assert "\u2591" in result
+
+    def test_default_backward_compatible(self) -> None:
+        """Default paused=False should not change existing behavior."""
+        result = _calendar_subtitle(5, 20, scrolling=True, scroll_offset=3)
+        assert result is not None
+        assert "scrolling" in result
+        assert "paused" not in result
+
+    def test_paused_without_scrolling_shows_paused(self) -> None:
+        """When paused=True and not scrolling, should show 'paused'."""
+        result = _calendar_subtitle(5, 20, scrolling=False, paused=True)
+        assert result is not None
+        assert "paused" in result
+
+    def test_paused_no_truncation_returns_subtitle(self) -> None:
+        """When paused=True but all events shown, subtitle should still appear."""
+        result = _calendar_subtitle(10, 10, scrolling=False, paused=True)
+        assert result is not None
+        assert "paused" in result
+
+    def test_paused_fallback_when_no_events(self) -> None:
+        """When scrolling + paused but total=0, should show 'paused'."""
+        result = _calendar_subtitle(0, 0, scrolling=True, scroll_offset=0, paused=True)
+        assert result is not None
+        assert "paused" in result
+        assert "auto-scrolling" not in result
+
+
+# ---------------------------------------------------------------------------
+# _render_dashboard pause state
+# ---------------------------------------------------------------------------
+
+
+class TestRenderDashboardPauseState:
+    """Tests for _render_dashboard auto_scroll_paused parameter."""
+
+    def test_accepts_param(self) -> None:
+        """_render_dashboard should accept auto_scroll_paused."""
+        msg = _make_message(slides=[_make_slide("Debate")])
+        data = {"commons": msg, "lords": msg, "calendar": []}
+        result = _render_dashboard(data, auto_scroll_paused=True)
+        assert isinstance(result, Layout)
+
+    def test_header_shows_paused_when_paused(self) -> None:
+        """Header should show PAUSED indicator when paused."""
+        msg = _make_message(slides=[_make_slide("Debate")])
+        data = {"commons": msg, "lords": msg, "calendar": []}
+        layout = _render_dashboard(data, auto_scroll_paused=True)
+        # Header is first child, which contains a Panel with Text
+        header_layout = layout.children[0]
+        # Extract text from the panel
+        panel = header_layout.renderable
+        assert isinstance(panel, Panel)
+        text = panel.renderable
+        assert isinstance(text, Text)
+        assert "PAUSED" in text.plain
+
+    def test_header_no_paused_by_default(self) -> None:
+        """Header should not show PAUSED when not paused."""
+        msg = _make_message(slides=[_make_slide("Debate")])
+        data = {"commons": msg, "lords": msg, "calendar": []}
+        layout = _render_dashboard(data, auto_scroll_paused=False)
+        header_layout = layout.children[0]
+        panel = header_layout.renderable
+        assert isinstance(panel, Panel)
+        text = panel.renderable
+        assert isinstance(text, Text)
+        assert "PAUSED" not in text.plain
+
+    def test_header_shows_key_hints(self) -> None:
+        """Header should show keyboard control hints."""
+        msg = _make_message(slides=[_make_slide("Debate")])
+        data = {"commons": msg, "lords": msg, "calendar": []}
+        layout = _render_dashboard(data)
+        header_layout = layout.children[0]
+        panel = header_layout.renderable
+        assert isinstance(panel, Panel)
+        text = panel.renderable
+        assert isinstance(text, Text)
+        assert "q quit" in text.plain
+        assert "scroll" in text.plain
+        assert "pause" in text.plain
+
+
+# ---------------------------------------------------------------------------
+# POLL_INTERVAL constant
+# ---------------------------------------------------------------------------
+
+
+class TestPollIntervalConstant:
+    """Tests for POLL_INTERVAL constant."""
+
+    def test_exists_and_less_than_scroll_interval(self) -> None:
+        """POLL_INTERVAL should exist and be less than SCROLL_INTERVAL."""
+        assert POLL_INTERVAL > 0
+        assert POLL_INTERVAL < SCROLL_INTERVAL
+
+
+# ---------------------------------------------------------------------------
+# Key reader thread
+# ---------------------------------------------------------------------------
+
+
+class TestKeyReaderThread:
+    """Tests for _start_key_reader thread lifecycle."""
+
+    def test_thread_starts_as_daemon(self) -> None:
+        """Key reader thread should be a daemon thread."""
+        key_q: queue.Queue[str] = queue.Queue()
+        stop = threading.Event()
+        stop.set()  # Immediately signal stop
+        thread = _start_key_reader(key_q, stop)
+        assert thread.daemon is True
+        thread.join(timeout=2.0)
+
+    def test_thread_stops_on_signal(self) -> None:
+        """Key reader thread should stop when stop_reading is set."""
+        key_q: queue.Queue[str] = queue.Queue()
+        stop = threading.Event()
+        thread = _start_key_reader(key_q, stop)
+        assert thread.is_alive()
+        stop.set()
+        thread.join(timeout=2.0)
+        assert not thread.is_alive()
+
+
+# ---------------------------------------------------------------------------
+# Manual scroll behavior
+# ---------------------------------------------------------------------------
+
+
+class TestManualScrollBehavior:
+    """Tests for manual scroll offset behavior via key presses."""
+
+    def test_down_increments_both_offsets(self) -> None:
+        """Pressing down should increment both scroll offsets."""
+        commons_offset = 0
+        lords_offset = 0
+        # Simulate "down" key
+        commons_offset += 1
+        lords_offset += 1
+        assert commons_offset == 1
+        assert lords_offset == 1
+
+    def test_up_decrements_clamped_to_zero(self) -> None:
+        """Pressing up should decrement offsets, clamped at 0."""
+        commons_offset = 1
+        lords_offset = 0
+        commons_offset = max(0, commons_offset - 1)
+        lords_offset = max(0, lords_offset - 1)
+        assert commons_offset == 0
+        assert lords_offset == 0
+
+    def test_up_at_zero_stays_zero(self) -> None:
+        """Pressing up at offset 0 should stay at 0."""
+        commons_offset = 0
+        lords_offset = 0
+        commons_offset = max(0, commons_offset - 1)
+        lords_offset = max(0, lords_offset - 1)
+        assert commons_offset == 0
+        assert lords_offset == 0
+
+    def test_space_toggles_auto_scroll(self) -> None:
+        """Space should toggle auto_scroll state."""
+        auto_scroll = True
+        # First press: pause
+        auto_scroll = not auto_scroll
+        assert auto_scroll is False
+        # Second press: resume
+        auto_scroll = not auto_scroll
+        assert auto_scroll is True

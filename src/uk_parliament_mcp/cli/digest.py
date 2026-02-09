@@ -188,9 +188,9 @@ async def _fetch_bills(start_date: str, end_date: str, house: int | None) -> dic
         detail_tasks = {bid: _fetch_bill_detail(bid) for bid in sorted(bill_ids)[:20]}
         detail_keys = list(detail_tasks.keys())
         detail_results = await asyncio.gather(*detail_tasks.values(), return_exceptions=True)
-        for bid, result in zip(detail_keys, detail_results, strict=True):
-            if isinstance(result, dict) and not isinstance(result, Exception):
-                bill_details[bid] = result
+        for bid, detail in zip(detail_keys, detail_results, strict=True):
+            if isinstance(detail, dict) and not isinstance(detail, BaseException):
+                bill_details[bid] = detail
 
     result: dict[str, Any] = data if isinstance(data, dict) else {"items": data}
     result["_bill_details"] = bill_details

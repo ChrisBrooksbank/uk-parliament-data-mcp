@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import json
+import queue
 import shutil
 import signal
 import sys
+import threading
 from datetime import datetime
 from typing import Any
 
@@ -31,6 +33,81 @@ app = typer.Typer(help="Live Parliament dashboard with auto-refresh")
 
 MIN_INTERVAL = 30  # Minimum refresh interval in seconds
 SCROLL_INTERVAL = 5  # Seconds between scroll steps
+POLL_INTERVAL = 0.15  # Seconds between key polls (150ms for responsive input)
+
+
+def _read_keys_windows(key_queue: queue.Queue[str], stop_reading: threading.Event) -> None:
+    """Read keys on Windows using msvcrt."""
+    import msvcrt
+    import time
+
+    while not stop_reading.is_set():
+        if msvcrt.kbhit():
+            ch = msvcrt.getwch()
+            if ch == "\xe0" or ch == "\x00":
+                # Arrow key prefix — read the second byte
+                ch2 = msvcrt.getwch()
+                if ch2 == "H":
+                    key_queue.put("up")
+                elif ch2 == "P":
+                    key_queue.put("down")
+            elif ch == " ":
+                key_queue.put("space")
+            elif ch.lower() == "q":
+                key_queue.put("q")
+        time.sleep(0.05)
+
+
+def _read_keys_unix(key_queue: queue.Queue[str], stop_reading: threading.Event) -> None:
+    """Read keys on Unix using termios/tty."""
+    import select
+    import termios
+    import time
+    import tty
+
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)  # type: ignore[attr-defined]
+    try:
+        tty.setcbreak(fd)  # type: ignore[attr-defined]
+        while not stop_reading.is_set():
+            if select.select([sys.stdin], [], [], 0.05)[0]:
+                ch = sys.stdin.read(1)
+                if ch == "\x1b":
+                    # Escape sequence — try to read bracket + code
+                    if select.select([sys.stdin], [], [], 0.05)[0]:
+                        ch2 = sys.stdin.read(1)
+                        if ch2 == "[" and select.select([sys.stdin], [], [], 0.05)[0]:
+                            ch3 = sys.stdin.read(1)
+                            if ch3 == "A":
+                                key_queue.put("up")
+                            elif ch3 == "B":
+                                key_queue.put("down")
+                elif ch == " ":
+                    key_queue.put("space")
+                elif ch.lower() == "q":
+                    key_queue.put("q")
+            else:
+                time.sleep(0.05)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)  # type: ignore[attr-defined]
+
+
+def _start_key_reader(
+    key_queue: queue.Queue[str], stop_reading: threading.Event
+) -> threading.Thread:
+    """Start a daemon thread that reads keyboard input.
+
+    Args:
+        key_queue: Queue to put normalized key names into.
+        stop_reading: Event to signal the reader to stop.
+
+    Returns:
+        The started daemon thread.
+    """
+    target = _read_keys_windows if sys.platform == "win32" else _read_keys_unix
+    thread = threading.Thread(target=target, args=(key_queue, stop_reading), daemon=True)
+    thread.start()
+    return thread
 
 
 async def _fetch_commons_now() -> dict[str, Any] | None:
@@ -121,6 +198,8 @@ def _render_dashboard(
     data: dict[str, Any],
     scroll_offset_commons: int = 0,
     scroll_offset_lords: int = 0,
+    *,
+    auto_scroll_paused: bool = False,
 ) -> Layout:
     """Render the full dashboard layout.
 
@@ -128,6 +207,7 @@ def _render_dashboard(
         data: Dict with commons, lords, and calendar data.
         scroll_offset_commons: Scroll position for Commons calendar auto-scrolling.
         scroll_offset_lords: Scroll position for Lords calendar auto-scrolling.
+        auto_scroll_paused: Whether auto-scrolling is paused by the user.
 
     Returns:
         Rich Layout for the dashboard.
@@ -136,8 +216,11 @@ def _render_dashboard(
     layout = Layout()
 
     # Header
+    paused_indicator = "  PAUSED" if auto_scroll_paused else ""
     header = Text(
-        f"  UK Parliament Live | Last updated: {now} | Ctrl+C to exit", style="bold white on blue"
+        f"  UK Parliament Live | Last updated: {now}{paused_indicator}"
+        f" | \u2191\u2193 scroll  space pause  q quit",
+        style="bold white on blue",
     )
 
     # Chamber panels — build and measure
@@ -192,6 +275,7 @@ def _render_dashboard(
             commons_total,
             scrolling=commons_scrolling,
             scroll_offset=scroll_offset_commons,
+            paused=auto_scroll_paused,
         )
         commons_cal_panel = Panel(
             commons_content,
@@ -214,6 +298,7 @@ def _render_dashboard(
             lords_total,
             scrolling=lords_scrolling,
             scroll_offset=scroll_offset_lords,
+            paused=auto_scroll_paused,
         )
         lords_cal_panel = Panel(
             lords_content,
@@ -243,6 +328,7 @@ def _render_dashboard(
             total_count,
             scrolling=is_scrolling,
             scroll_offset=scroll_offset,
+            paused=auto_scroll_paused,
         )
         calendar_layout = Layout(
             Panel(
@@ -264,6 +350,11 @@ def _render_dashboard(
 async def _run_watch(house: str | None = None, interval: int = 30) -> None:
     """Run the live watch dashboard.
 
+    Keyboard controls:
+        Up/Down arrows: Scroll calendar events manually (pauses auto-scroll).
+        Space: Toggle auto-scroll pause/resume.
+        q: Quit the dashboard.
+
     Args:
         house: Optional house filter ("commons", "lords", or None for both).
         interval: Refresh interval in seconds.
@@ -282,13 +373,22 @@ async def _run_watch(house: str | None = None, interval: int = 30) -> None:
         loop.add_signal_handler(signal.SIGINT, _handle_signal)
         loop.add_signal_handler(signal.SIGTERM, _handle_signal)
 
+    # Key reader infrastructure
+    key_queue: queue.Queue[str] = queue.Queue()
+    stop_reading = threading.Event()
+    reader_thread: threading.Thread | None = None
+
     try:
+        reader_thread = _start_key_reader(key_queue, stop_reading)
+
         data: dict[str, Any] | None = None
         last_fetch_time = 0.0
         scroll_offset_commons = 0
         scroll_offset_lords = 0
+        auto_scroll = True
+        elapsed_since_scroll = 0.0
 
-        with Live(console=console, screen=True, refresh_per_second=1) as live:
+        with Live(console=console, screen=True, refresh_per_second=4) as live:
             while not stop_event.is_set():
                 try:
                     # Fetch new data when interval has elapsed
@@ -299,50 +399,87 @@ async def _run_watch(house: str | None = None, interval: int = 30) -> None:
                         scroll_offset_commons = 0
                         scroll_offset_lords = 0
 
+                    # Process queued key presses
+                    while True:
+                        try:
+                            key = key_queue.get_nowait()
+                        except queue.Empty:
+                            break
+                        if key == "q":
+                            stop_event.set()
+                        elif key == "up":
+                            scroll_offset_commons = max(0, scroll_offset_commons - 1)
+                            scroll_offset_lords = max(0, scroll_offset_lords - 1)
+                            auto_scroll = False
+                        elif key == "down":
+                            scroll_offset_commons += 1
+                            scroll_offset_lords += 1
+                            auto_scroll = False
+                        elif key == "space":
+                            auto_scroll = not auto_scroll
+                            if auto_scroll:
+                                elapsed_since_scroll = 0.0
+
                     dashboard = _render_dashboard(
                         data,
                         scroll_offset_commons=scroll_offset_commons,
                         scroll_offset_lords=scroll_offset_lords,
+                        auto_scroll_paused=not auto_scroll,
                     )
                     live.update(dashboard)
 
-                    # Compute whether scrolling is needed
-                    calendar_events = data.get("calendar", [])
-                    terminal_height = shutil.get_terminal_size().lines
-                    chamber_panels_exist = "commons" in data or "lords" in data
-                    if chamber_panels_exist:
-                        max_chamber = int(terminal_height * _CHAMBER_MAX_FRACTION)
-                        chamber_size = max(_CHAMBER_MIN_HEIGHT, min(max_chamber, max_chamber))
-                    else:
-                        chamber_size = _CHAMBER_MIN_HEIGHT
-                    available_rows = max(terminal_height - 3 - chamber_size - 5, 3)
-
-                    both_houses = "commons" in data and "lords" in data
-                    if both_houses and calendar_events:
-                        commons_events, lords_events = _split_events_by_house(calendar_events)
-                        if len(commons_events) > available_rows:
-                            scroll_offset_commons += 1
-                        if len(lords_events) > available_rows:
-                            scroll_offset_lords += 1
-                    else:
-                        total_events = len(calendar_events)
-                        if total_events > available_rows:
-                            if "commons" in data:
-                                scroll_offset_commons += 1
+                    # Auto-scroll timer
+                    if auto_scroll:
+                        elapsed_since_scroll += POLL_INTERVAL
+                        if elapsed_since_scroll >= SCROLL_INTERVAL:
+                            elapsed_since_scroll = 0.0
+                            # Compute whether scrolling is needed
+                            calendar_events = data.get("calendar", [])
+                            terminal_height = shutil.get_terminal_size().lines
+                            chamber_panels_exist = "commons" in data or "lords" in data
+                            if chamber_panels_exist:
+                                max_chamber = int(terminal_height * _CHAMBER_MAX_FRACTION)
+                                chamber_size = max(
+                                    _CHAMBER_MIN_HEIGHT,
+                                    min(max_chamber, max_chamber),
+                                )
                             else:
-                                scroll_offset_lords += 1
+                                chamber_size = _CHAMBER_MIN_HEIGHT
+                            available_rows = max(terminal_height - 3 - chamber_size - 5, 3)
+
+                            both_houses = "commons" in data and "lords" in data
+                            if both_houses and calendar_events:
+                                commons_events, lords_events = _split_events_by_house(
+                                    calendar_events
+                                )
+                                if len(commons_events) > available_rows:
+                                    scroll_offset_commons += 1
+                                if len(lords_events) > available_rows:
+                                    scroll_offset_lords += 1
+                            else:
+                                total_events = len(calendar_events)
+                                if total_events > available_rows:
+                                    if "commons" in data:
+                                        scroll_offset_commons += 1
+                                    else:
+                                        scroll_offset_lords += 1
+
                 except Exception:
                     # Don't crash on transient errors
                     pass
 
-                # Wait for scroll interval or stop signal
+                # Wait for poll interval or stop signal
                 try:
-                    await asyncio.wait_for(stop_event.wait(), timeout=SCROLL_INTERVAL)
+                    await asyncio.wait_for(stop_event.wait(), timeout=POLL_INTERVAL)
                     break  # Stop event was set
                 except TimeoutError:
                     continue  # Timeout expired, continue
     except KeyboardInterrupt:
         pass  # Clean exit on Ctrl+C
+    finally:
+        stop_reading.set()
+        if reader_thread is not None:
+            reader_thread.join(timeout=1.0)
 
 
 @app.callback(invoke_without_command=True)
@@ -373,7 +510,12 @@ def watch(
     Live Parliament dashboard with auto-refresh.
 
     Shows current chamber activity and today's business in a live-updating display.
-    Press Ctrl+C to exit.
+
+    Keyboard controls:
+      Up/Down arrows  Scroll calendar events (pauses auto-scroll)
+      Space           Pause / resume auto-scrolling
+      q               Quit the dashboard
+      Ctrl+C          Quit the dashboard
 
     Examples:
       parliament watch                # Both houses

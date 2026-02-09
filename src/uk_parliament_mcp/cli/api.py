@@ -734,8 +734,8 @@ def explore(
             table = Table(title="Query Parameters", show_lines=False, padding=(0, 1))
             table.add_column("Parameter", style="cyan")
             table.add_column("Value", style="green")
-            for k, v in flat_query.items():
-                table.add_row(k, str(v))
+            for k, qv in flat_query.items():
+                table.add_row(k, str(qv))
             console.print(table)
 
         params = ep.get("parameters", [])

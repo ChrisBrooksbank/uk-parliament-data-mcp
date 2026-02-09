@@ -29,7 +29,7 @@ from uk_parliament_mcp.http_client import get_result
 
 def _select_api(console: Console, metadata: dict[str, Any]) -> dict[str, Any]:
     """Show numbered API list and prompt the user to pick one."""
-    apis = metadata["apis"]
+    apis: list[dict[str, Any]] = metadata["apis"]
     console.print()
     table = Table(title="Select an API", show_lines=False, padding=(0, 1))
     table.add_column("#", style="bold", justify="right", width=4)
@@ -57,7 +57,7 @@ def _select_endpoint(
     search_term: str | None = None,
 ) -> dict[str, Any]:
     """Show numbered endpoint list and prompt the user to pick one."""
-    endpoints = api["endpoints"]
+    endpoints: list[dict[str, Any]] = api["endpoints"]
     if search_term:
         term_lower = search_term.lower()
         endpoints = [
@@ -217,7 +217,7 @@ def _call_and_display(console: Console, url: str) -> dict[str, Any] | None:
 
     try:
         raw = run_async(get_result(url))
-        parsed = json.loads(raw)
+        parsed: dict[str, Any] | None = json.loads(raw)
     except Exception as exc:
         console.print(Panel(f"[bold red]Error:[/] {exc}", title="API Error"))
         return None
@@ -307,16 +307,18 @@ def _show_related(
 
     # Find the full endpoint object from the api
     picked = related[idx - 1]
-    for ep in api["endpoints"]:
-        if ep["method"] == picked["method"] and ep["path"] == picked["path"]:
-            return ep
+    all_eps: list[dict[str, Any]] = api["endpoints"]
+    for candidate in all_eps:
+        if candidate["method"] == picked["method"] and candidate["path"] == picked["path"]:
+            return candidate
     return None
 
 
 def _find_endpoint_by_path(api: dict[str, Any], path: str) -> dict[str, Any] | None:
     """Find an endpoint by path (partial match)."""
     path_lower = path.lower()
-    for ep in api["endpoints"]:
+    all_eps: list[dict[str, Any]] = api["endpoints"]
+    for ep in all_eps:
         if path_lower in ep["path"].lower():
             return ep
     return None
