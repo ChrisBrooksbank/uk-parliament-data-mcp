@@ -42,11 +42,11 @@ def _read_keys_windows(key_queue: queue.Queue[str], stop_reading: threading.Even
     import time
 
     while not stop_reading.is_set():
-        if msvcrt.kbhit():
-            ch = msvcrt.getwch()
+        if msvcrt.kbhit():  # type: ignore[attr-defined,unused-ignore]
+            ch = msvcrt.getwch()  # type: ignore[attr-defined,unused-ignore]
             if ch == "\xe0" or ch == "\x00":
                 # Arrow key prefix — read the second byte
-                ch2 = msvcrt.getwch()
+                ch2 = msvcrt.getwch()  # type: ignore[attr-defined,unused-ignore]
                 if ch2 == "H":
                     key_queue.put("up")
                 elif ch2 == "P":
@@ -66,9 +66,9 @@ def _read_keys_unix(key_queue: queue.Queue[str], stop_reading: threading.Event) 
     import tty
 
     fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)  # type: ignore[attr-defined]
+    old_settings = termios.tcgetattr(fd)  # type: ignore[attr-defined,unused-ignore]
     try:
-        tty.setcbreak(fd)  # type: ignore[attr-defined]
+        tty.setcbreak(fd)  # type: ignore[attr-defined,unused-ignore]
         while not stop_reading.is_set():
             if select.select([sys.stdin], [], [], 0.05)[0]:
                 ch = sys.stdin.read(1)
@@ -89,7 +89,7 @@ def _read_keys_unix(key_queue: queue.Queue[str], stop_reading: threading.Event) 
             else:
                 time.sleep(0.05)
     finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)  # type: ignore[attr-defined]
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)  # type: ignore[attr-defined,unused-ignore]
 
 
 def _start_key_reader(
