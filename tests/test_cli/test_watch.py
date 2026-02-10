@@ -26,11 +26,11 @@ from uk_parliament_mcp.cli.renderers import (
     _split_events_by_house,
 )
 from uk_parliament_mcp.cli.watch import (
-    POLL_INTERVAL,
-    SCROLL_INTERVAL,
     _CHAMBER_MAX_FRACTION,
     _CHAMBER_MIN_HEIGHT,
     MIN_INTERVAL,
+    POLL_INTERVAL,
+    SCROLL_INTERVAL,
     _estimate_chamber_height,
     _fetch_all_data,
     _fetch_calendar_today,
@@ -370,7 +370,7 @@ class TestRenderChamberPanel:
         assert isinstance(rendered, Text)
         assert "Before divider" in rendered.plain
         assert "After divider" in rendered.plain
-        assert "----" in rendered.plain
+        assert "\u2500\u2500\u2500\u2500" in rendered.plain
 
     def test_empty_line_style(self) -> None:
         msg = _make_message(
