@@ -176,22 +176,32 @@ async def _fetch_all_data(
 
 _CHAMBER_MIN_HEIGHT = 5  # Panel chrome (2) + at least 3 content lines
 _CHAMBER_MAX_FRACTION = 0.4  # Never exceed 40% of terminal height
+_SIDE_BY_SIDE_MIN_WIDTH = 80  # Stack panels vertically below this terminal width
 
 
-def _estimate_chamber_height(panel: Panel) -> int:
+def _estimate_chamber_height(panel: Panel, width: int | None = None) -> int:
     """Estimate the number of terminal rows a chamber panel needs.
+
+    Uses Rich's own rendering engine to measure height accurately,
+    accounting for text wrapping at the given width.
 
     Args:
         panel: Rich Panel produced by _render_chamber_panel.
+        width: Available width in columns for the panel.  When two
+            panels are side-by-side this should be roughly half the
+            terminal width.  ``None`` falls back to the full terminal
+            width.
 
     Returns:
-        Estimated row count including panel borders.
+        Estimated row count including panel borders and wrapped lines.
     """
-    renderable = panel.renderable
-    if isinstance(renderable, Text):
-        content = renderable.plain.rstrip("\n")
-        return content.count("\n") + 1 + 2  # content lines + panel borders
-    return _CHAMBER_MIN_HEIGHT
+    if width is None:
+        width = shutil.get_terminal_size().columns
+    # Use a hidden Console to render the panel at the target width and
+    # count the lines it actually produces (including wrapping).
+    console = Console(width=width, file=None, force_terminal=True)
+    lines = list(console.render_lines(panel, console.options.update_width(width)))
+    return len(lines)
 
 
 def _render_dashboard(
@@ -224,16 +234,23 @@ def _render_dashboard(
     )
 
     # Chamber panels — build and measure
+    terminal_width = shutil.get_terminal_size().columns
+    terminal_height = shutil.get_terminal_size().lines
     chamber_panels: list[Panel] = []
     chambers = Layout()
     both_houses = "commons" in data and "lords" in data
+    # Stack panels vertically on narrow terminals to avoid excessive wrapping
+    stack_chambers = both_houses and terminal_width < _SIDE_BY_SIDE_MIN_WIDTH
     if "commons" in data:
         commons_panel = _render_chamber_panel(data.get("commons"), "House of Commons")
         chamber_panels.append(commons_panel)
         if "lords" in data:
             lords_panel = _render_chamber_panel(data.get("lords"), "House of Lords")
             chamber_panels.append(lords_panel)
-            chambers.split_row(Layout(commons_panel), Layout(lords_panel))
+            if stack_chambers:
+                chambers.split_column(Layout(commons_panel), Layout(lords_panel))
+            else:
+                chambers.split_row(Layout(commons_panel), Layout(lords_panel))
         else:
             chambers.update(commons_panel)
     elif "lords" in data:
@@ -242,11 +259,21 @@ def _render_dashboard(
         chambers.update(lords_panel)
 
     # Size the chamber section to fit content, give calendar the rest
-    terminal_height = shutil.get_terminal_size().lines
     max_chamber = int(terminal_height * _CHAMBER_MAX_FRACTION)
     if chamber_panels:
-        tallest = max(_estimate_chamber_height(p) for p in chamber_panels)
-        chamber_size = max(_CHAMBER_MIN_HEIGHT, min(tallest, max_chamber))
+        # Measure panels at their actual rendered width
+        panel_width = terminal_width // 2 if both_houses and not stack_chambers else terminal_width
+        if stack_chambers:
+            # Stacked: sum of both panel heights
+            total = sum(
+                _estimate_chamber_height(p, width=panel_width) for p in chamber_panels
+            )
+            chamber_size = max(_CHAMBER_MIN_HEIGHT, min(total, max_chamber))
+        else:
+            tallest = max(
+                _estimate_chamber_height(p, width=panel_width) for p in chamber_panels
+            )
+            chamber_size = max(_CHAMBER_MIN_HEIGHT, min(tallest, max_chamber))
     else:
         chamber_size = _CHAMBER_MIN_HEIGHT
 
