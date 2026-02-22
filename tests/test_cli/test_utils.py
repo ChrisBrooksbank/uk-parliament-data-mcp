@@ -156,9 +156,7 @@ class TestFieldsHintPrinting:
         return json.dumps(
             {
                 "url": "https://api.parliament.uk/test",
-                "data": json.dumps(
-                    {"items": [{"id": 1, "name": "Test", "extra": "hidden"}]}
-                ),
+                "data": json.dumps({"items": [{"id": 1, "name": "Test", "extra": "hidden"}]}),
             }
         )
 
@@ -171,9 +169,7 @@ class TestFieldsHintPrinting:
         import sys
 
         mock_sys.stderr = sys.stderr
-        result = format_output(
-            table_response, output_format=OutputFormat.TABLE, data_only=True
-        )
+        format_output(table_response, output_format=OutputFormat.TABLE, data_only=True)
         captured = capsys.readouterr()
         assert "Showing:" in captured.err
         assert "Tip:" in captured.err
@@ -186,9 +182,7 @@ class TestFieldsHintPrinting:
         import sys
 
         mock_sys.stderr = sys.stderr
-        result = format_output(
-            table_response, output_format=OutputFormat.JSON, data_only=True
-        )
+        format_output(table_response, output_format=OutputFormat.JSON, data_only=True)
         captured = capsys.readouterr()
         assert "Showing:" not in captured.err
 
@@ -200,9 +194,7 @@ class TestFieldsHintPrinting:
         import sys
 
         mock_sys.stderr = sys.stderr
-        result = format_output(
-            table_response, output_format=OutputFormat.JSON, data_only=True
-        )
+        format_output(table_response, output_format=OutputFormat.JSON, data_only=True)
         captured = capsys.readouterr()
         assert "Showing:" not in captured.err
 
@@ -214,6 +206,6 @@ class TestFieldsHintPrinting:
         import sys
 
         mock_sys.stderr = sys.stderr
-        result = format_output(table_response, raw=True)
+        format_output(table_response, raw=True)
         captured = capsys.readouterr()
         assert "Showing:" not in captured.err

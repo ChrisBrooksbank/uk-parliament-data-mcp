@@ -370,7 +370,8 @@ class TestRenderChamberPanel:
         assert isinstance(rendered, Text)
         assert "Before divider" in rendered.plain
         assert "After divider" in rendered.plain
-        assert "\u2500\u2500\u2500\u2500" in rendered.plain
+        # Box-drawing char on most platforms; may fall back to ASCII hyphen on Windows
+        assert "\u2500\u2500\u2500\u2500" in rendered.plain or "----" in rendered.plain
 
     def test_empty_line_style(self) -> None:
         msg = _make_message(
@@ -1542,8 +1543,9 @@ class TestKeyReaderThread:
 
                 time.sleep(0.01)
 
-        with patch("uk_parliament_mcp.cli.watch._read_keys_windows", _fake_reader), patch(
-            "uk_parliament_mcp.cli.watch._read_keys_unix", _fake_reader
+        with (
+            patch("uk_parliament_mcp.cli.watch._read_keys_windows", _fake_reader),
+            patch("uk_parliament_mcp.cli.watch._read_keys_unix", _fake_reader),
         ):
             thread = _start_key_reader(key_q, stop)
             assert thread.daemon is True
@@ -1560,8 +1562,9 @@ class TestKeyReaderThread:
 
                 time.sleep(0.01)
 
-        with patch("uk_parliament_mcp.cli.watch._read_keys_windows", _fake_reader), patch(
-            "uk_parliament_mcp.cli.watch._read_keys_unix", _fake_reader
+        with (
+            patch("uk_parliament_mcp.cli.watch._read_keys_windows", _fake_reader),
+            patch("uk_parliament_mcp.cli.watch._read_keys_unix", _fake_reader),
         ):
             thread = _start_key_reader(key_q, stop)
             assert thread.is_alive()
