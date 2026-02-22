@@ -122,14 +122,17 @@ Note: This tool is an unofficial, independent project — not created or support
 
 GOODBYE_PROMPT = """You are now interacting as a normal assistant. There are no special restrictions or requirements for using UK Parliament MCP data. You may answer questions using any available data or knowledge, and you do not need to append MCP API URLs or limit yourself to MCP sources. Resume normal assistant behavior."""
 
-QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (122 tools)
+QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (163 tools)
 
 ### Composite Tools (Start Here for Common Queries!)
 These tools combine multiple API calls - use them first for efficiency:
-- get_mp_profile(name) - Complete MP profile in one call
-- check_mp_vote(mp_name, topic) - Check how an MP voted on a topic
+- get_mp_profile(member_id) - Complete MP profile in one call
+- check_mp_vote(member_id, topic) - Check how an MP voted on a topic
 - get_bill_overview(search_term) - Full bill info with stages
 - get_committee_summary(topic) - Committee with evidence and publications
+- get_my_mp(postcode, topic) - Find MP by UK postcode with full profile
+
+Note: Composite tools require member_id (int) — search first with get_member_by_name()
 
 ### Key Conventions
 - House IDs: 1 = Commons, 2 = Lords (for some tools: 'Commons' or 'Lords' as strings)
@@ -140,46 +143,55 @@ These tools combine multiple API calls - use them first for efficiency:
 ### Tool Categories & Entry Points
 | Module | Tools | Start With |
 |--------|-------|------------|
-| composite | 4 | get_mp_profile(name) |
-| members | 24 | get_member_by_name(name) |
+| composite | 5 | get_mp_profile(member_id) |
+| members | 30 | get_member_by_name(name) |
 | bills | 21 | search_bills(search_term) |
-| committees | 24 | search_committees(search_term) |
+| committees | 26 | search_committees(search_term) |
 | commons_votes | 5 | search_commons_divisions(search_term) |
 | lords_votes | 5 | search_lords_divisions(search_term) |
-| hansard | 18 | search_hansard(house, start_date, end_date, search_term) |
-| oral_questions | 3 | search_early_day_motions(search_term) |
+| hansard | 20 | search_hansard(house, start_date, end_date, search_term) |
+| oral_questions | 5 | search_early_day_motions(search_term) |
+| written_questions | 7 | search_written_questions(search_term) |
 | interests | 3 | search_roi(member_id) |
 | now | 2 | happening_now_in_commons() |
-| whatson | 3 | search_calendar(house, start_date, end_date) |
-| statutory_instruments | 2 | search_statutory_instruments() |
-| treaties | 1 | search_treaties(search_text) |
+| whatson | 8 | search_calendar(house, start_date, end_date) |
+| statutory_instruments | 5 | search_statutory_instruments() |
+| treaties | 6 | search_treaties(search_text) |
 | erskine_may | 11 | search_erskine_may(search_term) |
 
 ### Common Patterns
 1. Use composite tools first for common queries (saves multiple calls)
 2. For detailed data: Search by name/term -> Get by ID -> Get related data
-3. For MP voting: check_mp_vote() OR get_member_by_name() -> get_commons_voting_record_for_member()
+3. For MP voting: check_mp_vote(member_id, topic) OR get_member_by_name() -> get_commons_voting_record_for_member()
 4. For bill progress: get_bill_overview() OR search_bills() -> get_bill_stages()
 
 Use parliament_guide(topic) for detailed tool information.
 Use parliament_workflow(query) for step-by-step research planning."""
 
 GUIDANCE_CONTENT = {
-    "composite": """## Composite Tools (4 tools)
+    "composite": """## Composite Tools (5 tools)
 
 High-level tools that combine multiple API calls for common research tasks.
 Use these FIRST for common queries to reduce tool calls and improve efficiency.
 
-### MP/Lord Research
-- get_mp_profile(name) - Complete profile in one call
-  - Combines: member search + details + biography + interests + voting
-  - Returns: Basic info, biography, registered interests, recent votes
-  - Example: get_mp_profile("Keir Starmer")
+Note: get_mp_profile and check_mp_vote require member_id (int).
+Search first with get_member_by_name(name) to get the member_id.
 
-- check_mp_vote(mp_name, topic) - Check voting stance on a topic
-  - Combines: member search + division search with member filter
+### MP/Lord Research
+- get_mp_profile(member_id) - Complete profile in one call
+  - Combines: member details + biography + interests + voting
+  - Returns: Basic info, biography, registered interests, recent votes
+  - Example: get_mp_profile(4514)  # Keir Starmer's member_id
+
+- check_mp_vote(member_id, topic) - Check voting stance on a topic
+  - Combines: member lookup + division search with member filter
   - Returns: MP info and divisions on the topic where they voted
-  - Example: check_mp_vote("Boris Johnson", "climate")
+  - Example: check_mp_vote(172, "climate")  # Boris Johnson's member_id
+
+- get_my_mp(postcode, topic) - Find MP by UK postcode
+  - Combines: constituency lookup + member search + biography + interests + votes
+  - Returns: Constituency, MP profile, biography, registered interests, election result, recent votes
+  - Example: get_my_mp("SW1A 1AA", "climate")
 
 ### Bill Research
 - get_bill_overview(search_term) - Full bill information
@@ -199,7 +211,7 @@ Use the individual tools (in members, bills, etc.) when you need:
 - Pagination through large result sets
 - Access to specific endpoints not covered by composite tools
 - More control over which data is fetched""",
-    "members": """## Members Tools (24 tools)
+    "members": """## Members Tools (30 tools)
 
 ### Primary Search Tools
 - search_members(name, location, party_id, house, is_current_member, skip, take) - Comprehensive member search with filters
@@ -224,6 +236,7 @@ Use the individual tools (in members, bills, etc.) when you need:
 ### Interests & Staff
 - get_member_registered_interests(member_id, house) - Declared financial interests
 - get_member_staff(member_id) - Office staff details
+- get_lords_interests_staff(search_term) - Lords staff interests
 
 ### Electoral Data
 - get_member_latest_election_result(member_id) - Last election result
@@ -234,6 +247,19 @@ Use the individual tools (in members, bills, etc.) when you need:
 - parties_list_by_house(house) - Active parties (house: 1=Commons, 2=Lords)
 - get_departments() - Government departments
 - get_answering_bodies() - Which dept answers which questions
+- get_government_posts() - Government ministerial posts
+- get_opposition_posts() - Opposition front bench posts
+- get_state_of_parties(house, for_date) - Party composition of a House
+- get_lords_by_type(for_date) - Lords by peerage type
+- get_spokespersons(party_id) - Party spokespersons
+- get_policy_interests() - Policy interest categories
+
+### Images
+- get_member_portrait_url(member_id) - Official portrait URL
+- get_member_thumbnail_url(member_id) - Thumbnail image URL
+
+### History
+- get_members_history(member_ids) - Historical member data
 
 ### Typical Workflow
 1. Search: get_member_by_name("Keir Starmer") -> extract member_id
@@ -299,7 +325,7 @@ Use the individual tools (in members, bills, etc.) when you need:
 1. Find division: search_commons_divisions("Rwanda") -> get division_id
 2. Full results: get_commons_division_by_id(division_id) -> see all votes
 3. Member record: get_commons_voting_record_for_member(member_id) -> voting history""",
-    "committees": """## Committee Tools (24 tools)
+    "committees": """## Committee Tools (26 tools)
 
 ### Search & Discovery
 - search_committees(search_term) - Find committees by topic
@@ -344,7 +370,7 @@ Use the individual tools (in members, bills, etc.) when you need:
 4. Activity: get_committee_meetings("2024-01-01", "2024-12-31") -> recent meetings
 5. Evidence: get_oral_evidence(committee_id=committee_id) -> witness testimonies
 6. Reports: get_publications(committee_id=committee_id) -> published reports""",
-    "hansard": """## Hansard Tools (18 tools)
+    "hansard": """## Hansard Tools (20 tools)
 
 ### Core Search
 - search_hansard(house, start_date, end_date, search_term) - Search debates
@@ -372,6 +398,10 @@ Use the individual tools (in members, bills, etc.) when you need:
 - get_hansard_linked_dates(house, date) - Previous/next sitting
 - get_hansard_section_trees(house, date, section) - Debate hierarchy
 
+### Historic Hansard
+- search_historic_sitting_days(house, start_date, end_date) - Search historic sitting days
+- get_historic_sitting_day(house, sitting_date) - Get historic sitting day details
+
 ### About Hansard
 Hansard is the official verbatim record of everything said in Parliament:
 - Debates in the Commons and Lords chambers
@@ -385,15 +415,17 @@ Hansard is the official verbatim record of everything said in Parliament:
 3. Who spoke: get_debate_speakers(debate_section_id) -> speaker list
 4. Votes: get_debate_divisions(debate_section_id) -> divisions
 5. Member focus: get_member_hansard_contributions(member_id, debate_section_id)""",
-    "questions": """## Questions & Motions Tools (4 tools)
+    "questions": """## Questions & Motions Tools (5 tools)
 
 ### Early Day Motions (EDMs)
 - get_recently_tabled_edms(take) - Get recently tabled EDMs
 - search_early_day_motions(search_term) - Find EDMs by topic
+- get_early_day_motion(edm_id) - Get specific EDM details
 - edms_for_member_id(member_id) - EDMs signed/sponsored by a member
 
 ### Oral Questions
 - search_oral_question_times(answering_date_start, answering_date_end) - Find question sessions
+- search_oral_questions(...) - Search oral questions with filters
 
 ### About EDMs
 Early Day Motions are formal notices of a motion:
@@ -437,7 +469,7 @@ MPs and Lords must declare:
 1. Find member: get_member_by_name("Name") -> member_id
 2. Get interests: search_roi(member_id) -> declared interests
 3. Understand categories: interests_categories() -> what each means""",
-    "live": """## Live Activity & Calendar Tools (5 tools)
+    "live": """## Live Activity & Calendar Tools (10 tools)
 
 ### What's Happening Now
 - happening_now_in_commons() - Current Commons chamber activity
@@ -447,10 +479,15 @@ MPs and Lords must declare:
 - search_calendar(house, start_date, end_date) - Find scheduled events (house: 'Commons' or 'Lords')
 - get_sessions() - List of parliamentary sessions
 - get_non_sitting_days(house, start_date, end_date) - Recesses, bank holidays, etc.
+- get_sitting_dates(house, start_date, end_date) - Sitting dates in range
+- get_next_sitting_date(house, date_to_check) - Next sitting after a date
+- get_tabling_deadline(house, requested_date) - Tabling deadline for a date
+- get_answer_deadline(house, requested_date) - Answer deadline for a date
+- get_calendar_event(event_id) - Get calendar event by ID
 
 ### Parameters
 - Dates: YYYY-MM-DD format
-- house: 1 = Commons, 2 = Lords (optional)
+- house: 'Commons' or 'Lords' (string)
 
 ### What "Now" Tools Return
 - Current business being debated
@@ -462,14 +499,22 @@ MPs and Lords must declare:
 - "Now" tools only work when Parliament is sitting
 - Check get_non_sitting_days() for recess periods
 - Calendar includes debates, questions, legislation""",
-    "legislation": """## Legislation Tools (3 tools)
+    "legislation": """## Legislation Tools (11 tools)
 
-### Statutory Instruments
-- search_statutory_instruments(search_term, skip, take) - Find SIs
-- get_statutory_instruments_business_items(statutory_instrument_id) - SI progress
+### Statutory Instruments (5 tools)
+- search_statutory_instruments(name) - Find SIs by name
+- search_acts_of_parliament(name) - Find Acts by name
+- get_statutory_instrument(instrument_id) - Get SI details
+- get_si_business_items(instrument_id) - SI parliamentary progress
+- get_act_of_parliament(act_id) - Get Act details
 
-### Treaties
-- search_treaties(search_text, skip, take) - Find international treaties
+### Treaties (6 tools)
+- search_treaties(search_text) - Find international treaties
+- search_treaties_advanced(...) - Advanced treaty search with filters
+- get_treaty(treaty_id) - Get treaty details
+- get_treaty_business_items(treaty_id) - Treaty parliamentary progress
+- get_treaty_government_organisations() - Government organisations for treaties
+- get_treaty_series_memberships() - Treaty series memberships
 
 ### About Statutory Instruments
 SIs are secondary/delegated legislation:
@@ -486,7 +531,7 @@ International agreements requiring parliamentary scrutiny:
 
 ### Typical Workflow
 1. Search: search_statutory_instruments("environment")
-2. Details: get_statutory_instruments_business_items(si_id) -> parliamentary progress""",
+2. Details: get_si_business_items(instrument_id) -> parliamentary progress""",
     "procedures": """## Procedure Tools (13 tools)
 
 ### Erskine May Navigation
@@ -541,18 +586,19 @@ Or search directly:
 5. Third Reading: Final debate
 6. Lords/Commons stages: Mirror process in other House
 7. Royal Assent: Becomes law""",
-    "all": """## All UK Parliament MCP Tools (122 tools)
+    "all": """## All UK Parliament MCP Tools (163 tools)
 
-### Composite (4 tools) - Use These First!
-get_mp_profile, check_mp_vote, get_bill_overview, get_committee_summary
+### Composite (5 tools) - Use These First!
+get_mp_profile(member_id), check_mp_vote(member_id, topic), get_bill_overview, get_committee_summary, get_my_mp(postcode, topic)
+Note: get_mp_profile and check_mp_vote require member_id (int) — search first with get_member_by_name()
 
-### Members (24 tools)
+### Members (30 tools)
 Search: search_members, get_member_by_name
 Details: get_member_by_id, get_members_biography, get_members_contact, get_member_synopsis, get_member_experience, get_member_focus
 Activity: get_member_voting, get_commons_voting_record_for_member, get_lords_voting_record_for_member, get_member_written_questions, get_contributions, edms_for_member_id
 Interests: get_member_registered_interests, get_member_staff, get_lords_interests_staff
 Electoral: get_member_latest_election_result, get_constituencies, get_election_results_for_constituency
-Reference: parties_list_by_house, get_departments, get_answering_bodies
+Reference: parties_list_by_house, get_departments, get_answering_bodies, get_government_posts, get_opposition_posts, get_state_of_parties, get_lords_by_type, get_spokespersons, get_policy_interests
 History: get_members_history
 Images: get_member_portrait_url, get_member_thumbnail_url
 
@@ -568,32 +614,49 @@ RSS: get_all_bills_rss, get_public_bills_rss, get_private_bills_rss, get_bill_rs
 Commons: search_commons_divisions, get_commons_division_by_id, get_commons_voting_record_for_member, get_commons_divisions_grouped_by_party, get_commons_divisions_search_count
 Lords: search_lords_divisions, get_lords_division_by_id, get_lords_voting_record_for_member, get_lords_divisions_grouped_by_party, get_lords_divisions_search_count
 
-### Committees (24 tools)
+### Committees (26 tools)
 Search: search_committees, get_committee_by_id, get_committee_types
-Business: get_committee_business, get_committee_business_by_id, get_committee_business_types
+Business: get_committee_business, get_committee_business_by_id, get_committee_business_types, get_committee_business_publications_summary
 Meetings: get_committee_meetings, get_events, get_event_by_id, get_committee_events, get_committees_next_events, get_event_activities, get_event_attendance
 Members: get_committee_members, get_committee_staff, get_member_committee_memberships
 Evidence: get_oral_evidence, get_oral_evidence_by_id, get_written_evidence, get_written_evidence_by_id
-Publications: get_publications, get_publication_by_id, get_committee_publications_summary, get_publication_types
+Publications: get_publications, get_publication_by_id, get_committee_publications_summary, get_committee_publication_types
+Petitions: search_bill_petitions
 
-### Hansard (18 tools)
+### Hansard (20 tools)
 Search: search_hansard, search_hansard_full, search_hansard_contributions, search_hansard_members, search_hansard_divisions
 Debates: get_debate_by_id, get_member_hansard_contributions, get_debate_divisions, get_division_details, get_debate_speakers, get_top_level_debate_id, get_debate_by_title
 Members: get_member_contribution_summary
 Calendar: get_hansard_sitting_day, get_hansard_calendar, get_hansard_last_sitting_date, get_hansard_linked_dates, get_hansard_section_trees
+Historic: search_historic_sitting_days, get_historic_sitting_day
 
 ### Erskine May (11 tools)
 Structure: get_erskine_may_parts, get_erskine_may_part, get_erskine_may_chapter, get_erskine_may_section, get_erskine_may_section_relative
 Search: search_erskine_may, search_erskine_may_sections, get_erskine_may_paragraph
 Index: browse_erskine_may_index, search_erskine_may_index, get_erskine_may_index_term
 
-### Other Tools (10 tools)
-Questions: get_recently_tabled_edms, search_early_day_motions, search_oral_question_times
-Interests: search_roi, interests_categories, get_registers_of_interests
+### Questions & Motions (5 tools)
+EDMs: get_recently_tabled_edms, search_early_day_motions, get_early_day_motion, edms_for_member_id
+Oral: search_oral_question_times, search_oral_questions
+
+### Written Questions & Statements (7 tools)
+Questions: search_written_questions, get_written_question, get_written_question_by_uin
+Statements: search_written_statements, get_written_statement, get_written_statement_by_uin
+Reports: get_daily_reports
+
+### Interests (3 tools)
+search_roi, interests_categories, get_registers_of_interests
+
+### Live & Calendar (10 tools)
 Live: happening_now_in_commons, happening_now_in_lords
-Calendar: search_calendar, get_sessions, get_non_sitting_days
-Legislation: search_statutory_instruments, get_statutory_instruments_business_items, search_treaties
-Session: order_order, parliament_guide, parliament_workflow""",
+Calendar: search_calendar, get_sessions, get_non_sitting_days, get_sitting_dates, get_next_sitting_date, get_tabling_deadline, get_answer_deadline, get_calendar_event
+
+### Legislation (11 tools)
+SIs: search_statutory_instruments, search_acts_of_parliament, get_statutory_instrument, get_si_business_items, get_act_of_parliament
+Treaties: search_treaties, search_treaties_advanced, get_treaty, get_treaty_business_items, get_treaty_government_organisations, get_treaty_series_memberships
+
+### Session & Guidance (4 tools)
+order_order, parliament_guide, parliament_workflow, get_cli_reference""",
     "conventions": """## UK Parliament MCP Conventions
 
 ### House Identification
@@ -640,14 +703,14 @@ Goal: Track a bill's progress through Parliament
 1. search_bills(topic) -> bill_id
 2. get_bill_by_id(bill_id) -> current status
 3. get_bill_stages(bill_id) -> full journey
-4. get_bill_amendments(bill_id) -> proposed changes
+4. get_bill_stage_amendments(bill_id, stage_id) -> proposed changes
 
 ### Committee Investigation
 Goal: Find what a committee examined
 1. search_committees(topic) -> committee_id
 2. get_committee_by_id(committee_id) -> scope
 3. get_oral_evidence(committee_id) -> witness testimony
-4. get_committee_publications(committee_id) -> reports
+4. get_publications(committee_id) -> reports
 
 ### Conflict of Interest Research
 Goal: Check MP's financial interests
@@ -742,8 +805,8 @@ WORKFLOW_PATTERNS: list[dict[str, Any]] = [
             },
             {
                 "step": 4,
-                "tool": "get_bill_amendments(bill_id)",
-                "purpose": "See proposed changes",
+                "tool": "get_bill_stage_amendments(bill_id, stage_id)",
+                "purpose": "See proposed changes at a specific stage",
                 "output": "List of amendments with sponsors",
             },
         ],
@@ -773,7 +836,7 @@ WORKFLOW_PATTERNS: list[dict[str, Any]] = [
             },
             {
                 "step": 4,
-                "tool": "get_committee_publications(committee_id)",
+                "tool": "get_publications(committee_id)",
                 "purpose": "Find reports and conclusions",
                 "output": "Published reports",
             },
@@ -988,7 +1051,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def order_order() -> str:
         """Start UK Parliament research session | order, begin, initialize, start session, parliament mode |
         Use at the START of any parliamentary research to get proper context and guidance.
-        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 122 tools.
+        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 163 tools.
         """
         return f"{SYSTEM_PROMPT}\n\n---\n\n{QUICK_REFERENCE}"
 
@@ -1087,7 +1150,7 @@ def register_prompts(mcp: FastMCP) -> None:
 
     @mcp.prompt()
     async def parliament(topic: str | None = None) -> str:
-        """Initialize UK Parliament research session with guidance on 122 available tools.
+        """Initialize UK Parliament research session with guidance on 163 available tools.
 
         Provides system instructions for parliamentary data queries, quick reference
         of tool categories, and guidance on common research workflows.

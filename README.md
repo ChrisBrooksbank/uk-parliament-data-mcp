@@ -140,16 +140,19 @@ These high-level tools combine multiple API calls for common research tasks:
 
 | Tool | What it does |
 |------|--------------|
-| `get_mp_profile(name)` | Complete MP/Lord profile: bio, interests, voting record |
-| `check_mp_vote(mp_name, topic)` | How an MP voted on a specific topic |
+| `get_mp_profile(member_id)` | Complete MP/Lord profile: bio, interests, voting record |
+| `check_mp_vote(member_id, topic)` | How an MP voted on a specific topic |
 | `get_bill_overview(search_term)` | Full bill info: details, stages, publications |
 | `get_committee_summary(topic)` | Committee overview: evidence, publications |
+| `get_my_mp(postcode, topic)` | Find MP by UK postcode with full profile |
+
+Note: `get_mp_profile` and `check_mp_vote` require a `member_id` (int). Search first with `get_member_by_name()`.
 
 **Example:**
 ```
 Tell me everything about Keir Starmer
 ```
-The AI will use `get_mp_profile` to fetch biography, registered interests, and voting history in a single efficient call.
+The AI will use `get_member_by_name` to find the member_id, then `get_mp_profile` to fetch biography, registered interests, and voting history in a single efficient call.
 
 ## Ending Your Session
 
@@ -383,11 +386,11 @@ pip install uk-parliament-mcp
 # Search for an MP
 parliament members search "Keir Starmer"
 
-# Get comprehensive MP profile
-parliament composite mp-profile "Rishi Sunak" --pretty
+# Get comprehensive MP profile (use member_id)
+parliament composite mp-profile 4514 --pretty
 
-# Check how an MP voted on a topic
-parliament composite check-vote "Boris Johnson" "climate"
+# Check how an MP voted on a topic (use member_id)
+parliament composite check-vote 172 "climate"
 
 # Track bill progress
 parliament bills search "Online Safety" --data-only | jq '.items[0]'
@@ -424,8 +427,8 @@ parliament hansard search-debates "NHS" --house 1
 
 # Live activity
 parliament live commons-now
-parliament live calendar
-parliament live next-sitting-date --house 1
+parliament live calendar Commons 2025-01-15 2025-01-31
+parliament live next-sitting-date Commons 2025-01-15
 
 # Questions and statements
 parliament questions search-edms "immigration"
@@ -459,11 +462,11 @@ parliament api search "bill"               # Search across APIs
 parliament my-mp "SW1A 1AA"
 parliament my-mp "N1 9GU" --votes climate
 
-# Get everything about an MP in one call
-parliament composite mp-profile "Keir Starmer" --pretty
+# Get everything about an MP in one call (use member_id)
+parliament composite mp-profile 4514 --pretty
 
-# Check how an MP voted on a topic
-parliament composite check-vote "Johnson" "climate" --pretty
+# Check how an MP voted on a topic (use member_id)
+parliament composite check-vote 172 "climate" --pretty
 
 # Get comprehensive bill overview
 parliament composite bill-overview "Online Safety" --pretty
@@ -558,7 +561,7 @@ parliament reference members
 parliament reference --search vote
 
 # Export as JSON
-parliament reference --json
+parliament reference --format json
 ```
 
 ### Output Formats

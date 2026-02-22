@@ -25,13 +25,13 @@ The package includes a `parliament` CLI tool for terminal access to all 163 Parl
 parliament members search "Keir Starmer"
 
 # Get comprehensive MP profile
-parliament composite mp-profile "Rishi Sunak" --pretty
+parliament composite mp-profile 4514 --pretty
 
 # Search bills
 parliament bills search "Online Safety"
 
 # Check how an MP voted on a topic
-parliament composite check-vote "Boris Johnson" "climate"
+parliament composite check-vote 172 "climate"
 
 # Get live chamber activity
 parliament live commons-now
@@ -108,8 +108,8 @@ parliament members search "Starmer" --data-only | jq '.items[0]'
 
 **MP research:**
 ```bash
-# Full profile in one call
-parliament composite mp-profile "Keir Starmer" --pretty
+# Full profile in one call (use member_id)
+parliament composite mp-profile 4514 --pretty
 
 # Search by name
 parliament members search "Sunak"
@@ -138,8 +138,8 @@ parliament bills amendments 123
 
 **Voting records:**
 ```bash
-# Check MP's vote on topic
-parliament composite check-vote "Johnson" "climate" --pretty
+# Check MP's vote on topic (use member_id)
+parliament composite check-vote 172 "climate" --pretty
 
 # Search Commons divisions
 parliament votes search "environment" --house 1
@@ -166,10 +166,10 @@ parliament committees oral-evidence 456
 parliament live commons-now --pretty
 
 # Today's calendar
-parliament live calendar
+parliament live calendar Commons 2025-01-15 2025-01-31
 
 # Next sitting date
-parliament live next-sitting-date --house 1
+parliament live next-sitting-date Commons 2025-01-15
 ```
 
 **Daily/weekly digest:**
@@ -426,15 +426,15 @@ This prompt is separate from the guidance **tools** below - prompts appear in th
 
 High-level tools that combine multiple API calls for common research tasks. Use these first for efficiency:
 
-### `get_mp_profile(name)`
-Get comprehensive MP/Lord profile in one call. Combines member search + biography + interests + voting.
+### `get_mp_profile(member_id)`
+Get comprehensive MP/Lord profile in one call. Combines member details + biography + interests + voting.
 - Returns: Basic info, biography, registered interests, recent votes
-- Example: `get_mp_profile("Keir Starmer")`
+- Example: `get_mp_profile(4514)` (search for member_id first using `get_member_by_name()`)
 
-### `check_mp_vote(mp_name, topic)`
-Check how an MP voted on a specific topic. Combines member search + division lookup.
+### `check_mp_vote(member_id, topic)`
+Check how an MP voted on a specific topic. Combines member lookup + division search.
 - Returns: MP info and divisions on the topic where they voted
-- Example: `check_mp_vote("Boris Johnson", "climate")`
+- Example: `check_mp_vote(172, "climate")` (search for member_id first using `get_member_by_name()`)
 
 ### `get_bill_overview(search_term)`
 Get comprehensive bill overview. Combines bill search + details + stages + publications.
