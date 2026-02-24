@@ -23,6 +23,7 @@ https://github.com/user-attachments/assets/30f2df13-dff9-44e6-b1f6-5eebfb665d9e
 - [MCP Server for AI Assistants](#mcp-server-for-ai-assistants)
   - [Getting Started](#getting-started)
   - [Starting a Session](#starting-a-session)
+  - [Parliament Research Skill (Claude Code)](#parliament-research-skill-claude-code)
   - [Claude Desktop Setup](#claude-desktop-setup)
   - [VS Code Setup](#vs-code-setup)
   - [What Can I Ask?](#what-can-i-ask)
@@ -72,6 +73,20 @@ After every response, append a list of all MCP API URLs used to generate the ans
 If no relevant data is available via the MCP API, state that clearly and do not attempt to fabricate a response.
 Convert raw data into human-readable summaries while preserving accuracy, but always list the raw URLs used.
 ```
+
+### Parliament Research Skill (Claude Code)
+
+If you use [Claude Code](https://docs.anthropic.com/en/docs/claude-code), this repo includes a `/parliament-research` slash command that turns Claude into a Parliament research assistant.
+
+Type `/parliament-research` followed by a natural language question:
+
+```
+/parliament-research How did Keir Starmer vote on climate?
+/parliament-research When was Chelmsford mentioned in Hansard?
+/parliament-research What bills about education are in progress?
+```
+
+Claude will pick the right CLI commands, run them, and present a sourced answer. The command file lives at `.claude/commands/parliament-research.md`.
 
 ## Claude Desktop Setup
 
