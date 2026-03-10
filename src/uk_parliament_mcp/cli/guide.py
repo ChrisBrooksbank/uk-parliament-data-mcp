@@ -303,7 +303,7 @@ def tools(
     """
     Start UK Parliament research session - list all available tools.
 
-    Returns system prompt and quick reference of all 163 tool categories with
+    Returns system prompt and quick reference of all 209 tool categories with
     entry points, key conventions, and common patterns.
     """
     result = run_async(_order_order_async())

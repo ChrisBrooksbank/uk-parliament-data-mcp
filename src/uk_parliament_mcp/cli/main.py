@@ -30,7 +30,7 @@ from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async, sho
 
 app = typer.Typer(
     name="parliament",
-    help="UK Parliament CLI (Unofficial) - not affiliated with UK Parliament.\n\nAccess 163 Parliament API tools from the terminal.\nData sourced from publicly available parliament.uk APIs.\nhttps://github.com/ChrisBrooksbank/uk-parliament-mcp-lab",
+    help="UK Parliament CLI (Unofficial) - not affiliated with UK Parliament.\n\nAccess 209 Parliament API tools from the terminal.\nData sourced from publicly available parliament.uk APIs.\nhttps://github.com/ChrisBrooksbank/uk-parliament-mcp-lab",
     no_args_is_help=True,
 )
 
