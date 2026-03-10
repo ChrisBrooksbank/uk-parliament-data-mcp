@@ -522,3 +522,263 @@ def register_tools(mcp: FastMCP) -> None:
         """
         url = f"{HANSARD_API_BASE}/historicsittingdays/{house}/{sitting_date}"
         return await get_result(url)
+
+    @mcp.tool()
+    async def get_hansard_currently_processing() -> str:
+        """Get Hansard content currently being processed | Hansard, processing status, live updates | Use to check what Hansard content is currently being transcribed or indexed | Returns list of items currently being processed
+
+        Returns:
+            Items currently being processed by the Hansard system.
+        """
+        url = f"{HANSARD_API_BASE}/overview/currentlyprocessing.json"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_hansard_first_year() -> str:
+        """Get the earliest year Hansard records are available | Hansard, first year, earliest record | Use to determine the historical range of available Hansard data | Returns the first year with Hansard records
+
+        Returns:
+            The first year with available Hansard records.
+        """
+        url = f"{HANSARD_API_BASE}/overview/firstyear.json"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_hansard_pdfs_for_day(date: str, house: int) -> str:
+        """Get PDF documents for a specific sitting day | Hansard, PDFs, daily documents | Use to retrieve official PDF transcripts for a parliamentary sitting day | Returns list of PDF links for that day
+
+        Args:
+            date: Date in YYYY-MM-DD format.
+            house: House number: 1 for Commons, 2 for Lords.
+
+        Returns:
+            List of PDF documents available for that sitting day.
+        """
+        url = build_url(
+            f"{HANSARD_API_BASE}/overview/pdfsforday.json",
+            {
+                "date": date,
+                "house": house,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_hansard_speakers_for_day(
+        date: str,
+        house: int,
+        section: str,
+    ) -> str:
+        """Get list of speakers for a specific sitting day section | Hansard, speakers, daily list | Use to find who spoke in a particular section of parliamentary business on a given day | Returns list of speakers for that section
+
+        Args:
+            date: Date in YYYY-MM-DD format.
+            house: House number: 1 for Commons, 2 for Lords.
+            section: Section name (e.g. 'Debate', 'WestHall', 'Petitions', 'GEN').
+
+        Returns:
+            List of speakers for the specified day and section.
+        """
+        url = build_url(
+            f"{HANSARD_API_BASE}/overview/speakerslist/{date}/{house}.json",
+            {"section": section},
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def search_committee_debates(
+        house: int | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        search_term: str | None = None,
+        committee_title: str | None = None,
+        skip: int = 0,
+        take: int = 20,
+    ) -> str:
+        """Search committee debates in Hansard | Hansard, committees, select committee debates | Use to find debates and discussions from parliamentary committees | Returns committee debates matching the search criteria
+
+        Args:
+            house: House number: 1 for Commons, 2 for Lords (optional).
+            start_date: Start date in YYYY-MM-DD format (optional).
+            end_date: End date in YYYY-MM-DD format (optional).
+            search_term: Search term (optional).
+            committee_title: Filter by committee title (optional).
+            skip: Number of results to skip for pagination (default 0).
+            take: Number of results to return (default 20).
+
+        Returns:
+            Committee debates matching the search criteria.
+        """
+        url = build_url(
+            f"{HANSARD_API_BASE}/search/committeedebates.json",
+            {
+                "queryParameters.house": house,
+                "queryParameters.startDate": start_date,
+                "queryParameters.endDate": end_date,
+                "queryParameters.searchTerm": search_term,
+                "queryParameters.committeeTitle": committee_title,
+                "queryParameters.skip": skip,
+                "queryParameters.take": take,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def search_hansard_committees(
+        house: int | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        search_term: str | None = None,
+        skip: int = 0,
+        take: int = 20,
+    ) -> str:
+        """Search committees that appear in Hansard | Hansard, committee search, parliamentary committees | Use to find committees by name or keyword in Hansard records | Returns committees matching the search criteria
+
+        Args:
+            house: House number: 1 for Commons, 2 for Lords (optional).
+            start_date: Start date in YYYY-MM-DD format (optional).
+            end_date: End date in YYYY-MM-DD format (optional).
+            search_term: Search term (optional).
+            skip: Number of results to skip for pagination (default 0).
+            take: Number of results to return (default 20).
+
+        Returns:
+            Committees matching the search criteria.
+        """
+        url = build_url(
+            f"{HANSARD_API_BASE}/search/committees.json",
+            {
+                "queryParameters.house": house,
+                "queryParameters.startDate": start_date,
+                "queryParameters.endDate": end_date,
+                "queryParameters.searchTerm": search_term,
+                "queryParameters.skip": skip,
+                "queryParameters.take": take,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_debate_by_column(
+        house: int | None = None,
+        column_number: int | None = None,
+        volume_number: int | None = None,
+        series_number: int | None = None,
+    ) -> str:
+        """Get a debate by Hansard column number | Hansard, column reference, volume | Use when you have a Hansard column reference (e.g. from a citation) and need to find the debate | Returns the debate at the specified column
+
+        Args:
+            house: House number: 1 for Commons, 2 for Lords (optional).
+            column_number: Hansard column number (optional).
+            volume_number: Hansard volume number (optional).
+            series_number: Hansard series number (optional).
+
+        Returns:
+            Debate at the specified column reference.
+        """
+        url = build_url(
+            f"{HANSARD_API_BASE}/search/debatebycolumn.json",
+            {
+                "queryParameters.house": house,
+                "queryParameters.columnNumber": column_number,
+                "queryParameters.volumeNumber": volume_number,
+                "queryParameters.seriesNumber": series_number,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_debate_by_external_id(
+        content_item_external_id: str,
+        house: int,
+    ) -> str:
+        """Get a debate by its external content item ID | Hansard, external ID, debate lookup | Use when you have an external content item ID to retrieve the specific debate | Returns the debate matching the external ID
+
+        Args:
+            content_item_external_id: External content item ID.
+            house: House number: 1 for Commons, 2 for Lords.
+
+        Returns:
+            Debate matching the external content item ID.
+        """
+        url = build_url(
+            f"{HANSARD_API_BASE}/search/debatebyexternalid.json",
+            {
+                "contentItemExternalId": content_item_external_id,
+                "house": house,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def search_hansard_petitions(
+        house: int | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        search_term: str | None = None,
+        skip: int = 0,
+        take: int = 20,
+    ) -> str:
+        """Search petitions in Hansard | Hansard, petitions, parliamentary petitions | Use to find petitions presented in Parliament | Returns petitions matching the search criteria
+
+        Args:
+            house: House number: 1 for Commons, 2 for Lords (optional).
+            start_date: Start date in YYYY-MM-DD format (optional).
+            end_date: End date in YYYY-MM-DD format (optional).
+            search_term: Search term (optional).
+            skip: Number of results to skip for pagination (default 0).
+            take: Number of results to return (default 20).
+
+        Returns:
+            Petitions matching the search criteria.
+        """
+        url = build_url(
+            f"{HANSARD_API_BASE}/search/petitions.json",
+            {
+                "queryParameters.house": house,
+                "queryParameters.startDate": start_date,
+                "queryParameters.endDate": end_date,
+                "queryParameters.searchTerm": search_term,
+                "queryParameters.skip": skip,
+                "queryParameters.take": take,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_hansard_timeline_stats(
+        contribution_type: str | None = None,
+        is_debates_search: bool | None = None,
+        house: int | None = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+        search_term: str | None = None,
+        member_id: int | None = None,
+    ) -> str:
+        """Get Hansard timeline statistics | Hansard, statistics, timeline, contribution counts | Use to get aggregate stats showing contribution activity over time | Returns timeline statistics for the given search parameters
+
+        Args:
+            contribution_type: Type of contribution to filter by (optional).
+            is_debates_search: Whether to search debates only (optional).
+            house: House number: 1 for Commons, 2 for Lords (optional).
+            start_date: Start date in YYYY-MM-DD format (optional).
+            end_date: End date in YYYY-MM-DD format (optional).
+            search_term: Search term (optional).
+            member_id: Member ID to filter by (optional).
+
+        Returns:
+            Timeline statistics for contributions matching the criteria.
+        """
+        url = build_url(
+            f"{HANSARD_API_BASE}/timeline-stats.json",
+            {
+                "contributionType": contribution_type,
+                "isDebatesSearch": is_debates_search,
+                "queryParameters.house": house,
+                "queryParameters.startDate": start_date,
+                "queryParameters.endDate": end_date,
+                "queryParameters.searchTerm": search_term,
+                "queryParameters.memberId": member_id,
+            },
+        )
+        return await get_result(url)

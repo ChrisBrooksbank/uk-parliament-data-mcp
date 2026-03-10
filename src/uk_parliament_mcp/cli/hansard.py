@@ -579,3 +579,291 @@ def get_historic_sitting_day(
     """
     url = f"{HANSARD_API_BASE}/historicsittingdays/{house}/{sitting_date}"
     output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("currently-processing")
+def get_hansard_currently_processing(
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get Hansard content currently being processed.
+
+    Use to check what Hansard content is currently being transcribed or indexed.
+    """
+    url = f"{HANSARD_API_BASE}/overview/currentlyprocessing.json"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("first-year")
+def get_hansard_first_year(
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get the earliest year Hansard records are available.
+
+    Use to determine the historical range of available Hansard data.
+    """
+    url = f"{HANSARD_API_BASE}/overview/firstyear.json"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("pdfs-for-day")
+def get_hansard_pdfs_for_day(
+    date: str = typer.Argument(..., help="Date (YYYY-MM-DD)"),
+    house: int = typer.Argument(..., help="House: 1=Commons, 2=Lords"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get PDF documents for a specific sitting day.
+
+    Use to retrieve official PDF transcripts for a parliamentary sitting day.
+    """
+    url = build_url(
+        f"{HANSARD_API_BASE}/overview/pdfsforday.json",
+        {
+            "date": date,
+            "house": house,
+        },
+    )
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("speakers-for-day")
+def get_hansard_speakers_for_day(
+    date: str = typer.Argument(..., help="Date (YYYY-MM-DD)"),
+    house: int = typer.Argument(..., help="House: 1=Commons, 2=Lords"),
+    section: str = typer.Argument(
+        ..., help="Section (e.g., 'Debate', 'WestHall', 'Petitions', 'GEN')"
+    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get list of speakers for a specific sitting day section.
+
+    Use to find who spoke in a particular section of parliamentary business on a given day.
+    """
+    url = build_url(
+        f"{HANSARD_API_BASE}/overview/speakerslist/{date}/{house}.json",
+        {"section": section},
+    )
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("search-committee-debates")
+def search_committee_debates(
+    house: int | None = typer.Option(None, "--house", help="House: 1=Commons, 2=Lords"),
+    start_date: str | None = typer.Option(None, "--start-date", help="Start date (YYYY-MM-DD)"),
+    end_date: str | None = typer.Option(None, "--end-date", help="End date (YYYY-MM-DD)"),
+    search_term: str | None = typer.Option(None, "--search-term", help="Search term"),
+    committee_title: str | None = typer.Option(
+        None, "--committee-title", help="Filter by committee title"
+    ),
+    skip: int = typer.Option(0, "--skip", help="Results to skip (pagination)"),
+    take: int = typer.Option(20, "--take", help="Results to return"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Search committee debates in Hansard.
+
+    Use to find debates and discussions from parliamentary committees.
+    """
+    url = build_url(
+        f"{HANSARD_API_BASE}/search/committeedebates.json",
+        {
+            "queryParameters.house": house,
+            "queryParameters.startDate": start_date,
+            "queryParameters.endDate": end_date,
+            "queryParameters.searchTerm": search_term,
+            "queryParameters.committeeTitle": committee_title,
+            "queryParameters.skip": skip,
+            "queryParameters.take": take,
+        },
+    )
+    output_paginated(
+        url, HANSARD_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
+    )
+
+
+@app.command("search-committees")
+def search_hansard_committees(
+    house: int | None = typer.Option(None, "--house", help="House: 1=Commons, 2=Lords"),
+    start_date: str | None = typer.Option(None, "--start-date", help="Start date (YYYY-MM-DD)"),
+    end_date: str | None = typer.Option(None, "--end-date", help="End date (YYYY-MM-DD)"),
+    search_term: str | None = typer.Option(None, "--search-term", help="Search term"),
+    skip: int = typer.Option(0, "--skip", help="Results to skip (pagination)"),
+    take: int = typer.Option(20, "--take", help="Results to return"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Search committees that appear in Hansard.
+
+    Use to find committees by name or keyword in Hansard records.
+    """
+    url = build_url(
+        f"{HANSARD_API_BASE}/search/committees.json",
+        {
+            "queryParameters.house": house,
+            "queryParameters.startDate": start_date,
+            "queryParameters.endDate": end_date,
+            "queryParameters.searchTerm": search_term,
+            "queryParameters.skip": skip,
+            "queryParameters.take": take,
+        },
+    )
+    output_paginated(
+        url, HANSARD_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
+    )
+
+
+@app.command("debate-by-column")
+def get_debate_by_column(
+    house: int | None = typer.Option(None, "--house", help="House: 1=Commons, 2=Lords"),
+    column_number: int | None = typer.Option(None, "--column", help="Hansard column number"),
+    volume_number: int | None = typer.Option(None, "--volume", help="Hansard volume number"),
+    series_number: int | None = typer.Option(None, "--series", help="Hansard series number"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get a debate by Hansard column number.
+
+    Use when you have a Hansard column reference (e.g. from a citation).
+    """
+    url = build_url(
+        f"{HANSARD_API_BASE}/search/debatebycolumn.json",
+        {
+            "queryParameters.house": house,
+            "queryParameters.columnNumber": column_number,
+            "queryParameters.volumeNumber": volume_number,
+            "queryParameters.seriesNumber": series_number,
+        },
+    )
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("debate-by-external-id")
+def get_debate_by_external_id(
+    content_item_external_id: str = typer.Argument(..., help="External content item ID"),
+    house: int = typer.Argument(..., help="House: 1=Commons, 2=Lords"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get a debate by its external content item ID.
+
+    Use when you have an external content item ID to retrieve the specific debate.
+    """
+    url = build_url(
+        f"{HANSARD_API_BASE}/search/debatebyexternalid.json",
+        {
+            "contentItemExternalId": content_item_external_id,
+            "house": house,
+        },
+    )
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("search-petitions")
+def search_hansard_petitions(
+    house: int | None = typer.Option(None, "--house", help="House: 1=Commons, 2=Lords"),
+    start_date: str | None = typer.Option(None, "--start-date", help="Start date (YYYY-MM-DD)"),
+    end_date: str | None = typer.Option(None, "--end-date", help="End date (YYYY-MM-DD)"),
+    search_term: str | None = typer.Option(None, "--search-term", help="Search term"),
+    skip: int = typer.Option(0, "--skip", help="Results to skip (pagination)"),
+    take: int = typer.Option(20, "--take", help="Results to return"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Search petitions in Hansard.
+
+    Use to find petitions presented in Parliament.
+    """
+    url = build_url(
+        f"{HANSARD_API_BASE}/search/petitions.json",
+        {
+            "queryParameters.house": house,
+            "queryParameters.startDate": start_date,
+            "queryParameters.endDate": end_date,
+            "queryParameters.searchTerm": search_term,
+            "queryParameters.skip": skip,
+            "queryParameters.take": take,
+        },
+    )
+    output_paginated(
+        url, HANSARD_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
+    )
+
+
+@app.command("timeline-stats")
+def get_hansard_timeline_stats(
+    contribution_type: str | None = typer.Option(
+        None, "--contribution-type", help="Type of contribution to filter by"
+    ),
+    is_debates_search: bool | None = typer.Option(
+        None,
+        "--debates-search/--no-debates-search",
+        help="Search debates only",
+    ),
+    house: int | None = typer.Option(None, "--house", help="House: 1=Commons, 2=Lords"),
+    start_date: str | None = typer.Option(None, "--start-date", help="Start date (YYYY-MM-DD)"),
+    end_date: str | None = typer.Option(None, "--end-date", help="End date (YYYY-MM-DD)"),
+    search_term: str | None = typer.Option(None, "--search-term", help="Search term"),
+    member_id: int | None = typer.Option(None, "--member-id", help="Filter by member ID"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get Hansard timeline statistics.
+
+    Use to get aggregate stats showing contribution activity over time.
+    """
+    url = build_url(
+        f"{HANSARD_API_BASE}/timeline-stats.json",
+        {
+            "contributionType": contribution_type,
+            "isDebatesSearch": is_debates_search,
+            "queryParameters.house": house,
+            "queryParameters.startDate": start_date,
+            "queryParameters.endDate": end_date,
+            "queryParameters.searchTerm": search_term,
+            "queryParameters.memberId": member_id,
+        },
+    )
+    output_result(url, pretty, data_only, output_format, fields, raw)

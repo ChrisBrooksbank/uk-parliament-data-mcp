@@ -115,18 +115,18 @@ def _extract_text(result) -> str:
 
 # Each tuple: (module, mock_target, expected_tool_count)
 SINGLE_REQUEST_MODULES = [
-    (members, "uk_parliament_mcp.tools.members.get_result", 30),
+    (members, "uk_parliament_mcp.tools.members.get_result", 39),
     (bills, "uk_parliament_mcp.tools.bills.get_result", 21),
-    (committees, "uk_parliament_mcp.tools.committees.get_result", 26),
+    (committees, "uk_parliament_mcp.tools.committees.get_result", 30),
     (commons_votes, "uk_parliament_mcp.tools.commons_votes.get_result", 5),
     (lords_votes, "uk_parliament_mcp.tools.lords_votes.get_result", 5),
-    (hansard, "uk_parliament_mcp.tools.hansard.get_result", 20),
+    (hansard, "uk_parliament_mcp.tools.hansard.get_result", 30),
     (oral_questions, "uk_parliament_mcp.tools.oral_questions.get_result", 5),
     (written_questions, "uk_parliament_mcp.tools.written_questions.get_result", 7),
-    (interests, "uk_parliament_mcp.tools.interests.get_result", 3),
-    (now, "uk_parliament_mcp.tools.now.get_result", 2),
-    (whatson, "uk_parliament_mcp.tools.whatson.get_result", 8),
-    (statutory_instruments, "uk_parliament_mcp.tools.statutory_instruments.get_result", 5),
+    (interests, "uk_parliament_mcp.tools.interests.get_result", 6),
+    (now, "uk_parliament_mcp.tools.now.get_result", 3),
+    (whatson, "uk_parliament_mcp.tools.whatson.get_result", 19),
+    (statutory_instruments, "uk_parliament_mcp.tools.statutory_instruments.get_result", 13),
     (treaties, "uk_parliament_mcp.tools.treaties.get_result", 6),
     (erskine_may, "uk_parliament_mcp.tools.erskine_may.get_result", 11),
 ]

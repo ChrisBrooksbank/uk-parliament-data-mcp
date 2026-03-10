@@ -13,7 +13,7 @@ An MCP (Model Context Protocol) server that gives AI assistants access to UK Par
 
 ## MCP Server for AI Assistants
 
-Connect your AI assistant to 163 UK Parliament API tools for comprehensive parliamentary research.
+Connect your AI assistant to 209 UK Parliament API tools for comprehensive parliamentary research.
 
 https://github.com/user-attachments/assets/30f2df13-dff9-44e6-b1f6-5eebfb665d9e
 
@@ -52,11 +52,11 @@ https://github.com/user-attachments/assets/30f2df13-dff9-44e6-b1f6-5eebfb665d9e
 - Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
 - Or say **"Order Order"** (like the Speaker) to initialize the session
 
-This gives your AI assistant the context it needs to effectively use the 163 available tools.
+This gives your AI assistant the context it needs to effectively use the 209 available tools.
 
 ## Starting a Session
 
-Say **"Order Order"** to initialize your parliamentary research session. This gives Claude the context needed to effectively use the 163 available tools.
+Say **"Order Order"** to initialize your parliamentary research session. This gives Claude the context needed to effectively use the 209 available tools.
 
 If that doesn't work, copy and paste this system prompt:
 
@@ -390,7 +390,7 @@ Show me the JSON returned from the last MCP call.
 
 ## CLI Usage
 
-The package includes a `parliament` CLI for terminal access to all 163 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
+The package includes a `parliament` CLI for terminal access to all 209 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
 
 ### Install — Standalone Executable (Recommended)
 
@@ -446,7 +446,7 @@ parliament live commons-now --pretty
 
 ### Common Commands
 
-The CLI organizes 163 tools into 15 command groups:
+The CLI organizes 209 tools into 15 command groups:
 
 ```bash
 # MP and Lords research

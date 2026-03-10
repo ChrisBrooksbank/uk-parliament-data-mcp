@@ -22,8 +22,8 @@ class TestCommitteesToolsRegistration:
         return server
 
     @pytest.mark.asyncio
-    async def test_register_tools_adds_all_12_tools(self, mcp: FastMCP):
-        """register_tools adds all 12 committee tools."""
+    async def test_register_tools_adds_all_committee_tools(self, mcp: FastMCP):
+        """register_tools adds all committee tools."""
         tools = await mcp.list_tools()
         tool_names = [t.name for t in tools]
 
@@ -40,6 +40,10 @@ class TestCommitteesToolsRegistration:
             "get_publication_by_id",
             "get_written_evidence",
             "get_oral_evidence",
+            "get_bill_petition_by_id",
+            "get_archived_publication_links",
+            "search_event_activities",
+            "get_submission_period",
         ]
 
         for tool_name in expected_tools:
@@ -524,3 +528,146 @@ class TestGetOralEvidence:
             assert "CommitteeId=739" in call_url
             assert "SearchTerm=testimony" in call_url
             assert "StartDate=2024-01-01" in call_url
+
+
+class TestGetBillPetitionById:
+    """Tests for get_bill_petition_by_id tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_bill_petition_by_id builds correct URL with default params."""
+        with patch("uk_parliament_mcp.tools.committees.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            committees.register_tools(mcp)
+
+            await mcp.call_tool("get_bill_petition_by_id", {"petition_id": 42})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{COMMITTEES_API_BASE}/BillPetitions/42" in call_url
+            assert "showOnWebsiteOnly=true" in call_url
+
+    @pytest.mark.asyncio
+    async def test_builds_url_with_website_only_false(self):
+        """get_bill_petition_by_id builds URL with showOnWebsiteOnly=false."""
+        with patch("uk_parliament_mcp.tools.committees.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            committees.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_bill_petition_by_id", {"petition_id": 42, "show_on_website_only": False}
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "showOnWebsiteOnly=false" in call_url
+
+
+class TestGetArchivedPublicationLinks:
+    """Tests for get_archived_publication_links tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_archived_publication_links builds correct URL."""
+        with patch("uk_parliament_mcp.tools.committees.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            committees.register_tools(mcp)
+
+            await mcp.call_tool("get_archived_publication_links", {"committee_id": 739})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{COMMITTEES_API_BASE}/Committees/739/ArchivedPublicationLinks"
+
+
+class TestSearchEventActivities:
+    """Tests for search_event_activities tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_url_with_defaults(self):
+        """search_event_activities builds URL with default parameters."""
+        with patch("uk_parliament_mcp.tools.committees.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            committees.register_tools(mcp)
+
+            await mcp.call_tool("search_event_activities", {})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{COMMITTEES_API_BASE}/Events/Activities" in call_url
+            assert "ShowOnWebsiteOnly=true" in call_url
+            assert "Skip=0" in call_url
+            assert "Take=30" in call_url
+
+    @pytest.mark.asyncio
+    async def test_builds_url_with_filters(self):
+        """search_event_activities builds URL with optional filters."""
+        with patch("uk_parliament_mcp.tools.committees.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            committees.register_tools(mcp)
+
+            await mcp.call_tool(
+                "search_event_activities",
+                {
+                    "committee_id": 123,
+                    "search_term": "evidence",
+                    "house": 1,
+                    "start_date_from": "2024-01-01",
+                    "skip": 10,
+                    "take": 50,
+                },
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "CommitteeId=123" in call_url
+            assert "SearchTerm=evidence" in call_url
+            assert "House=1" in call_url
+            assert "StartDateFrom=2024-01-01" in call_url
+            assert "Skip=10" in call_url
+            assert "Take=50" in call_url
+
+    @pytest.mark.asyncio
+    async def test_filters_none_values(self):
+        """search_event_activities filters out None parameter values."""
+        with patch("uk_parliament_mcp.tools.committees.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            committees.register_tools(mcp)
+
+            await mcp.call_tool("search_event_activities", {"committee_id": 123})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "CommitteeId=123" in call_url
+            assert "SearchTerm" not in call_url
+
+
+class TestGetSubmissionPeriod:
+    """Tests for get_submission_period tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_submission_period builds correct URL."""
+        with patch("uk_parliament_mcp.tools.committees.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            committees.register_tools(mcp)
+
+            await mcp.call_tool("get_submission_period", {"submission_period_id": 99})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{COMMITTEES_API_BASE}/SubmissionPeriod/99"

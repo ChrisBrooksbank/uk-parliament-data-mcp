@@ -22,8 +22,8 @@ class TestMembersToolsRegistration:
         return server
 
     @pytest.mark.asyncio
-    async def test_register_tools_adds_all_24_tools(self, mcp: FastMCP):
-        """register_tools adds all 24 member tools."""
+    async def test_register_tools_adds_all_member_tools(self, mcp: FastMCP):
+        """register_tools adds all member tools."""
         tools = await mcp.list_tools()
         tool_names = [t.name for t in tools]
 
@@ -52,6 +52,15 @@ class TestMembersToolsRegistration:
             "get_member_latest_election_result",
             "get_member_portrait_url",
             "get_member_thumbnail_url",
+            "get_constituency_by_id",
+            "get_constituency_latest_election",
+            "get_constituency_election_result",
+            "get_constituency_representations",
+            "get_constituency_synopsis",
+            "search_historical_members",
+            "get_speaker_and_deputies",
+            "browse_locations",
+            "get_lords_interests_register",
         ]
 
         for tool_name in expected_tools:
@@ -727,3 +736,212 @@ class TestGetMemberThumbnailUrl:
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
             assert call_url == f"{MEMBERS_API_BASE}/Members/4514/ThumbnailUrl"
+
+
+class TestGetConstituencyById:
+    """Tests for get_constituency_by_id tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_constituency_by_id builds correct URL."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool("get_constituency_by_id", {"constituency_id": 3510})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{MEMBERS_API_BASE}/Location/Constituency/3510"
+
+
+class TestGetConstituencyLatestElection:
+    """Tests for get_constituency_latest_election tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_constituency_latest_election builds correct URL."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool("get_constituency_latest_election", {"constituency_id": 3510})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{MEMBERS_API_BASE}/Location/Constituency/3510/ElectionResult/Latest"
+
+
+class TestGetConstituencyElectionResult:
+    """Tests for get_constituency_election_result tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_constituency_election_result builds correct URL."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_constituency_election_result",
+                {"constituency_id": 3510, "election_id": 42},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{MEMBERS_API_BASE}/Location/Constituency/3510/ElectionResult/42"
+
+
+class TestGetConstituencyRepresentations:
+    """Tests for get_constituency_representations tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_constituency_representations builds correct URL."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool("get_constituency_representations", {"constituency_id": 3510})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{MEMBERS_API_BASE}/Location/Constituency/3510/Representations"
+
+
+class TestGetConstituencySynopsis:
+    """Tests for get_constituency_synopsis tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_constituency_synopsis builds correct URL."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool("get_constituency_synopsis", {"constituency_id": 3510})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{MEMBERS_API_BASE}/Location/Constituency/3510/Synopsis"
+
+
+class TestSearchHistoricalMembers:
+    """Tests for search_historical_members tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url_no_params(self):
+        """search_historical_members builds correct URL with no params."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool("search_historical_members", {})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{MEMBERS_API_BASE}/Members/SearchHistorical"
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url_with_name(self):
+        """search_historical_members includes name param when provided."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool("search_historical_members", {"name": "Churchill"})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "name=Churchill" in call_url
+
+
+class TestGetSpeakerAndDeputies:
+    """Tests for get_speaker_and_deputies tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_speaker_and_deputies builds correct URL."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool("get_speaker_and_deputies", {"for_date": "2025-01-15"})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{MEMBERS_API_BASE}/Posts/SpeakerAndDeputies/2025-01-15"
+
+
+class TestBrowseLocations:
+    """Tests for browse_locations tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """browse_locations builds correct URL."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool(
+                "browse_locations",
+                {"location_type": "Constituency", "location_name": "London"},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{MEMBERS_API_BASE}/Location/Browse/Constituency/London"
+
+
+class TestGetLordsInterestsRegister:
+    """Tests for get_lords_interests_register tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url_no_params(self):
+        """get_lords_interests_register builds correct URL with no params."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool("get_lords_interests_register", {})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{MEMBERS_API_BASE}/LordsInterests/Register"
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url_with_search_term(self):
+        """get_lords_interests_register includes searchTerm when provided."""
+        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            members.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_lords_interests_register", {"search_term": "finance"}
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert "searchTerm=finance" in call_url

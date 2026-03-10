@@ -41,3 +41,42 @@ def register_tools(mcp: FastMCP) -> None:
         """
         url = f"{INTERESTS_API_BASE}/Registers"
         return await get_result(url)
+
+    @mcp.tool()
+    async def get_interest_category(category_id: int) -> str:
+        """Get a specific interest category by ID | register of interests, interest category, declaration type | Use to get details of a specific interest category | Returns category details
+
+        Args:
+            category_id: Interest category ID.
+
+        Returns:
+            Details of the specified interest category.
+        """
+        url = f"{INTERESTS_API_BASE}/Categories/{category_id}"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_interest_by_id(interest_id: int) -> str:
+        """Get a specific registered interest by ID | register of interests, financial interest, declaration | Use to retrieve a specific interest declaration by its ID | Returns interest details
+
+        Args:
+            interest_id: Interest record ID.
+
+        Returns:
+            Details of the specified interest declaration.
+        """
+        url = f"{INTERESTS_API_BASE}/Interests/{interest_id}"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_register_by_id(register_id: int) -> str:
+        """Get a specific Register of Interests by ID | register of interests, published register, transparency | Use to retrieve a specific published interest register by its ID | Returns register details
+
+        Args:
+            register_id: Register ID.
+
+        Returns:
+            Details of the specified Register of Interests.
+        """
+        url = f"{INTERESTS_API_BASE}/Registers/{register_id}"
+        return await get_result(url)

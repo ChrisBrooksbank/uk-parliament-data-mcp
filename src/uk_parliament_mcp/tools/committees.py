@@ -713,3 +713,102 @@ def register_tools(mcp: FastMCP) -> None:
         """
         url = f"{COMMITTEES_API_BASE}/CommitteeBusiness/{business_id}/Publications/Summary"
         return await get_result(url)
+
+    @mcp.tool()
+    async def get_bill_petition_by_id(
+        petition_id: int,
+        show_on_website_only: bool = True,
+    ) -> str:
+        """Get a specific bill petition by ID | bill petition, private bill, hybrid bill petition | Use to get full details of a petition submitted on a Private Bill | Returns petition details
+
+        Args:
+            petition_id: Bill petition ID.
+            show_on_website_only: Show only petitions visible on website. Default: true.
+
+        Returns:
+            Detailed bill petition record.
+        """
+        url = build_url(
+            f"{COMMITTEES_API_BASE}/BillPetitions/{petition_id}",
+            {"showOnWebsiteOnly": show_on_website_only},
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_archived_publication_links(committee_id: int) -> str:
+        """Get archived publication links for a committee | archived publications, legacy documents, old reports | Use to find archived publications linked to a committee | Returns grouped archived publication links
+
+        Args:
+            committee_id: Committee ID.
+
+        Returns:
+            Archived publication links grouped by type for the committee.
+        """
+        url = f"{COMMITTEES_API_BASE}/Committees/{committee_id}/ArchivedPublicationLinks"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def search_event_activities(
+        committee_id: int | None = None,
+        committee_business_id: int | None = None,
+        search_term: str | None = None,
+        start_date_from: str | None = None,
+        start_date_to: str | None = None,
+        house: int | None = None,
+        location_id: int | None = None,
+        event_type_id: int | None = None,
+        include_activity_attendees: bool = False,
+        show_on_website_only: bool = True,
+        skip: int = 0,
+        take: int = 30,
+    ) -> str:
+        """Search committee event activities | event agenda items, meeting activities, committee sessions | Use to find activities across committee events with flexible filtering | Returns event activities matching criteria
+
+        Args:
+            committee_id: Optional: filter by committee ID.
+            committee_business_id: Optional: filter by committee business ID.
+            search_term: Optional: search term for activity titles or content (min 2 chars).
+            start_date_from: Optional: start date from in YYYY-MM-DD format.
+            start_date_to: Optional: start date to in YYYY-MM-DD format.
+            house: Optional: filter by house (1 = Commons, 2 = Lords).
+            location_id: Optional: location ID to filter events.
+            event_type_id: Optional: filter by event type ID.
+            include_activity_attendees: Include attendees with each activity. Default: false.
+            show_on_website_only: Show only events visible on website. Default: true.
+            skip: Number of records to skip (for pagination).
+            take: Number of records to return (default 30, max 100).
+
+        Returns:
+            Event activities matching the specified criteria.
+        """
+        url = build_url(
+            f"{COMMITTEES_API_BASE}/Events/Activities",
+            {
+                "CommitteeId": committee_id,
+                "CommitteeBusinessId": committee_business_id,
+                "SearchTerm": search_term,
+                "StartDateFrom": start_date_from,
+                "StartDateTo": start_date_to,
+                "House": house,
+                "LocationId": location_id,
+                "EventTypeId": event_type_id,
+                "IncludeActivityAttendees": include_activity_attendees,
+                "ShowOnWebsiteOnly": show_on_website_only,
+                "Skip": skip,
+                "Take": take,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_submission_period(submission_period_id: int) -> str:
+        """Get a submission period by ID | submission period, evidence call, inquiry window | Use to get details of a specific evidence submission period | Returns submission period details
+
+        Args:
+            submission_period_id: Submission period ID.
+
+        Returns:
+            Submission period details.
+        """
+        url = f"{COMMITTEES_API_BASE}/SubmissionPeriod/{submission_period_id}"
+        return await get_result(url)

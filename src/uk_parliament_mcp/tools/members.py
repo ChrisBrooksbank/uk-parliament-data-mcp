@@ -118,12 +118,14 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_constituencies(
+        search_text: str | None = None,
         skip: int | None = None,
         take: int | None = None,
     ) -> str:
-        """Get list of UK parliamentary constituencies with pagination support. Use when you need constituency information, want to browse all constituencies, or need constituency data for analysis.
+        """Search and list UK parliamentary constituencies | constituency search, find constituency, browse constituencies | Use when you need constituency information, want to search by name, or need constituency data for analysis | Returns list of UK parliamentary constituencies
 
         Args:
+            search_text: Optional filter by constituency name (partial match).
             skip: Number of constituencies to skip (for pagination).
             take: Number of constituencies to return (default 20, max 100).
 
@@ -132,7 +134,7 @@ def register_tools(mcp: FastMCP) -> None:
         """
         url = build_url(
             f"{MEMBERS_API_BASE}/Location/Constituency/Search",
-            {"skip": skip, "take": take},
+            {"searchText": search_text, "skip": skip, "take": take},
         )
         return await get_result(url)
 
@@ -508,4 +510,152 @@ def register_tools(mcp: FastMCP) -> None:
             List of policy interest categories with IDs for use in member searches.
         """
         url = f"{MEMBERS_API_BASE}/Reference/PolicyInterests"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_constituency_by_id(constituency_id: int) -> str:
+        """Get a constituency by ID with full details | constituency lookup, find constituency, constituency info | Use when you have a constituency ID and need full details about it | Returns constituency name, boundaries, and related data
+
+        Args:
+            constituency_id: Unique constituency ID number.
+
+        Returns:
+            Constituency details including name and related information.
+        """
+        url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_constituency_latest_election(constituency_id: int) -> str:
+        """Get the latest election result for a constituency | constituency election, latest vote, most recent election result | Use when you need the most recent election result for a specific constituency | Returns vote counts, winner, turnout, and candidate details
+
+        Args:
+            constituency_id: Unique constituency ID number.
+
+        Returns:
+            Latest election result with vote counts, winner, and turnout.
+        """
+        url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}/ElectionResult/Latest"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_constituency_election_result(constituency_id: int, election_id: int) -> str:
+        """Get a specific election result for a constituency by election ID | constituency election, historic vote, election result | Use when you need a particular election result for a constituency | Returns vote counts, winner, turnout, and candidate details for that election
+
+        Args:
+            constituency_id: Unique constituency ID number.
+            election_id: Election ID number.
+
+        Returns:
+            Election result with vote counts, winner, and turnout for the specified election.
+        """
+        url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}/ElectionResult/{election_id}"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_constituency_representations(constituency_id: int) -> str:
+        """Get all MP representations for a constituency over time | constituency history, who represented, past MPs | Use when researching which MPs have represented a constituency historically | Returns list of representations with dates and member details
+
+        Args:
+            constituency_id: Unique constituency ID number.
+
+        Returns:
+            List of representations with member details and date ranges.
+        """
+        url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}/Representations"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_constituency_synopsis(constituency_id: int) -> str:
+        """Get a brief synopsis or summary for a constituency | constituency overview, constituency description, area summary | Use when you need a concise description or background information about a constituency | Returns text synopsis of the constituency
+
+        Args:
+            constituency_id: Unique constituency ID number.
+
+        Returns:
+            Text synopsis summarising the constituency.
+        """
+        url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}/Synopsis"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def search_historical_members(
+        name: str | None = None,
+        date_to_search_for: str | None = None,
+        skip: int | None = None,
+        take: int | None = None,
+    ) -> str:
+        """Search historical members of the Commons or Lords | past MPs, historic members, former members, historical search | Use when researching members from historical periods or who were active on a specific date | Returns member profiles matching the historical search criteria
+
+        Args:
+            name: Optional name search term (partial match).
+            date_to_search_for: Optional date to find members active on that date (YYYY-MM-DD).
+            skip: Number of records to skip (for pagination).
+            take: Number of records to return (default 20, max 20).
+
+        Returns:
+            Member profiles matching the historical search criteria.
+        """
+        url = build_url(
+            f"{MEMBERS_API_BASE}/Members/SearchHistorical",
+            {
+                "name": name,
+                "dateToSearchFor": date_to_search_for,
+                "skip": skip,
+                "take": take,
+            },
+        )
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_speaker_and_deputies(for_date: str) -> str:
+        """Get the Speaker of the Commons and Deputy Speakers for a date | Speaker, Deputy Speaker, House officers | Use when you need to know who was Speaker or a Deputy Speaker on a given date | Returns member details for the Speaker and Deputy Speakers
+
+        Args:
+            for_date: Date for which to return the Speaker and Deputy Speakers (YYYY-MM-DD).
+
+        Returns:
+            Member details for the Speaker and Deputy Speakers on the given date.
+        """
+        url = f"{MEMBERS_API_BASE}/Posts/SpeakerAndDeputies/{for_date}"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def browse_locations(location_type: str, location_name: str) -> str:
+        """Browse locations by type and name, returning parent and child locations | location browse, constituency type, country region | Use when exploring the location hierarchy (e.g. countries, regions, constituencies) | Returns list of locations matching the type and name
+
+        Args:
+            location_type: Type of location (e.g. 'Constituency', 'Country', 'Region').
+            location_name: Name of the location to browse.
+
+        Returns:
+            List of parent and child locations matching the criteria.
+        """
+        url = f"{MEMBERS_API_BASE}/Location/Browse/{quote(location_type)}/{quote(location_name)}"
+        return await get_result(url)
+
+    @mcp.tool()
+    async def get_lords_interests_register(
+        search_term: str | None = None,
+        page: int | None = None,
+        include_deleted: bool | None = None,
+    ) -> str:
+        """Search the Lords register of interests | Lords interests, peer interests, Lords declarations, register | Use when investigating Lords' declared interests, financial interests, or outside roles | Returns registered interests matching the search criteria
+
+        Args:
+            search_term: Optional search term to filter interests.
+            page: Optional page number for pagination (default 0, 20 per page).
+            include_deleted: Optional flag to include deleted interests (default False).
+
+        Returns:
+            Registered interests matching the search criteria.
+        """
+        url = build_url(
+            f"{MEMBERS_API_BASE}/LordsInterests/Register",
+            {
+                "searchTerm": search_term,
+                "page": page,
+                "includeDeleted": include_deleted,
+            },
+        )
         return await get_result(url)

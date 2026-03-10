@@ -672,3 +672,197 @@ def search_lords_staff_interests(
         {"searchTerm": search_term, "page": page},
     )
     output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("constituency-get")
+def get_constituency(
+    constituency_id: int = typer.Argument(..., help="Constituency ID"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get a constituency by ID.
+
+    Returns full constituency details including name and related information.
+    """
+    url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("constituency-latest-election")
+def get_constituency_latest_election(
+    constituency_id: int = typer.Argument(..., help="Constituency ID"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get the latest election result for a constituency.
+
+    Returns vote counts, winner, turnout, and candidate details.
+    """
+    url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}/ElectionResult/Latest"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("constituency-election")
+def get_constituency_election_result(
+    constituency_id: int = typer.Argument(..., help="Constituency ID"),
+    election_id: int = typer.Argument(..., help="Election ID"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get a specific election result for a constituency.
+
+    Returns vote counts, winner, turnout, and candidate details for that election.
+    """
+    url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}/ElectionResult/{election_id}"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("constituency-representations")
+def get_constituency_representations(
+    constituency_id: int = typer.Argument(..., help="Constituency ID"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get all MP representations for a constituency over time.
+
+    Returns list of representations with member details and date ranges.
+    """
+    url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}/Representations"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("constituency-synopsis")
+def get_constituency_synopsis(
+    constituency_id: int = typer.Argument(..., help="Constituency ID"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get a brief synopsis or summary for a constituency.
+
+    Returns text synopsis describing the constituency.
+    """
+    url = f"{MEMBERS_API_BASE}/Location/Constituency/{constituency_id}/Synopsis"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("search-historical")
+def search_historical_members(
+    name: str | None = typer.Option(None, "--name", "-n", help="Name search term (partial match)"),
+    date: str | None = typer.Option(
+        None, "--date", help="Find members active on this date (YYYY-MM-DD)"
+    ),
+    skip: int | None = typer.Option(None, "--skip", help="Number of records to skip"),
+    take: int | None = typer.Option(None, "--take", help="Number of records to return"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Search historical members of the Commons or Lords.
+
+    Returns member profiles from historical periods or active on a specific date.
+    """
+    url = build_url(
+        f"{MEMBERS_API_BASE}/Members/SearchHistorical",
+        {
+            "name": name,
+            "dateToSearchFor": date,
+            "skip": skip,
+            "take": take,
+        },
+    )
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("speaker-and-deputies")
+def get_speaker_and_deputies(
+    for_date: str = typer.Argument(..., help="Date to query (YYYY-MM-DD)"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get the Speaker and Deputy Speakers for a given date.
+
+    Returns member details for the Speaker and Deputy Speakers.
+    """
+    url = f"{MEMBERS_API_BASE}/Posts/SpeakerAndDeputies/{for_date}"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("browse-locations")
+def browse_locations(
+    location_type: str = typer.Argument(
+        ..., help="Location type (e.g. 'Constituency', 'Country', 'Region')"
+    ),
+    location_name: str = typer.Argument(..., help="Location name to browse"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Browse locations by type and name.
+
+    Returns parent and child locations matching the type and name.
+    """
+    from urllib.parse import quote
+
+    url = f"{MEMBERS_API_BASE}/Location/Browse/{quote(location_type)}/{quote(location_name)}"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("lords-interests-register")
+def search_lords_interests_register(
+    search_term: str | None = typer.Option(
+        None, "--search", "-s", help="Search term to filter interests"
+    ),
+    page: int | None = typer.Option(None, "--page", help="Page number for pagination"),
+    include_deleted: bool | None = typer.Option(
+        None, "--include-deleted", help="Include deleted interests"
+    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Search the Lords register of interests.
+
+    Returns registered interests matching the search criteria.
+    """
+    url = build_url(
+        f"{MEMBERS_API_BASE}/LordsInterests/Register",
+        {
+            "searchTerm": search_term,
+            "page": page,
+            "includeDeleted": include_deleted,
+        },
+    )
+    output_result(url, pretty, data_only, output_format, fields, raw)

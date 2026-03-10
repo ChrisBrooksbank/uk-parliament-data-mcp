@@ -826,3 +826,119 @@ def get_business_publications_summary(
     """
     url = f"{COMMITTEES_API_BASE}/CommitteeBusiness/{business_id}/Publications/Summary"
     output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("bill-petition")
+def get_bill_petition(
+    petition_id: int = typer.Argument(..., help="Bill petition ID"),
+    show_on_website_only: bool = typer.Option(
+        True, "--website-only/--all", help="Show only public petitions"
+    ),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get a specific bill petition by ID.
+
+    Full details of a petition submitted on a Private or Hybrid Bill.
+    """
+    url = build_url(
+        f"{COMMITTEES_API_BASE}/BillPetitions/{petition_id}",
+        {"showOnWebsiteOnly": show_on_website_only},
+    )
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("archived-publication-links")
+def get_archived_publication_links(
+    committee_id: int = typer.Argument(..., help="Committee ID"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get archived publication links for a committee.
+
+    Find legacy and archived publications linked to a committee, grouped by type.
+    """
+    url = f"{COMMITTEES_API_BASE}/Committees/{committee_id}/ArchivedPublicationLinks"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("event-activities-search")
+def search_event_activities(
+    committee_id: int | None = typer.Option(None, "--committee-id", help="Filter by committee ID"),
+    committee_business_id: int | None = typer.Option(
+        None, "--business-id", help="Filter by business ID"
+    ),
+    search_term: str | None = typer.Option(None, "--search", help="Search term (min 2 chars)"),
+    start_date_from: str | None = typer.Option(
+        None, "--start-from", help="Start date from (YYYY-MM-DD)"
+    ),
+    start_date_to: str | None = typer.Option(None, "--start-to", help="Start date to (YYYY-MM-DD)"),
+    house: int | None = typer.Option(None, "--house", help="House (1=Commons, 2=Lords)"),
+    location_id: int | None = typer.Option(None, "--location-id", help="Location ID"),
+    event_type_id: int | None = typer.Option(None, "--type-id", help="Event type ID"),
+    include_activity_attendees: bool = typer.Option(
+        False, "--include-attendees", help="Include attendees with each activity"
+    ),
+    show_on_website_only: bool = typer.Option(
+        True, "--website-only/--all", help="Show only public events"
+    ),
+    skip: int = typer.Option(0, "--skip", help="Number of records to skip"),
+    take: int = typer.Option(30, "--take", help="Number of records to return"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Search committee event activities.
+
+    Find activities across committee events with flexible filtering by committee,
+    business, date range, house, and event type.
+    """
+    url = build_url(
+        f"{COMMITTEES_API_BASE}/Events/Activities",
+        {
+            "CommitteeId": committee_id,
+            "CommitteeBusinessId": committee_business_id,
+            "SearchTerm": search_term,
+            "StartDateFrom": start_date_from,
+            "StartDateTo": start_date_to,
+            "House": house,
+            "LocationId": location_id,
+            "EventTypeId": event_type_id,
+            "IncludeActivityAttendees": include_activity_attendees,
+            "ShowOnWebsiteOnly": show_on_website_only,
+            "Skip": skip,
+            "Take": take,
+        },
+    )
+    output_paginated(
+        url, COMMITTEES_PAGINATION, take, skip, pretty, data_only, output_format, fields, raw
+    )
+
+
+@app.command("submission-period")
+def get_submission_period(
+    submission_period_id: int = typer.Argument(..., help="Submission period ID"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get a submission period by ID.
+
+    Details of a specific evidence submission period for a committee inquiry.
+    """
+    url = f"{COMMITTEES_API_BASE}/SubmissionPeriod/{submission_period_id}"
+    output_result(url, pretty, data_only, output_format, fields, raw)

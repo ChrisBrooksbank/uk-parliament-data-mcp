@@ -23,13 +23,16 @@ class TestInterestsToolsRegistration:
 
     @pytest.mark.asyncio
     async def test_register_tools_adds_all_interest_tools(self, mcp: FastMCP):
-        """register_tools adds all 3 interest tools."""
+        """register_tools adds all 6 interest tools."""
         tools = await mcp.list_tools()
         tool_names = [t.name for t in tools]
 
         assert "search_roi" in tool_names
         assert "interests_categories" in tool_names
         assert "get_registers_of_interests" in tool_names
+        assert "get_interest_category" in tool_names
+        assert "get_interest_by_id" in tool_names
+        assert "get_register_by_id" in tool_names
 
     @pytest.mark.asyncio
     async def test_tools_have_descriptions(self, mcp: FastMCP):
@@ -38,7 +41,15 @@ class TestInterestsToolsRegistration:
         interest_tools = [
             t
             for t in tools
-            if t.name in ["search_roi", "interests_categories", "get_registers_of_interests"]
+            if t.name
+            in [
+                "search_roi",
+                "interests_categories",
+                "get_registers_of_interests",
+                "get_interest_category",
+                "get_interest_by_id",
+                "get_register_by_id",
+            ]
         ]
 
         for tool in interest_tools:
@@ -123,3 +134,60 @@ class TestGetRegistersOfInterests:
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
             assert call_url == f"{INTERESTS_API_BASE}/Registers"
+
+
+class TestGetInterestCategory:
+    """Tests for get_interest_category tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_interest_category builds correct URL with category_id."""
+        with patch("uk_parliament_mcp.tools.interests.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            interests.register_tools(mcp)
+
+            await mcp.call_tool("get_interest_category", {"category_id": 5})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{INTERESTS_API_BASE}/Categories/5"
+
+
+class TestGetInterestById:
+    """Tests for get_interest_by_id tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_interest_by_id builds correct URL with interest_id."""
+        with patch("uk_parliament_mcp.tools.interests.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            interests.register_tools(mcp)
+
+            await mcp.call_tool("get_interest_by_id", {"interest_id": 42})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{INTERESTS_API_BASE}/Interests/42"
+
+
+class TestGetRegisterById:
+    """Tests for get_register_by_id tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_register_by_id builds correct URL with register_id."""
+        with patch("uk_parliament_mcp.tools.interests.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            interests.register_tools(mcp)
+
+            await mcp.call_tool("get_register_by_id", {"register_id": 10})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{INTERESTS_API_BASE}/Registers/10"

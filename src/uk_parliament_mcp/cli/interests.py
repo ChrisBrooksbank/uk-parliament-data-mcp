@@ -111,6 +111,60 @@ def interests_categories(
     output_result(url, pretty, data_only, output_format, fields, raw)
 
 
+@app.command("category")
+def get_interest_category(
+    category_id: int = typer.Argument(..., help="Interest category ID"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get a specific interest category by ID.
+
+    Use to get details of a specific interest category from the Register of Interests.
+    """
+    url = f"{INTERESTS_API_BASE}/Categories/{category_id}"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("interest")
+def get_interest_by_id(
+    interest_id: int = typer.Argument(..., help="Interest record ID"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get a specific registered interest by ID.
+
+    Use to retrieve a specific interest declaration by its ID.
+    """
+    url = f"{INTERESTS_API_BASE}/Interests/{interest_id}"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("register")
+def get_register_by_id(
+    register_id: int = typer.Argument(..., help="Register ID"),
+    pretty: PrettyOpt = False,
+    data_only: DataOnlyOpt = True,
+    output_format: FormatOpt = OutputFormat.AUTO,
+    raw: RawOpt = False,
+    fields: FieldsOpt = None,
+) -> None:
+    """
+    Get a specific Register of Interests by ID.
+
+    Use to retrieve a specific published interest register by its ID.
+    """
+    url = f"{INTERESTS_API_BASE}/Registers/{register_id}"
+    output_result(url, pretty, data_only, output_format, fields, raw)
+
+
 @app.command("registers")
 def get_registers_of_interests(
     session_id: int | None = typer.Option(

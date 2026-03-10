@@ -150,7 +150,7 @@ class TestParliamentGuide:
         """parliament_guide with 'all' returns comprehensive tool list."""
         content_list, _ = await mcp.call_tool("parliament_guide", {"topic": "all"})
         text = content_list[0].text
-        assert "163 tools" in text
+        assert "209 tools" in text
         assert "Members" in text
         assert "Bills" in text
         assert "Votes" in text

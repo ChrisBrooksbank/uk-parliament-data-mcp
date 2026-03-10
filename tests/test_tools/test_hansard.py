@@ -35,6 +35,16 @@ class TestHansardToolsRegistration:
             "get_division_details",
             "get_hansard_sitting_day",
             "get_hansard_calendar",
+            "get_hansard_currently_processing",
+            "get_hansard_first_year",
+            "get_hansard_pdfs_for_day",
+            "get_hansard_speakers_for_day",
+            "search_committee_debates",
+            "search_hansard_committees",
+            "get_debate_by_column",
+            "get_debate_by_external_id",
+            "search_hansard_petitions",
+            "get_hansard_timeline_stats",
         ]
         for tool_name in expected_tools:
             assert tool_name in tool_names
@@ -373,3 +383,242 @@ class TestGetHansardCalendar:
             assert "year=2024" in call_url
             assert "month=3" in call_url
             assert "house=1" in call_url
+
+
+class TestGetHansardCurrentlyProcessing:
+    """Tests for get_hansard_currently_processing tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_hansard_currently_processing builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool("get_hansard_currently_processing", {})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{HANSARD_API_BASE}/overview/currentlyprocessing.json"
+
+
+class TestGetHansardFirstYear:
+    """Tests for get_hansard_first_year tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_hansard_first_year builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool("get_hansard_first_year", {})
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert call_url == f"{HANSARD_API_BASE}/overview/firstyear.json"
+
+
+class TestGetHansardPdfsForDay:
+    """Tests for get_hansard_pdfs_for_day tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_hansard_pdfs_for_day builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_hansard_pdfs_for_day",
+                {"date": "2024-03-15", "house": 1},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/overview/pdfsforday.json" in call_url
+            assert "date=2024-03-15" in call_url
+            assert "house=1" in call_url
+
+
+class TestGetHansardSpeakersForDay:
+    """Tests for get_hansard_speakers_for_day tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_hansard_speakers_for_day builds correct URL with path params."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_hansard_speakers_for_day",
+                {"date": "2024-03-15", "house": 1, "section": "Debate"},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/overview/speakerslist/2024-03-15/1.json" in call_url
+            assert "section=Debate" in call_url
+
+
+class TestSearchCommitteeDebates:
+    """Tests for search_committee_debates tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url_with_committee_title(self):
+        """search_committee_debates builds correct URL with committee title filter."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "search_committee_debates",
+                {
+                    "house": 1,
+                    "search_term": "NHS",
+                    "committee_title": "Health Committee",
+                },
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/search/committeedebates.json" in call_url
+            assert "queryParameters.house=1" in call_url
+            assert "queryParameters.searchTerm=NHS" in call_url
+            assert "queryParameters.committeeTitle=Health" in call_url
+
+
+class TestSearchHansardCommittees:
+    """Tests for search_hansard_committees tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """search_hansard_committees builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "search_hansard_committees",
+                {"search_term": "Treasury"},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/search/committees.json" in call_url
+            assert "queryParameters.searchTerm=Treasury" in call_url
+
+
+class TestGetDebateByColumn:
+    """Tests for get_debate_by_column tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_debate_by_column builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_debate_by_column",
+                {"house": 1, "column_number": 425, "volume_number": 730},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/search/debatebycolumn.json" in call_url
+            assert "queryParameters.house=1" in call_url
+            assert "queryParameters.columnNumber=425" in call_url
+            assert "queryParameters.volumeNumber=730" in call_url
+
+
+class TestGetDebateByExternalId:
+    """Tests for get_debate_by_external_id tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_debate_by_external_id builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_debate_by_external_id",
+                {"content_item_external_id": "ext-abc-123", "house": 1},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/search/debatebyexternalid.json" in call_url
+            assert "contentItemExternalId=ext-abc-123" in call_url
+            assert "house=1" in call_url
+
+
+class TestSearchHansardPetitions:
+    """Tests for search_hansard_petitions tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """search_hansard_petitions builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "search_hansard_petitions",
+                {"search_term": "climate", "house": 1},
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/search/petitions.json" in call_url
+            assert "queryParameters.searchTerm=climate" in call_url
+            assert "queryParameters.house=1" in call_url
+
+
+class TestGetHansardTimelineStats:
+    """Tests for get_hansard_timeline_stats tool."""
+
+    @pytest.mark.asyncio
+    async def test_builds_correct_url(self):
+        """get_hansard_timeline_stats builds correct URL."""
+        with patch("uk_parliament_mcp.tools.hansard.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            hansard.register_tools(mcp)
+
+            await mcp.call_tool(
+                "get_hansard_timeline_stats",
+                {
+                    "search_term": "Brexit",
+                    "house": 1,
+                    "start_date": "2016-01-01",
+                    "end_date": "2020-12-31",
+                },
+            )
+
+            mock.assert_called_once()
+            call_url = mock.call_args[0][0]
+            assert f"{HANSARD_API_BASE}/timeline-stats.json" in call_url
+            assert "queryParameters.searchTerm=Brexit" in call_url
+            assert "queryParameters.house=1" in call_url
