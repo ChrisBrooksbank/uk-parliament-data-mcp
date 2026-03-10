@@ -146,7 +146,11 @@ def _render_slide_lines(lines: list[dict[str, Any]], text: Text) -> None:
         # Divider styles -> horizontal rules (single char repeated;
         # Rich will clip to panel width automatically)
         if style in ("DividerSolid", "DividerDotted", "DividerDashed"):
-            char = "\u2500" if style == "DividerSolid" else ("\u00b7" if style == "DividerDotted" else "\u2504")
+            char = (
+                "\u2500"
+                if style == "DividerSolid"
+                else ("\u00b7" if style == "DividerDotted" else "\u2504")
+            )
             text.append(char * 60 + "\n", style="dim")
             continue
 

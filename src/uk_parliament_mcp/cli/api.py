@@ -27,6 +27,7 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
+
 def _get_data_path(filename: str) -> Path:
     """Resolve a data file path, supporting PyInstaller frozen bundles."""
     if getattr(sys, "frozen", False):

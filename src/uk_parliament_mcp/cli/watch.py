@@ -265,14 +265,10 @@ def _render_dashboard(
         panel_width = terminal_width // 2 if both_houses and not stack_chambers else terminal_width
         if stack_chambers:
             # Stacked: sum of both panel heights
-            total = sum(
-                _estimate_chamber_height(p, width=panel_width) for p in chamber_panels
-            )
+            total = sum(_estimate_chamber_height(p, width=panel_width) for p in chamber_panels)
             chamber_size = max(_CHAMBER_MIN_HEIGHT, min(total, max_chamber))
         else:
-            tallest = max(
-                _estimate_chamber_height(p, width=panel_width) for p in chamber_panels
-            )
+            tallest = max(_estimate_chamber_height(p, width=panel_width) for p in chamber_panels)
             chamber_size = max(_CHAMBER_MIN_HEIGHT, min(tallest, max_chamber))
     else:
         chamber_size = _CHAMBER_MIN_HEIGHT
