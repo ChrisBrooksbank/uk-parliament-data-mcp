@@ -390,14 +390,44 @@ Show me the JSON returned from the last MCP call.
 
 ## CLI Usage
 
-The package also includes a `parliament` CLI for terminal access to all 163 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
+The package includes a `parliament` CLI for terminal access to all 163 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
+
+### Install — Standalone Executable (Recommended)
+
+**No Python required.** Download a single file, and you're ready to go:
+
+| Platform | Download |
+|----------|----------|
+| Windows | [`parliament-windows-x64.exe`](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/releases/latest/download/parliament-windows-x64.exe) |
+| macOS | [`parliament-macos-x64`](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/releases/latest/download/parliament-macos-x64) |
+| Linux | [`parliament-linux-x64`](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/releases/latest/download/parliament-linux-x64) |
+
+On macOS/Linux, make the binary executable after downloading:
+
+```bash
+chmod +x parliament-linux-x64
+./parliament-linux-x64 members search "Starmer"
+```
+
+On Windows, just run the `.exe` directly:
+
+```
+parliament-windows-x64.exe members search "Starmer"
+```
+
+> **Tip:** Rename the download to `parliament` (or `parliament.exe`) and place it on your PATH for convenience.
+
+### Install — pip (Alternative)
+
+If you already have Python 3.11+, you can install from PyPI instead:
+
+```bash
+pip install uk-parliament-mcp
+```
 
 ### Quick Start
 
 ```bash
-# Install from PyPI
-pip install uk-parliament-mcp
-
 # Search for an MP
 parliament members search "Keir Starmer"
 
@@ -684,8 +714,9 @@ The `uvx` method shown above is recommended for most users. For specific use cas
 
 | Method | Best For | Pros | Cons |
 |--------|----------|------|------|
-| `uvx uk-parliament-mcp` | Most users | No install needed, always latest version | Requires uvx installed |
-| `pip install uk-parliament-mcp` | Production use | Stable, version locked | Requires pip, manual updates |
+| **Standalone executable** | Non-technical users, quick setup | Zero prerequisites, single file download | Manual updates, larger file size |
+| `uvx uk-parliament-mcp` | MCP server users | No install needed, always latest version | Requires uvx installed |
+| `pip install uk-parliament-mcp` | Python developers | Stable, version locked, CLI + MCP server | Requires Python 3.11+ |
 | Local development install | Contributors | Full source access, can modify | More complex setup |
 
 ### Using pip install

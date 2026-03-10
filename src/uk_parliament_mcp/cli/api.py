@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -26,7 +27,15 @@ app = typer.Typer(
     no_args_is_help=True,
 )
 
-_METADATA_PATH = Path(__file__).parent / "api_metadata.json"
+def _get_data_path(filename: str) -> Path:
+    """Resolve a data file path, supporting PyInstaller frozen bundles."""
+    if getattr(sys, "frozen", False):
+        base = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+        return base / "uk_parliament_mcp" / "cli" / filename
+    return Path(__file__).parent / filename
+
+
+_METADATA_PATH = _get_data_path("api_metadata.json")
 _metadata_cache: dict[str, Any] | None = None
 
 
