@@ -3,11 +3,11 @@
 [![PyPI version](https://badge.fury.io/py/uk-parliament-mcp.svg)](https://badge.fury.io/py/uk-parliament-mcp)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/actions/workflows/ci.yml)
+[![CI](https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/actions/workflows/ci.yml)
 
 > **Disclaimer:** This is an unofficial, independent project. It is not created, endorsed, or supported by UK Parliament. All data is sourced from the publicly available [parliament.uk APIs](https://developer.parliament.uk/).
 >
-> GitHub: [ChrisBrooksbank/uk-parliament-mcp-lab](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab)
+> GitHub: [ChrisBrooksbank/uk-parliament-data-mcp](https://github.com/ChrisBrooksbank/uk-parliament-data-mcp)
 
 An MCP (Model Context Protocol) server that gives AI assistants access to UK Parliament data. Query MPs, Lords, bills, votes, committees, debates, and more through AI assistants like Claude Desktop and VS Code Copilot. Also includes a CLI for terminal access.
 
@@ -398,9 +398,9 @@ The package includes a `parliament` CLI for terminal access to all 209 UK Parlia
 
 | Platform | Download |
 |----------|----------|
-| Windows | [`parliament-windows-x64.exe`](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/releases/latest/download/parliament-windows-x64.exe) |
-| macOS | [`parliament-macos-x64`](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/releases/latest/download/parliament-macos-x64) |
-| Linux | [`parliament-linux-x64`](https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/releases/latest/download/parliament-linux-x64) |
+| Windows | [`parliament-windows-x64.exe`](https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/releases/latest/download/parliament-windows-x64.exe) |
+| macOS | [`parliament-macos-x64`](https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/releases/latest/download/parliament-macos-x64) |
+| Linux | [`parliament-linux-x64`](https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/releases/latest/download/parliament-linux-x64) |
 
 On macOS/Linux, make the binary executable after downloading:
 
@@ -754,8 +754,8 @@ For development or to get the latest unreleased changes:
 #### Clone and Install
 
 ```bash
-git clone https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab.git
-cd uk-parliament-mcp-lab
+git clone https://github.com/ChrisBrooksbank/uk-parliament-data-mcp.git
+cd uk-parliament-data-mcp
 
 # Create and activate virtual environment
 python -m venv .venv
@@ -773,9 +773,9 @@ pip install -e .
 {
   "mcpServers": {
     "uk-parliament": {
-      "command": "C:\\code\\uk-parliament-mcp-lab\\.venv\\Scripts\\python.exe",
+      "command": "C:\\code\\uk-parliament-data-mcp\\.venv\\Scripts\\python.exe",
       "args": ["-m", "uk_parliament_mcp"],
-      "cwd": "C:\\code\\uk-parliament-mcp-lab"
+      "cwd": "C:\\code\\uk-parliament-data-mcp"
     }
   }
 }
@@ -783,7 +783,7 @@ pip install -e .
 
 **VS Code:** Use the full path to the virtual environment Python:
 ```bash
-C:\code\uk-parliament-mcp-lab\.venv\Scripts\python.exe -m uk_parliament_mcp
+C:\code\uk-parliament-data-mcp\.venv\Scripts\python.exe -m uk_parliament_mcp
 ```
 
 ---
