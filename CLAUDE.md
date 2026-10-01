@@ -53,9 +53,9 @@ terminal ──> cli/main.py (Typer) ──> cli/*.py ────────�
 
 1. Add a nested `@mcp.tool()` async function in the matching `tools/<api>.py`. Import the base URL from `config.py` and use `build_url` + `get_result`.
 2. Write the docstring in the 4-part semantic format `Action | keywords, synonyms | Use case | Returns`, followed by an `Args:` section. The docstring is the tool description the LLM sees.
-3. If a CLI equivalent is wanted, add a Typer command in the matching `cli/<group>.py`. The CLI and the MCP tool are separate implementations, so keep them in sync by hand.
+3. Add the matching Typer command in `cli/<group>.py`. The CLI and the MCP tool are separate implementations. `tests/test_consistency.py` fails if an endpoint (`f"{X_API_BASE}/path"`) is called on one side only. Deliberate one-sided endpoints go in its `MCP_ONLY_ENDPOINTS`/`CLI_ONLY_ENDPOINTS` allowlists.
 4. Add tests in `tests/test_tools/test_<api>.py` (mirrors the source layout). Tests patch the module-level name, e.g. `patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock)`, and assert on the URL. Registration tests list the expected tool names per module.
-5. **Tool count is hardcoded** ("209") in `tools/core.py` (`QUICK_REFERENCE`, the `all` guide, docstrings), `cli/main.py` help, `cli/guide.py`, `README.md`, this file and `tests/test_tools/test_core.py`. Update all of them when the count changes, along with the per-topic guide text in `core.py`.
+5. **Tool count is hardcoded** ("209") in `tools/core.py` (`QUICK_REFERENCE`, the `all` guide, docstrings), `cli/main.py` help, `cli/guide.py`, `README.md`, this file and `tests/test_tools/test_core.py`. `tests/test_consistency.py` checks these files against the number of registered tools. Also update the per-topic counts in the guide text in `core.py`, which are not checked.
 
 ## Conventions
 
