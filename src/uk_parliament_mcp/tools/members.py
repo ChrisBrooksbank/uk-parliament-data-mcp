@@ -580,16 +580,16 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_historical_members(
-        name: str | None = None,
-        date_to_search_for: str | None = None,
+        name: str,
+        date_to_search_for: str,
         skip: int | None = None,
         take: int | None = None,
     ) -> str:
         """Search historical members of the Commons or Lords | past MPs, historic members, former members, historical search | Use when researching members from historical periods or who were active on a specific date | Returns member profiles matching the historical search criteria
 
         Args:
-            name: Optional name search term (partial match).
-            date_to_search_for: Optional date to find members active on that date (YYYY-MM-DD).
+            name: Name search term (partial match). Required by the API.
+            date_to_search_for: Find members active on this date (YYYY-MM-DD). Required by the API.
             skip: Number of records to skip (for pagination).
             take: Number of records to return (default 20, max 20).
 

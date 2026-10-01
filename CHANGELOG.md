@@ -10,12 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Statutory Instruments tools that called the retired v1 API (every request returned HTTP 400) now use v2: `get_laying_bodies`, `get_si_procedures`, `get_si_procedure`
 - `get_si_procedure` / `parliament legislation si-procedure` now take the alphanumeric procedure ID the API uses (was typed as an integer)
+- `get_my_mp` reported "No current MP found" for every postcode over MCP: it read the search result before MCP response pruning had flattened it. (The CLI, which doesn't prune, was unaffected.)
+- `search_historical_members` / `members search-historical` now require both name and date. The API returns HTTP 400 unless both are given.
+- `get_parliamentary_diary` / `live parliamentary-diary` default the start date to today when no date filter is given. The API returns HTTP 500 without one.
 
 ### Added
 - `search_statutory_instruments` / `parliament legislation search-si` filters: procedure, recommended for procedure change, laying body, department, house, skip/take. Name is now optional. Use the "Proposed negative statutory instrument" procedure ID to list PNSIs.
 - Reference-data tools (bill types and stages, committee types, interest categories, policy interests, SI laying bodies and procedures, treaty organisations and series, Erskine May parts, calendar categories/locations/tags/types) cache responses for 15 minutes within an MCP session
 - `ROADMAP.md` listing open work
 - Tests that every CLI command runs, that MCP tools and CLI commands cover the same API endpoints, and that documented tool counts match the registered tools
+- Weekly live API check (`.github/workflows/live-api.yml`, `tests/live/`) that calls every argument-free tool and a set of tools with stable arguments against the real Parliament APIs
 
 ### Changed
 - Repository URLs in package metadata, CLI help and CONTRIBUTING.md now point to `uk-parliament-data-mcp`

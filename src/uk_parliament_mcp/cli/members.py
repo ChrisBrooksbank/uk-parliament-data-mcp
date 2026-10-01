@@ -767,10 +767,8 @@ def get_constituency_synopsis(
 
 @app.command("search-historical")
 def search_historical_members(
-    name: str | None = typer.Option(None, "--name", "-n", help="Name search term (partial match)"),
-    date: str | None = typer.Option(
-        None, "--date", help="Find members active on this date (YYYY-MM-DD)"
-    ),
+    name: str = typer.Option(..., "--name", "-n", help="Name search term (partial match)"),
+    date: str = typer.Option(..., "--date", help="Find members active on this date (YYYY-MM-DD)"),
     skip: int | None = typer.Option(None, "--skip", help="Number of records to skip"),
     take: int | None = typer.Option(None, "--take", help="Number of records to return"),
     pretty: PrettyOpt = False,
@@ -780,9 +778,9 @@ def search_historical_members(
     fields: FieldsOpt = None,
 ) -> None:
     """
-    Search historical members of the Commons or Lords.
+    Search historical members of the Commons or Lords active on a given date.
 
-    Returns member profiles from historical periods or active on a specific date.
+    The API requires both --name and --date.
     """
     url = build_url(
         f"{MEMBERS_API_BASE}/Members/SearchHistorical",

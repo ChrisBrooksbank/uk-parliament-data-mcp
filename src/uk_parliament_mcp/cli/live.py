@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date as date_type
+
 import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
@@ -341,7 +343,9 @@ def get_event_type_metadata(
 @app.command("parliamentary-diary")
 def get_parliamentary_diary(
     house: str | None = typer.Option(None, help="House filter: 'Commons' or 'Lords'"),
-    start_date: str | None = typer.Option(None, help="Start date filter (YYYY-MM-DD)"),
+    start_date: str | None = typer.Option(
+        None, help="Start date filter (YYYY-MM-DD); defaults to today if no date is given"
+    ),
     end_date: str | None = typer.Option(None, help="End date filter (YYYY-MM-DD)"),
     date: str | None = typer.Option(None, help="Specific date filter (YYYY-MM-DD)"),
     category_id: int | None = typer.Option(None, help="Category ID to filter by"),
@@ -358,6 +362,9 @@ def get_parliamentary_diary(
     Use to browse the full programme of parliamentary business across
     both chambers with optional date and house filtering.
     """
+    # The diary endpoint returns HTTP 500 when no date filter is given
+    if not (start_date or end_date or date):
+        start_date = date_type.today().isoformat()
     url = build_url(
         f"{WHATSON_API_BASE}/events/diary.json",
         {

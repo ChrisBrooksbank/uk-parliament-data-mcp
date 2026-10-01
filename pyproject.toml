@@ -31,7 +31,7 @@ Issues = "https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/issues"
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.0",
+    "pytest-asyncio>=0.24.0",
     "pytest-httpx>=0.30.0",
     "pytest-cov>=4.1.0",
     "ruff>=0.3.0",
@@ -74,6 +74,9 @@ warn_unused_ignores = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+markers = [
+    "live: calls the real Parliament APIs (skipped unless PARLIAMENT_LIVE_TESTS=1)",
+]
 testpaths = ["tests"]
 addopts = "--cov=uk_parliament_mcp --cov-report=term-missing"
 

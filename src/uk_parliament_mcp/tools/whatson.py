@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date as date_type
+
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.config import WHATSON_API_BASE
@@ -230,7 +232,7 @@ def register_tools(mcp: FastMCP) -> None:
 
         Args:
             house: Optional house filter: 'Commons' or 'Lords'.
-            start_date: Optional start date filter (YYYY-MM-DD).
+            start_date: Optional start date filter (YYYY-MM-DD). Defaults to today when no date filter is given.
             end_date: Optional end date filter (YYYY-MM-DD).
             date: Optional specific date filter (YYYY-MM-DD).
             category_id: Optional category ID to filter by.
@@ -239,6 +241,9 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Parliamentary diary events matching the filter criteria.
         """
+        # The diary endpoint returns HTTP 500 when no date filter is given
+        if not (start_date or end_date or date):
+            start_date = date_type.today().isoformat()
         url = build_url(
             f"{WHATSON_API_BASE}/events/diary.json",
             {

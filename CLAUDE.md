@@ -26,6 +26,7 @@ pytest tests/test_tools/                                  # MCP tool tests
 pytest tests/test_cli/                                    # CLI tests
 pytest tests/test_tools/test_members.py::TestMembersToolsRegistration -q
 pytest -k "search_member" --no-cov                        # single test, skip coverage
+PARLIAMENT_LIVE_TESTS=1 pytest tests/live --no-cov        # call the real APIs (skipped otherwise; runs weekly in CI)
 
 python -m uk_parliament_mcp             # run MCP server (stdio)
 parliament --help                       # run CLI

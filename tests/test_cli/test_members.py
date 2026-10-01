@@ -588,7 +588,9 @@ class TestSearchHistoricalMembers:
             return mock_historical_response
 
         with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
-            result = cli_runner.invoke(app, ["members", "search-historical", "--name", "Churchill"])
+            result = cli_runner.invoke(
+                app, ["members", "search-historical", "--name", "Churchill", "--date", "1950-01-01"]
+            )
 
         assert result.exit_code == 0
 
