@@ -156,12 +156,13 @@ You can ask questions about virtually all aspects of UK Parliament data. Here ar
 *   **Live Parliamentary Activity:** "What's happening in the House of Commons right now?" or "What's currently being debated in the Lords?"
 *   **Members of Parliament:** "Tell me everything you know about Boris Johnson," "What are Sir Keir Starmer's registered interests?" or "Show me the voting record of member 4129"
 *   **Bills & Legislation:** "Show me details of bill 425," "What amendments were proposed for bill 425?" or "What publications exist for the Environment Bill?"
-*   **Voting Records:** "How did MPs vote on the climate change motion?" or "Show me Lords divisions on healthcare policy"
-*   **Committees & Inquiries:** "Which committees are investigating economic issues?" or "Show me evidence submitted to the Treasury Committee"
+*   **Voting Records:** "How did MPs vote on the climate change motion?", "Show me Lords divisions on healthcare policy" or "How often do Diane Abbott and Keir Starmer vote the same way?"
+*   **Committees & Inquiries:** "Which committees are investigating economic issues?", "Show me evidence submitted to the Treasury Committee" or "Which committees scrutinised the Renters' Rights Bill?"
 *   **Parliamentary Procedures:** "Search Erskine May for references to Speaker's rulings" or "What are the oral question times this week?"
 *   **Constituencies & Elections:** "Show me election results for Birmingham constituencies" or "List all constituencies in Scotland"
 *   **Official Documents:** "Are there any statutory instruments about housing?" or "What treaties involve trade agreements?"
 *   **Transparency Data:** "Show register of interests for Treasury ministers" or "What are the declared interests categories?"
+*   **Not sure where to look?** "Search Parliament for net zero" searches members, bills, committees, Hansard and written questions at once.
 
 ## Power Tools
 
@@ -169,13 +170,18 @@ These high-level tools combine multiple API calls for common research tasks:
 
 | Tool | What it does |
 |------|--------------|
+| `search_parliament(query)` | One search across members, bills, committees, Hansard and written questions |
 | `get_mp_profile(member_id)` | Complete MP/Lord profile: bio, interests, voting record |
-| `check_mp_vote(member_id, topic)` | How an MP voted on a specific topic |
+| `check_mp_vote(member_id, topic)` | How an MP or Lord voted (Aye/No, Content/Not Content) on divisions about a topic |
+| `compare_member_votes(member_id_a, member_id_b, topic)` | Two members' votes side by side, with how often they agree |
+| `get_member_bills(member_id)` | Bills a member has sponsored |
 | `get_bill_overview(search_term)` | Full bill info: details, stages, publications |
+| `get_bill_committees(bill_id)` | Committees that examined a bill: committee stages and select committee scrutiny |
 | `get_committee_summary(topic)` | Committee overview: evidence, publications |
+| `get_committee_bills(committee_id)` | Bills a committee has scrutinised |
 | `get_my_mp(postcode, topic)` | Find MP by UK postcode with full profile |
 
-Note: `get_mp_profile` and `check_mp_vote` require a `member_id` (int). Search first with `get_member_by_name()`.
+Note: tools that take a `member_id` (int) need it looked up first with `get_member_by_name()`. When a power tool finds nothing it returns `suggestions` for what to try next (e.g. the surname only, a broader topic). Every `house` parameter accepts `1`/`2` or `"Commons"`/`"Lords"`.
 
 **Example:**
 ```
@@ -451,6 +457,9 @@ parliament composite mp-profile 4514 --pretty
 # Check how an MP voted on a topic (use member_id)
 parliament composite check-vote 172 "climate"
 
+# Search everything at once
+parliament composite search "net zero"
+
 # Track bill progress
 parliament bills search "Online Safety" --data-only | jq '.items[0]'
 
@@ -460,7 +469,7 @@ parliament live commons-now --pretty
 
 ### Common Commands
 
-The CLI organizes 210 tools into 15 command groups:
+The CLI organizes 210 tools into 13 command groups, plus the top-level `my-mp`, `digest`, `watch` and `reference` commands:
 
 ```bash
 # MP and Lords research
@@ -532,6 +541,19 @@ parliament composite bill-overview "Online Safety" --pretty
 
 # Get full committee summary
 parliament composite committee-summary "Treasury" --pretty
+
+# Search members, bills, committees, Hansard and written questions at once
+parliament composite search "renters rights"
+
+# Compare two members' votes (same House), optionally on a topic
+parliament composite compare-votes 4514 172 --topic welfare
+
+# Bills a member has sponsored
+parliament composite member-bills 4514
+
+# Which committees examined a bill, and which bills a committee examined
+parliament composite bill-committees 3764
+parliament composite committee-bills 172
 ```
 
 ### Daily/Weekly Digest
@@ -651,6 +673,8 @@ parliament members search "Starmer" --data-only | jq '.items[0]'
 ```
 
 When using `--fields`, the CLI shows available fields on stderr if none match, so you can discover the correct field paths.
+
+`--raw` and `--fields` also work before the command (`parliament --raw members search "Starmer"`).
 
 **Global flags:**
 - `--format` / `-f` - Output format: `json`, `table`, `markdown`, `csv`, `auto` (default: `auto`)

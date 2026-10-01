@@ -374,3 +374,23 @@ class TestGetResultCached:
 
         # Both should have been fetched
         assert len(httpx_mock.get_requests()) == 2
+
+
+async def test_client_uses_explicit_timeouts_and_pool_limits() -> None:
+    from uk_parliament_mcp.http_client import (
+        CONNECT_TIMEOUT,
+        HTTP_LIMITS,
+        HTTP_TIMEOUT,
+        ParliamentHTTPClient,
+    )
+
+    client = ParliamentHTTPClient()
+    try:
+        http = await client._get_client()
+        assert http.timeout.read == HTTP_TIMEOUT
+        assert http.timeout.connect == CONNECT_TIMEOUT
+        pool = http._transport._pool  # type: ignore[attr-defined]
+        assert pool._max_connections == HTTP_LIMITS.max_connections
+        assert pool._max_keepalive_connections == HTTP_LIMITS.max_keepalive_connections
+    finally:
+        await client.close()

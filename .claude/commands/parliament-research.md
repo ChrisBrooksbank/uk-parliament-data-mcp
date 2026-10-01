@@ -23,9 +23,16 @@ $ARGUMENTS
 |---|---|
 | Who is my MP? | `parliament my-mp "<postcode>"` |
 | MP profile | `parliament composite mp-profile <member_id>` |
+| Not sure where to look | `parliament composite search "<text>"` |
 | How did MP vote on X? | `parliament composite check-vote <member_id> "<topic>"` |
+| Do two members vote alike? | `parliament composite compare-votes <member_id_a> <member_id_b> --topic "<topic>"` |
+| Bills a member sponsored | `parliament composite member-bills <member_id>` |
 | Bill overview | `parliament composite bill-overview "<search_term>"` |
+| Which committees examined a bill? | `parliament composite bill-committees <bill_id>` |
 | Committee overview | `parliament composite committee-summary "<topic>"` |
+| Which bills did a committee examine? | `parliament composite committee-bills <committee_id>` |
+
+Composite results include `suggestions` when nothing is found.
 
 ## Specific Commands Reference
 
@@ -39,13 +46,10 @@ $ARGUMENTS
 
 #### Vote Direction Pattern
 
-`composite check-vote` returns divisions matching a topic but may not show HOW the member voted. To confirm vote direction:
+`composite check-vote` returns each matching division with the member's `vote` (Aye/No in the Commons, Content/Not Content in the Lords). A division missing from the list means the member did not vote in it. For the full division lists:
 
 ```
 parliament votes get-division <division_id> --house 1 --raw --format json
-→ search Ayes list for MemberId match → voted Aye
-→ search Noes list for MemberId match → voted No
-→ not in either list → did not vote
 ```
 
 **Warning:** Members can only vote after their election date. Check `latestHouseMembership.membershipStartDate` and filter out divisions before that date.

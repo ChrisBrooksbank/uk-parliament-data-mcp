@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Any, NotRequired, TypedDict
 from urllib.parse import urlencode
@@ -42,7 +43,11 @@ class CacheEntry(TypedDict):
 
 
 # Configuration constants (matching C# implementation)
-HTTP_TIMEOUT = 30.0  # seconds
+HTTP_TIMEOUT = float(os.environ.get("PARLIAMENT_HTTP_TIMEOUT", "30"))  # seconds
+CONNECT_TIMEOUT = 10.0  # seconds; fail fast when an API host is unreachable
+# Composite tools fan out 10-20 requests at once; cap connections so a burst
+# queues on the pool instead of opening an unbounded number of sockets.
+HTTP_LIMITS = httpx.Limits(max_connections=20, max_keepalive_connections=10)
 MAX_RETRY_ATTEMPTS = 3
 RETRY_DELAY_BASE = 1.0  # seconds
 
@@ -106,7 +111,10 @@ class ParliamentHTTPClient:
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create the HTTP client."""
         if self._client is None:
-            self._client = httpx.AsyncClient(timeout=HTTP_TIMEOUT)
+            self._client = httpx.AsyncClient(
+                timeout=httpx.Timeout(HTTP_TIMEOUT, connect=CONNECT_TIMEOUT),
+                limits=HTTP_LIMITS,
+            )
         return self._client
 
     async def close(self) -> None:

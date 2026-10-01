@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Query parameters the APIs silently ignored, so filters returned unfiltered results:
+  - `check_mp_vote` and `get_my_mp`'s topic votes now use each House's member-voting endpoint and report the member's actual vote (Lords members supported too)
+  - `search_commons_divisions` (MCP and CLI) sent `memberId` instead of `queryParameters.memberId`
+  - `search_oral_questions`, `search_written_questions`, `search_written_statements` and `get_recently_tabled_edms` used parameter names the APIs don't recognise
+- The standalone `parliament` executable crashed on startup and, once started, every request failed (PyInstaller excluded `tools` and `anyio`). `build-exe.yml` now runs the built executable, including one real request, before uploading it.
+- `parliament reference`, `parliament guide reference` and the `get_cli_reference` tool all reported 0 commands (Typer bundles its own Click, so `isinstance` checks never matched)
+- `parliament --raw <command>` and `--fields` given before the command were ignored
+- `parliament watch commons --interval 10` failed with "No such command"; `watch` and `digest` are now plain commands
 - Pin `mcp<2`. mcp 2.x renamed `FastMCP` to `MCPServer` and removed `mcp.server.fastmcp`, so fresh installs pulled in 2.x and failed on import.
 - Statutory Instruments tools that called the retired v1 API (every request returned HTTP 400) now use v2: `get_laying_bodies`, `get_si_procedures`, `get_si_procedure`
 - `get_si_procedure` / `parliament legislation si-procedure` now take the alphanumeric procedure ID the API uses (was typed as an integer)
@@ -16,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get_parliamentary_diary` / `live parliamentary-diary` default the start date to today when no date filter is given. The API returns HTTP 500 without one.
 
 ### Added
+- Five composite tools, with matching `parliament composite` commands (205 → 210 tools): `search_parliament` (members, bills, committees, Hansard and written questions in one call), `compare_member_votes`, `get_member_bills`, `get_bill_committees` and `get_committee_bills`
+- Composite tools return a `suggestions` list when they find nothing, and their descriptions list the tools they combine
+- "See also" cross-references in about 60 tool descriptions
+- Every `house` parameter accepts `1`/`2` or `"Commons"`/`"Lords"` (`config.house_id`/`house_name`)
+- Commons division search and voting-record tools gain skip/take and the teller and date filters the API supports
+- Tests: `test_api_params.py` (every query parameter checked against the OpenAPI specs), `test_guide_counts.py` (per-topic tool counts), `test_tool_references.py` (See also / Combines names exist), plus CLI tests that raise coverage of `guide.py`, `api.py`, `try_it.py` and `watch.py`
 - `search_statutory_instruments` / `parliament legislation search-si` filters: procedure, recommended for procedure change, laying body, department, house, skip/take. Name is now optional. Use the "Proposed negative statutory instrument" procedure ID to list PNSIs.
 - Reference-data tools (bill types and stages, committee types, interest categories, policy interests, SI laying bodies and procedures, treaty organisations and series, Erskine May parts, calendar categories/locations/tags/types) cache responses for 15 minutes within an MCP session
 - `ROADMAP.md` listing open work
@@ -24,6 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Weekly live API check (`.github/workflows/live-api.yml`, `tests/live/`) that calls every argument-free tool and a set of tools with stable arguments against the real Parliament APIs
 
 ### Changed
+- Commons and Lords votes tools are registered from one factory (`tools/votes.py`), replacing `commons_votes.py` and `lords_votes.py`
+- The shared HTTP client has a 20-connection pool and a 10 s connect timeout; the 30 s read timeout can be set with `PARLIAMENT_HTTP_TIMEOUT`
 - Repository URLs in package metadata, CLI help and CONTRIBUTING.md now point to `uk-parliament-data-mcp`
 - `get_member_voting` docstring explains that page 1 is the most recent page even though the API reports `skip=20` (an agent took the quirk for an offset and refetched)
 - Pre-commit hooks updated (current ruff; mypy runs from the project environment)
@@ -32,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `context/statutoryinstruments-api.json` and the `parliament api` catalogue updated to the live v2 spec
 
 ### Removed
+- The Hansard semantic search PWA scaffold (`pwa/`), a plan and empty Vite project sharing no code with the package. It's in git history if it's picked up as its own project.
+- Unused `GOODBYE_PROMPT`
 - `get_si_business_item`, `search_proposed_negative_sis`, `get_proposed_negative_si`, `get_proposed_negative_si_business_items` and their CLI commands (`si-business-item`, `search-pnsis`, `get-pnsi`, `pnsi-business`). Parliament retired these endpoints with the v1 API and there is no v2 equivalent. Proposed negatives are now returned by `search_statutory_instruments` and `get_statutory_instrument` (205 tools, down from 209).
 - Unused `validators.py` and `verify_readme_rendering.py`
 
