@@ -30,7 +30,7 @@ from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async, sho
 
 app = typer.Typer(
     name="parliament",
-    help="UK Parliament CLI (Unofficial) - not affiliated with UK Parliament.\n\nAccess 209 Parliament API tools from the terminal.\nData sourced from publicly available parliament.uk APIs.\nhttps://github.com/ChrisBrooksbank/uk-parliament-mcp-lab",
+    help="UK Parliament CLI (Unofficial) - not affiliated with UK Parliament.\n\nAccess 209 Parliament API tools from the terminal.\nData sourced from publicly available parliament.uk APIs.\nhttps://github.com/ChrisBrooksbank/uk-parliament-data-mcp",
     no_args_is_help=True,
 )
 
@@ -172,7 +172,7 @@ def callback(
     Access MPs, bills, votes, committees, Hansard, and more.
     Data sourced from publicly available parliament.uk APIs.
     This tool is not affiliated with or endorsed by UK Parliament.
-    https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab
+    https://github.com/ChrisBrooksbank/uk-parliament-data-mcp
     """
     # We use module-level variables since typer callbacks don't propagate context easily
     import uk_parliament_mcp.cli.main as _self

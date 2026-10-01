@@ -374,9 +374,7 @@ class TestGetProposedNegativeSI:
             mcp = FastMCP(name="test")
             statutory_instruments.register_tools(mcp)
 
-            await mcp.call_tool(
-                "get_proposed_negative_si_business_items", {"pnsi_id": "pnsi-456"}
-            )
+            await mcp.call_tool("get_proposed_negative_si_business_items", {"pnsi_id": "pnsi-456"})
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]

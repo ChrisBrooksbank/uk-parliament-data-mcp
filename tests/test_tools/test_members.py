@@ -773,7 +773,9 @@ class TestGetConstituencyLatestElection:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert call_url == f"{MEMBERS_API_BASE}/Location/Constituency/3510/ElectionResult/Latest"
+            assert (
+                call_url == f"{MEMBERS_API_BASE}/Location/Constituency/3510/ElectionResult/Latest"
+            )
 
 
 class TestGetConstituencyElectionResult:
@@ -938,9 +940,7 @@ class TestGetLordsInterestsRegister:
             mcp = FastMCP(name="test")
             members.register_tools(mcp)
 
-            await mcp.call_tool(
-                "get_lords_interests_register", {"search_term": "finance"}
-            )
+            await mcp.call_tool("get_lords_interests_register", {"search_term": "finance"})
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]

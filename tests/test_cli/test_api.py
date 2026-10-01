@@ -460,9 +460,7 @@ class TestParseParliamentUrl:
     def test_parse_multiple_query_values(self):
         from uk_parliament_mcp.cli.api import _parse_parliament_url
 
-        result = _parse_parliament_url(
-            "https://bills-api.parliament.uk/api/v1/Bills?tag=1&tag=2"
-        )
+        result = _parse_parliament_url("https://bills-api.parliament.uk/api/v1/Bills?tag=1&tag=2")
         assert result is not None
         _, _, query = result
         assert query["tag"] == ["1", "2"]

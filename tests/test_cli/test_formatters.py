@@ -772,9 +772,7 @@ class TestTruncationWarningIntegration:
         result = formatter.format_output(truncated_response)
         assert "> **Showing 1 of 150 results**" in result
 
-    def test_markdown_no_blockquote_when_not_truncated(
-        self, non_truncated_response: str
-    ) -> None:
+    def test_markdown_no_blockquote_when_not_truncated(self, non_truncated_response: str) -> None:
         """Test markdown has no blockquote when not truncated."""
         formatter = CLIFormatter(OutputFormat.MARKDOWN)
         result = formatter.format_output(non_truncated_response)

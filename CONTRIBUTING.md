@@ -6,8 +6,8 @@ Thank you for your interest in contributing! This document provides guidelines a
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab.git
-   cd uk-parliament-mcp-lab
+   git clone https://github.com/ChrisBrooksbank/uk-parliament-data-mcp.git
+   cd uk-parliament-data-mcp
    ```
 
 2. **Create virtual environment:**
@@ -31,8 +31,8 @@ We use automated tools to maintain consistency:
 
 Run before committing:
 ```bash
-ruff check src/
-ruff format src/
+ruff check src/ tests/
+ruff format src/ tests/
 mypy src/
 ```
 
@@ -43,9 +43,11 @@ mypy src/
 
 ```python
 """Description of API tools."""
+
 from mcp.server.fastmcp import FastMCP
 from uk_parliament_mcp.config import API_BASE
 from uk_parliament_mcp.http_client import build_url, get_result
+
 
 def register_tools(mcp: FastMCP) -> None:
     """Register tools with the MCP server."""
@@ -67,6 +69,7 @@ def register_tools(mcp: FastMCP) -> None:
 3. Register in `server.py`:
 ```python
 from uk_parliament_mcp.tools import my_module
+
 my_module.register_tools(mcp)
 ```
 
@@ -97,8 +100,8 @@ pytest --cov=uk_parliament_mcp --cov-report=term-missing
 2. Make your changes
 3. Ensure all checks pass:
    ```bash
-   ruff check src/
-   ruff format --check src/
+   ruff check src/ tests/
+   ruff format --check src/ tests/
    mypy src/
    pytest
    ```

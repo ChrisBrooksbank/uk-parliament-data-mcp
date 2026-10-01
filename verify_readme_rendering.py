@@ -24,29 +24,30 @@ def verify_collapsible_sections(readme_path: Path) -> tuple[bool, list[str]]:
     """
     errors = []
 
-    with open(readme_path, 'r', encoding='utf-8') as f:
+    with open(readme_path, encoding="utf-8") as f:
         content = f.read()
 
     # Check for matching <details> tags
-    details_open = content.count('<details>')
-    details_close = content.count('</details>')
+    details_open = content.count("<details>")
+    details_close = content.count("</details>")
     if details_open != details_close:
         errors.append(f"Mismatched <details> tags: {details_open} open, {details_close} close")
 
     # Check for matching <summary> tags
-    summary_open = content.count('<summary>')
-    summary_close = content.count('</summary>')
+    summary_open = content.count("<summary>")
+    summary_close = content.count("</summary>")
     if summary_open != summary_close:
         errors.append(f"Mismatched <summary> tags: {summary_open} open, {summary_close} close")
 
     # Check that each <details> has a <summary>
     if details_open != summary_open:
-        errors.append(f"Each <details> should have a <summary>: {details_open} details, {summary_open} summaries")
+        errors.append(
+            f"Each <details> should have a <summary>: {details_open} details, {summary_open} summaries"
+        )
 
     # Find all collapsible sections and validate structure
     pattern = re.compile(
-        r'<details>\s*\n<summary><strong>([^<]+)</strong>[^<]*</summary>\s*\n',
-        re.MULTILINE
+        r"<details>\s*\n<summary><strong>([^<]+)</strong>[^<]*</summary>\s*\n", re.MULTILINE
     )
 
     sections = pattern.findall(content)
@@ -58,7 +59,7 @@ def verify_collapsible_sections(readme_path: Path) -> tuple[bool, list[str]]:
         errors.append("No properly formatted collapsible sections found")
 
     # Verify there's a blank line after each </summary> (required for GitHub rendering)
-    summary_pattern = re.compile(r'</summary>\n\n', re.MULTILINE)
+    summary_pattern = re.compile(r"</summary>\n\n", re.MULTILINE)
     summary_with_blank = len(summary_pattern.findall(content))
     if summary_with_blank != summary_open:
         errors.append(
@@ -67,7 +68,7 @@ def verify_collapsible_sections(readme_path: Path) -> tuple[bool, list[str]]:
         )
 
     # Check for proper closing structure (blank line before </details>)
-    details_pattern = re.compile(r'\n\n</details>', re.MULTILINE)
+    details_pattern = re.compile(r"\n\n</details>", re.MULTILINE)
     details_with_blank = len(details_pattern.findall(content))
     if details_with_blank != details_close:
         errors.append(
@@ -80,7 +81,7 @@ def verify_collapsible_sections(readme_path: Path) -> tuple[bool, list[str]]:
 
 def main() -> int:
     """Main entry point."""
-    readme_path = Path(__file__).parent / 'README.md'
+    readme_path = Path(__file__).parent / "README.md"
 
     if not readme_path.exists():
         print(f"ERROR: README.md not found at {readme_path}")
@@ -103,5 +104,5 @@ def main() -> int:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

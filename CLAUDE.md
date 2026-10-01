@@ -17,9 +17,9 @@ End-user usage of both is documented in `README.md`.
 pip install -e ".[dev]"                 # dev install (Python 3.11+)
 
 # Validation (CI runs exactly these on 3.11 and 3.12)
-ruff check src/ && ruff format --check src/ && mypy src/ && pytest
+ruff check src/ tests/ && ruff format --check src/ tests/ && mypy src/ && pytest
 
-ruff check src/ --fix && ruff format src/   # auto-fix
+ruff check src/ tests/ --fix && ruff format src/ tests/   # auto-fix
 
 # Tests (pytest adds --cov by default via pyproject addopts)
 pytest tests/test_tools/                                  # MCP tool tests
