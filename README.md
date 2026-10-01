@@ -17,18 +17,20 @@ Connect your AI assistant to 205 UK Parliament API tools for comprehensive parli
 
 https://github.com/user-attachments/assets/30f2df13-dff9-44e6-b1f6-5eebfb665d9e
 
+*Claude Desktop using the server to check the parliamentary calendar. Every answer ends with the Parliament API URLs it came from.*
+
+Prefer the terminal? See the [CLI demo](#cli-usage).
+
 
 ## Table of Contents
 
 - [MCP Server for AI Assistants](#mcp-server-for-ai-assistants)
   - [Getting Started](#getting-started)
-  - [Starting a Session](#starting-a-session)
   - [Parliament Research Skill (Claude Code)](#parliament-research-skill-claude-code)
   - [Claude Desktop Setup](#claude-desktop-setup)
   - [VS Code Setup](#vs-code-setup)
   - [What Can I Ask?](#what-can-i-ask)
   - [Power Tools](#power-tools)
-  - [Ending Your Session](#ending-your-session)
   - [Prompting Tips](#prompting-tips)
   - [Example Prompts](#example-prompts)
 - [CLI Usage](#cli-usage)
@@ -42,7 +44,7 @@ https://github.com/user-attachments/assets/30f2df13-dff9-44e6-b1f6-5eebfb665d9e
   - [URL Transparency](#url-transparency)
   - [Help System](#help-system)
 - [Alternative Installation Methods](#alternative-installation-methods)
-- [Final Thoughts](#final-thoughts)
+- [Contributing](#contributing)
 
 ## Getting Started
 
@@ -52,13 +54,10 @@ https://github.com/user-attachments/assets/30f2df13-dff9-44e6-b1f6-5eebfb665d9e
 - Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
 - Or say **"Order Order"** (like the Speaker) to initialize the session
 
-This gives your AI assistant the context it needs to effectively use the 205 available tools.
+This gives your AI assistant the context it needs to effectively use the 205 available tools. To end the session, start a new chat.
 
-## Starting a Session
-
-Say **"Order Order"** to initialize your parliamentary research session. This gives Claude the context needed to effectively use the 205 available tools.
-
-If that doesn't work, copy and paste this system prompt:
+<details>
+<summary>If neither works, paste this system prompt instead</summary>
 
 ```plaintext
 You are a helpful assistant that answers questions using only data from UK Parliament MCP servers.
@@ -73,6 +72,8 @@ After every response, append a list of all MCP API URLs used to generate the ans
 If no relevant data is available via the MCP API, state that clearly and do not attempt to fabricate a response.
 Convert raw data into human-readable summaries while preserving accuracy, but always list the raw URLs used.
 ```
+
+</details>
 
 ### Parliament Research Skill (Claude Code)
 
@@ -168,10 +169,6 @@ Note: `get_mp_profile` and `check_mp_vote` require a `member_id` (int). Search f
 Tell me everything about Keir Starmer
 ```
 The AI will use `get_member_by_name` to find the member_id, then `get_mp_profile` to fetch biography, registered interests, and voting history in a single efficient call.
-
-## Ending Your Session
-
-Start a new chat session to end the parliamentary research mode.
 
 ---
 
@@ -391,6 +388,10 @@ Show me the JSON returned from the last MCP call.
 ## CLI Usage
 
 The package includes a `parliament` CLI for terminal access to all 205 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
+
+![parliament CLI demo: Commons votes on the Terminally Ill Adults Bill, the MP for SW1A 1AA with their election result and recent votes, and a member search](docs/media/cli-demo.gif)
+
+*Recorded against the live Parliament APIs ([`scripts/record-cli-demo.sh`](scripts/record-cli-demo.sh)).*
 
 ### Install — Standalone Executable (Recommended)
 
@@ -650,9 +651,11 @@ When using `--fields`, the CLI shows available fields on stderr if none match, s
 Every API request logs the source URL to stderr, so you can always see exactly which Parliament API endpoint was called:
 
 ```bash
-# URL appears on stderr, data on stdout
+# URLs appear on stderr, data on stdout
 parliament members search "Starmer"
-# stderr: GET https://members-api.parliament.uk/api/Members/Search?Name=Starmer
+# stderr:
+#   URLs called:
+#     https://members-api.parliament.uk/api/Members/Search?Name=Starmer&skip=0&take=20
 
 # Capture just the data (URLs go to stderr, not stdout)
 parliament members search "Starmer" > results.json
@@ -788,7 +791,7 @@ C:\code\uk-parliament-data-mcp\.venv\Scripts\python.exe -m uk_parliament_mcp
 
 ---
 
-## Final Thoughts
+## Contributing
 
-The project is under active development, with plans to increase data coverage and improve interaction quality. Contributions and feedback are welcome.
+Contributions and feedback are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and conventions, [ROADMAP.md](ROADMAP.md) for open work, and [CHANGELOG.md](CHANGELOG.md) for what has changed.
 
