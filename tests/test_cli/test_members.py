@@ -492,9 +492,7 @@ class TestGetConstituency:
         result = cli_runner.invoke(app, ["members", "constituency-get"])
         assert result.exit_code != 0
 
-    def test_constituency_get_success(
-        self, cli_runner: CliRunner, mock_constituency_response: str
-    ):
+    def test_constituency_get_success(self, cli_runner: CliRunner, mock_constituency_response: str):
         """Test constituency-get returns constituency data."""
 
         async def mock_get_result(url: str) -> str:
@@ -583,9 +581,7 @@ class TestSearchHistoricalMembers:
         result = cli_runner.invoke(app, ["members", "search-historical", "--help"])
         assert result.exit_code == 0
 
-    def test_search_historical_success(
-        self, cli_runner: CliRunner, mock_historical_response: str
-    ):
+    def test_search_historical_success(self, cli_runner: CliRunner, mock_historical_response: str):
         """Test search-historical returns data."""
 
         async def mock_get_result(url: str) -> str:
@@ -593,7 +589,7 @@ class TestSearchHistoricalMembers:
 
         with patch("uk_parliament_mcp.cli.utils.get_result", new=mock_get_result):
             result = cli_runner.invoke(
-                app, ["members", "search-historical", "--name", "Churchill"]
+                app, ["members", "search-historical", "--name", "Churchill", "--date", "1950-01-01"]
             )
 
         assert result.exit_code == 0
@@ -645,9 +641,7 @@ class TestLordsInterestsRegister:
         result = cli_runner.invoke(app, ["members", "lords-interests-register", "--help"])
         assert result.exit_code == 0
 
-    def test_success_no_args(
-        self, cli_runner: CliRunner, mock_register_response: str
-    ):
+    def test_success_no_args(self, cli_runner: CliRunner, mock_register_response: str):
         """Test lords-interests-register works without arguments."""
 
         async def mock_get_result(url: str) -> str:

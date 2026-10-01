@@ -7,9 +7,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import STATUTORY_INSTRUMENTS_API_BASE
+from uk_parliament_mcp.config import (
+    STATUTORY_INSTRUMENTS_API_BASE,
+)
 from uk_parliament_mcp.tools import statutory_instruments
-from uk_parliament_mcp.tools.statutory_instruments import STATUTORY_INSTRUMENTS_API_BASE_V1
 
 
 class TestStatutoryInstrumentsToolsRegistration:
@@ -34,13 +35,9 @@ class TestStatutoryInstrumentsToolsRegistration:
             "get_statutory_instrument",
             "get_si_business_items",
             "get_act_of_parliament",
-            "get_si_business_item",
             "get_laying_bodies",
             "get_si_procedures",
             "get_si_procedure",
-            "search_proposed_negative_sis",
-            "get_proposed_negative_si",
-            "get_proposed_negative_si_business_items",
             "get_si_timeline_business_items",
         ]
         for tool_name in expected_tools:
@@ -87,7 +84,8 @@ class TestSearchStatutoryInstruments:
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
             expected_url = (
-                f"{STATUTORY_INSTRUMENTS_API_BASE}/StatutoryInstrument?Name=Building%20Regulations"
+                f"{STATUTORY_INSTRUMENTS_API_BASE}/StatutoryInstrument"
+                "?Name=Building+Regulations&Skip=0&Take=20"
             )
             assert call_url == expected_url
 
@@ -109,7 +107,7 @@ class TestSearchStatutoryInstruments:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert "Health%20%26%20Safety%20Rules" in call_url
+            assert "Name=Health+%26+Safety+Rules" in call_url
 
     @pytest.mark.asyncio
     async def test_handles_single_quotes(self):
@@ -129,7 +127,29 @@ class TestSearchStatutoryInstruments:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert "Queen%27s%20Regulations" in call_url
+            assert "Name=Queen%27s+Regulations" in call_url
+
+    @pytest.mark.asyncio
+    async def test_proposed_negative_filters(self):
+        """search_statutory_instruments passes PNSI filters to the v2 search."""
+        with patch(
+            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
+        ) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            statutory_instruments.register_tools(mcp)
+
+            await mcp.call_tool(
+                "search_statutory_instruments",
+                {"procedure_id": "iCdMN1MW", "recommended_for_procedure_change": True},
+            )
+
+            call_url = mock.call_args[0][0]
+            assert call_url == (
+                f"{STATUTORY_INSTRUMENTS_API_BASE}/StatutoryInstrument"
+                "?Procedure=iCdMN1MW&RecommendedForProcedureChange=true&Skip=0&Take=20"
+            )
 
 
 class TestSearchActsOfParliament:
@@ -202,44 +222,6 @@ class TestSearchActsOfParliament:
             assert call_url == expected_url
 
 
-class TestGetSiBusinessItem:
-    """Tests for get_si_business_item tool."""
-
-    @pytest.mark.asyncio
-    async def test_builds_correct_url(self):
-        """get_si_business_item builds correct URL with item ID."""
-        with patch(
-            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
-        ) as mock:
-            mock.return_value = '{"url": "test", "data": "{}"}'
-
-            mcp = FastMCP(name="test")
-            statutory_instruments.register_tools(mcp)
-
-            await mcp.call_tool("get_si_business_item", {"item_id": "abc123"})
-
-            mock.assert_called_once()
-            call_url = mock.call_args[0][0]
-            assert f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/BusinessItem/abc123" in call_url
-
-    @pytest.mark.asyncio
-    async def test_includes_laid_paper_param(self):
-        """get_si_business_item includes laidPaper query param when provided."""
-        with patch(
-            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
-        ) as mock:
-            mock.return_value = '{"url": "test", "data": "{}"}'
-
-            mcp = FastMCP(name="test")
-            statutory_instruments.register_tools(mcp)
-
-            await mcp.call_tool("get_si_business_item", {"item_id": "abc123", "laid_paper": True})
-
-            mock.assert_called_once()
-            call_url = mock.call_args[0][0]
-            assert "laidPaper=true" in call_url
-
-
 class TestGetLayingBodies:
     """Tests for get_laying_bodies tool."""
 
@@ -247,7 +229,8 @@ class TestGetLayingBodies:
     async def test_builds_correct_url(self):
         """get_laying_bodies builds correct URL."""
         with patch(
-            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
+            "uk_parliament_mcp.tools.statutory_instruments.get_result_cached",
+            new_callable=AsyncMock,
         ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
@@ -258,7 +241,7 @@ class TestGetLayingBodies:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert call_url == f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/LayingBody"
+            assert call_url == f"{STATUTORY_INSTRUMENTS_API_BASE}/LayingBody"
 
 
 class TestGetSiProcedures:
@@ -268,7 +251,8 @@ class TestGetSiProcedures:
     async def test_get_si_procedures_builds_correct_url(self):
         """get_si_procedures builds correct URL."""
         with patch(
-            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
+            "uk_parliament_mcp.tools.statutory_instruments.get_result_cached",
+            new_callable=AsyncMock,
         ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
@@ -279,7 +263,7 @@ class TestGetSiProcedures:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert call_url == f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/Procedure"
+            assert call_url == f"{STATUTORY_INSTRUMENTS_API_BASE}/Procedure"
 
     @pytest.mark.asyncio
     async def test_get_si_procedure_builds_correct_url(self):
@@ -292,98 +276,11 @@ class TestGetSiProcedures:
             mcp = FastMCP(name="test")
             statutory_instruments.register_tools(mcp)
 
-            await mcp.call_tool("get_si_procedure", {"procedure_id": 3})
+            await mcp.call_tool("get_si_procedure", {"procedure_id": "H5YJQsK2"})
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert call_url == f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/Procedure/3"
-
-
-class TestSearchProposedNegativeSIs:
-    """Tests for search_proposed_negative_sis tool."""
-
-    @pytest.mark.asyncio
-    async def test_builds_correct_url_no_params(self):
-        """search_proposed_negative_sis builds correct URL with default params."""
-        with patch(
-            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
-        ) as mock:
-            mock.return_value = '{"url": "test", "data": "{}"}'
-
-            mcp = FastMCP(name="test")
-            statutory_instruments.register_tools(mcp)
-
-            await mcp.call_tool("search_proposed_negative_sis", {})
-
-            mock.assert_called_once()
-            call_url = mock.call_args[0][0]
-            assert (
-                f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/ProposedNegativeStatutoryInstrument"
-                in call_url
-            )
-
-    @pytest.mark.asyncio
-    async def test_includes_name_filter(self):
-        """search_proposed_negative_sis includes Name filter when provided."""
-        with patch(
-            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
-        ) as mock:
-            mock.return_value = '{"url": "test", "data": "{}"}'
-
-            mcp = FastMCP(name="test")
-            statutory_instruments.register_tools(mcp)
-
-            await mcp.call_tool("search_proposed_negative_sis", {"name": "Environment"})
-
-            mock.assert_called_once()
-            call_url = mock.call_args[0][0]
-            assert "Name=Environment" in call_url
-
-
-class TestGetProposedNegativeSI:
-    """Tests for get_proposed_negative_si and get_proposed_negative_si_business_items tools."""
-
-    @pytest.mark.asyncio
-    async def test_get_proposed_negative_si_builds_correct_url(self):
-        """get_proposed_negative_si builds correct URL."""
-        with patch(
-            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
-        ) as mock:
-            mock.return_value = '{"url": "test", "data": "{}"}'
-
-            mcp = FastMCP(name="test")
-            statutory_instruments.register_tools(mcp)
-
-            await mcp.call_tool("get_proposed_negative_si", {"pnsi_id": "pnsi-456"})
-
-            mock.assert_called_once()
-            call_url = mock.call_args[0][0]
-            assert (
-                f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/ProposedNegativeStatutoryInstrument/pnsi-456"
-                == call_url
-            )
-
-    @pytest.mark.asyncio
-    async def test_get_proposed_negative_si_business_items_builds_correct_url(self):
-        """get_proposed_negative_si_business_items builds correct URL."""
-        with patch(
-            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
-        ) as mock:
-            mock.return_value = '{"url": "test", "data": "{}"}'
-
-            mcp = FastMCP(name="test")
-            statutory_instruments.register_tools(mcp)
-
-            await mcp.call_tool(
-                "get_proposed_negative_si_business_items", {"pnsi_id": "pnsi-456"}
-            )
-
-            mock.assert_called_once()
-            call_url = mock.call_args[0][0]
-            assert (
-                f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/ProposedNegativeStatutoryInstrument/pnsi-456/BusinessItems"
-                == call_url
-            )
+            assert call_url == f"{STATUTORY_INSTRUMENTS_API_BASE}/Procedure/H5YJQsK2"
 
 
 class TestGetSiTimelineBusinessItems:

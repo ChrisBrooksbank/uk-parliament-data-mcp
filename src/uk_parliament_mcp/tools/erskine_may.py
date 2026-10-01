@@ -5,7 +5,7 @@ from urllib.parse import quote
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.config import ERSKINE_MAY_API_BASE
-from uk_parliament_mcp.http_client import build_url, get_result
+from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -32,7 +32,7 @@ def register_tools(mcp: FastMCP) -> None:
             List of all 6 parts of Erskine May with titles.
         """
         url = f"{ERSKINE_MAY_API_BASE}/Part"
-        return await get_result(url)
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
     async def get_erskine_may_part(part_number: int) -> str:

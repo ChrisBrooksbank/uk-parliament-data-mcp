@@ -17,6 +17,12 @@ from uk_parliament_mcp.http_client import (
 )
 
 
+@pytest.fixture(autouse=True)
+def no_retry_delay(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Skip real backoff sleeps so retry tests run instantly."""
+    monkeypatch.setattr("uk_parliament_mcp.http_client.RETRY_DELAY_BASE", 0.0)
+
+
 class TestBuildUrl:
     """Tests for build_url function."""
 

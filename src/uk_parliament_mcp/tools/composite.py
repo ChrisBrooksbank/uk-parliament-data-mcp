@@ -34,17 +34,22 @@ def _parse_response(response: str) -> dict[str, Any]:
         return {"error": "Failed to parse response"}
 
 
+def _first_search_item(search_response: dict[str, Any]) -> dict[str, Any]:
+    """Return the first item of a Members API search, with or without its value wrapper.
+
+    Raw responses look like ``{"items": [{"value": {...}, "links": [...]}]}``; with
+    response pruning on (the MCP default) the wrapper is flattened to ``{"items": [{...}]}``.
+    """
+    items = search_response.get("items") or [{}]
+    first = items[0] if isinstance(items[0], dict) else {}
+    value = first.get("value")
+    return value if isinstance(value, dict) else first
+
+
 def _extract_member_id(member_response: dict[str, Any]) -> int | None:
     """Extract member_id from member search response."""
-    try:
-        items = member_response.get("items", [])
-        if items:
-            member_id = items[0].get("value", {}).get("id")
-            if isinstance(member_id, int):
-                return member_id
-    except (KeyError, IndexError, TypeError):
-        pass
-    return None
+    member_id = _first_search_item(member_response).get("id")
+    return member_id if isinstance(member_id, int) else None
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -302,7 +307,7 @@ def register_tools(mcp: FastMCP) -> None:
                 }
             )
 
-        basic_info = member_data.get("items", [{}])[0].get("value", {})
+        basic_info = _first_search_item(member_data)
 
         # Step 2: Parallel detail fetches
         biography_url = f"{MEMBERS_API_BASE}/Members/{member_id}/Biography"

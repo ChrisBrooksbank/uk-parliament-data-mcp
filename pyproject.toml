@@ -17,21 +17,21 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "mcp>=1.0.0",
+    "mcp>=1.0.0,<2",  # mcp 2.x renamed FastMCP to MCPServer; see ROADMAP.md
     "httpx>=0.27.0",
     "typer>=0.9.0",
     "rich>=13.0.0",
 ]
 
 [project.urls]
-Homepage = "https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab"
-Repository = "https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab"
-Issues = "https://github.com/ChrisBrooksbank/uk-parliament-mcp-lab/issues"
+Homepage = "https://github.com/ChrisBrooksbank/uk-parliament-data-mcp"
+Repository = "https://github.com/ChrisBrooksbank/uk-parliament-data-mcp"
+Issues = "https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/issues"
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
-    "pytest-asyncio>=0.23.0",
+    "pytest-asyncio>=0.24.0",
     "pytest-httpx>=0.30.0",
     "pytest-cov>=4.1.0",
     "ruff>=0.3.0",
@@ -74,6 +74,9 @@ warn_unused_ignores = true
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+markers = [
+    "live: calls the real Parliament APIs (skipped unless PARLIAMENT_LIVE_TESTS=1)",
+]
 testpaths = ["tests"]
 addopts = "--cov=uk_parliament_mcp --cov-report=term-missing"
 

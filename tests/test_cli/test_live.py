@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 from unittest.mock import patch
 
-import pytest
 from typer.testing import CliRunner
 
 from uk_parliament_mcp.cli.main import app
@@ -149,9 +148,7 @@ class TestSpeakerEvents:
             return mock_response
 
         with patch("uk_parliament_mcp.cli.live.get_result", new=mock_get_result):
-            result = cli_runner.invoke(
-                app, ["live", "speaker-events", "--date", "2024-03-15"]
-            )
+            result = cli_runner.invoke(app, ["live", "speaker-events", "--date", "2024-03-15"])
 
         assert result.exit_code == 0
 
@@ -201,9 +198,7 @@ class TestAnnulmentDate:
             return mock_response
 
         with patch("uk_parliament_mcp.cli.live.get_result", new=mock_get_result):
-            result = cli_runner.invoke(
-                app, ["live", "annulment-date", "2024-01-01", "40"]
-            )
+            result = cli_runner.invoke(app, ["live", "annulment-date", "2024-01-01", "40"])
 
         assert result.exit_code == 0
 
@@ -231,9 +226,7 @@ class TestLastSittingDate:
             return mock_response
 
         with patch("uk_parliament_mcp.cli.live.get_result", new=mock_get_result):
-            result = cli_runner.invoke(
-                app, ["live", "last-sitting-date", "Commons", "2024-08-01"]
-            )
+            result = cli_runner.invoke(app, ["live", "last-sitting-date", "Commons", "2024-08-01"])
 
         assert result.exit_code == 0
 

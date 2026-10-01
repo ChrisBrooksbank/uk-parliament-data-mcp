@@ -5,25 +5,51 @@ from urllib.parse import quote
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.config import STATUTORY_INSTRUMENTS_API_BASE
-from uk_parliament_mcp.http_client import build_url, get_result
-
-STATUTORY_INSTRUMENTS_API_BASE_V1 = "https://statutoryinstruments-api.parliament.uk/api/v1"
+from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
 def register_tools(mcp: FastMCP) -> None:
     """Register statutory instruments tools with the MCP server."""
 
     @mcp.tool()
-    async def search_statutory_instruments(name: str) -> str:
-        """Search for Statutory Instruments (secondary legislation) by name. Use when researching government regulations, rules, or orders made under primary legislation. SIs are used to implement or modify laws.
+    async def search_statutory_instruments(
+        name: str | None = None,
+        procedure_id: str | None = None,
+        recommended_for_procedure_change: bool | None = None,
+        laying_body_id: str | None = None,
+        department_id: int | None = None,
+        house: str | None = None,
+        skip: int = 0,
+        take: int = 20,
+    ) -> str:
+        """Search for Statutory Instruments (secondary legislation), including proposed negative SIs (PNSIs) under sifting. Use when researching government regulations, rules, or orders made under primary legislation. SIs are used to implement or modify laws.
 
         Args:
-            name: Name or title of the statutory instrument to search for.
+            name: Optional. Name or title of the statutory instrument to search for.
+            procedure_id: Optional. Procedure ID from get_si_procedures() (e.g. the "Proposed negative statutory instrument" procedure to list PNSIs).
+            recommended_for_procedure_change: Optional. Only PNSIs a sifting committee recommended for the affirmative procedure.
+            laying_body_id: Optional. Laying body ID from get_laying_bodies().
+            department_id: Optional. Government department ID.
+            house: Optional. "Commons" or "Lords".
+            skip: Number of records to skip (pagination, default 0).
+            take: Number of records to return (default 20).
 
         Returns:
-            Statutory Instruments matching the search term.
+            Statutory Instruments matching the filters.
         """
-        url = f"{STATUTORY_INSTRUMENTS_API_BASE}/StatutoryInstrument?Name={quote(name)}"
+        url = build_url(
+            f"{STATUTORY_INSTRUMENTS_API_BASE}/StatutoryInstrument",
+            {
+                "Name": name,
+                "Procedure": procedure_id,
+                "RecommendedForProcedureChange": recommended_for_procedure_change,
+                "LayingBodyId": laying_body_id,
+                "DepartmentId": department_id,
+                "House": house,
+                "Skip": skip,
+                "Take": take,
+            },
+        )
         return await get_result(url)
 
     @mcp.tool()
@@ -85,28 +111,6 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def get_si_business_item(
-        item_id: str,
-        laid_paper: bool | None = None,
-    ) -> str:
-        """Get SI business item details | statutory instrument scrutiny, business item, JCSI, SLSC |
-        Get details of a specific business item for an SI |
-        Returns business item details including scrutiny outcomes
-
-        Args:
-            item_id: The business item ID (alphanumeric string).
-            laid_paper: Optional. If True, treat ID as a laid paper ID.
-
-        Returns:
-            Business item details including scrutiny outcomes.
-        """
-        url = build_url(
-            f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/BusinessItem/{quote(item_id)}",
-            {"laidPaper": laid_paper},
-        )
-        return await get_result(url)
-
-    @mcp.tool()
     async def get_laying_bodies() -> str:
         """List SI laying bodies | laying body, department, government organisation, JCSI |
         Get all bodies that can lay statutory instruments before Parliament |
@@ -115,8 +119,8 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             List of all laying bodies with IDs and names.
         """
-        url = f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/LayingBody"
-        return await get_result(url)
+        url = f"{STATUTORY_INSTRUMENTS_API_BASE}/LayingBody"
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
     async def get_si_procedures() -> str:
@@ -127,89 +131,22 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             List of all SI procedures with IDs and names.
         """
-        url = f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/Procedure"
-        return await get_result(url)
+        url = f"{STATUTORY_INSTRUMENTS_API_BASE}/Procedure"
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
-    async def get_si_procedure(procedure_id: int) -> str:
+    async def get_si_procedure(procedure_id: str) -> str:
         """Get SI procedure details | statutory instrument procedure, affirmative, negative |
         Get details of a specific SI procedure |
         Returns procedure details including workflow steps
 
         Args:
-            procedure_id: The procedure ID (integer from list_si_procedures).
+            procedure_id: The procedure ID (alphanumeric string from get_si_procedures).
 
         Returns:
             Procedure details including workflow steps.
         """
-        url = f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/Procedure/{procedure_id}"
-        return await get_result(url)
-
-    @mcp.tool()
-    async def search_proposed_negative_sis(
-        name: str | None = None,
-        recommended_for_procedure_change: bool | None = None,
-        department_id: int | None = None,
-        laying_body_id: int | None = None,
-        skip: int = 0,
-        take: int = 20,
-    ) -> str:
-        """Search proposed negative SIs | PNSI, proposed negative statutory instrument, sifting |
-        Search proposed negative statutory instruments under parliamentary sifting |
-        Returns list of PNSIs with details and sifting status
-
-        Args:
-            name: Optional. Filter by SI name.
-            recommended_for_procedure_change: Optional. Filter to those recommended for procedure change.
-            department_id: Optional. Filter by department ID.
-            laying_body_id: Optional. Filter by laying body ID.
-            skip: Number of records to skip (pagination, default 0).
-            take: Number of records to return (default 20).
-
-        Returns:
-            List of proposed negative statutory instruments.
-        """
-        url = build_url(
-            f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/ProposedNegativeStatutoryInstrument",
-            {
-                "Name": name,
-                "RecommendedForProcedureChange": recommended_for_procedure_change,
-                "DepartmentId": department_id,
-                "LayingBodyId": laying_body_id,
-                "Skip": skip,
-                "Take": take,
-            },
-        )
-        return await get_result(url)
-
-    @mcp.tool()
-    async def get_proposed_negative_si(pnsi_id: str) -> str:
-        """Get proposed negative SI details | PNSI, proposed negative statutory instrument, sifting |
-        Get full details of a specific proposed negative SI |
-        Returns PNSI details including sifting committee recommendations
-
-        Args:
-            pnsi_id: The PNSI ID (alphanumeric string from search results).
-
-        Returns:
-            Full PNSI details including sifting committee recommendations.
-        """
-        url = f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/ProposedNegativeStatutoryInstrument/{quote(pnsi_id)}"
-        return await get_result(url)
-
-    @mcp.tool()
-    async def get_proposed_negative_si_business_items(pnsi_id: str) -> str:
-        """Get PNSI business items | proposed negative SI scrutiny, sifting committee, business items |
-        Get business items for a proposed negative statutory instrument |
-        Returns business items with dates and sifting outcomes
-
-        Args:
-            pnsi_id: The PNSI ID (alphanumeric string from search results).
-
-        Returns:
-            Business items with dates and sifting outcomes.
-        """
-        url = f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/ProposedNegativeStatutoryInstrument/{quote(pnsi_id)}/BusinessItems"
+        url = f"{STATUTORY_INSTRUMENTS_API_BASE}/Procedure/{quote(procedure_id)}"
         return await get_result(url)
 
     @mcp.tool()

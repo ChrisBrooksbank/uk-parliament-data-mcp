@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import date as date_type
+
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.config import WHATSON_API_BASE
-from uk_parliament_mcp.http_client import build_url, get_result
+from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -180,7 +182,7 @@ def register_tools(mcp: FastMCP) -> None:
             List of calendar event categories.
         """
         url = f"{WHATSON_API_BASE}/categories/list.json"
-        return await get_result(url)
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
     async def get_event_type_metadata(
@@ -230,7 +232,7 @@ def register_tools(mcp: FastMCP) -> None:
 
         Args:
             house: Optional house filter: 'Commons' or 'Lords'.
-            start_date: Optional start date filter (YYYY-MM-DD).
+            start_date: Optional start date filter (YYYY-MM-DD). Defaults to today when no date filter is given.
             end_date: Optional end date filter (YYYY-MM-DD).
             date: Optional specific date filter (YYYY-MM-DD).
             category_id: Optional category ID to filter by.
@@ -239,6 +241,9 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Parliamentary diary events matching the filter criteria.
         """
+        # The diary endpoint returns HTTP 500 when no date filter is given
+        if not (start_date or end_date or date):
+            start_date = date_type.today().isoformat()
         url = build_url(
             f"{WHATSON_API_BASE}/events/diary.json",
             {
@@ -295,7 +300,7 @@ def register_tools(mcp: FastMCP) -> None:
             List of parliamentary calendar locations.
         """
         url = f"{WHATSON_API_BASE}/locations/list.json"
-        return await get_result(url)
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
     async def get_annulment_date(
@@ -382,7 +387,7 @@ def register_tools(mcp: FastMCP) -> None:
             List of calendar event tags.
         """
         url = f"{WHATSON_API_BASE}/tags/list.json"
-        return await get_result(url)
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
     async def get_calendar_types() -> str:
@@ -392,4 +397,4 @@ def register_tools(mcp: FastMCP) -> None:
             List of parliamentary calendar event types.
         """
         url = f"{WHATSON_API_BASE}/types/list.json"
-        return await get_result(url)
+        return await get_result_cached(url, cache_key=url)

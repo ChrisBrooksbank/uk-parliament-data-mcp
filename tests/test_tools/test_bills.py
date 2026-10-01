@@ -139,7 +139,9 @@ class TestBillTypes:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """bill_types builds correct URL."""
-        with patch("uk_parliament_mcp.tools.bills.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.bills.get_result_cached", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -158,7 +160,9 @@ class TestBillStages:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """bill_stages builds correct URL."""
-        with patch("uk_parliament_mcp.tools.bills.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.bills.get_result_cached", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")

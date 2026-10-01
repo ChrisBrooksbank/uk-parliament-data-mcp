@@ -24,20 +24,20 @@ pytest --cov=uk_parliament_mcp      # Run with coverage
 ## Validation (run before committing)
 
 ```bash
-ruff check src/                     # Lint check
-ruff format --check src/            # Format check
+ruff check src/ tests/              # Lint check
+ruff format --check src/ tests/     # Format check
 mypy src/                           # Type check
 pytest                              # Tests
 
 # All at once:
-ruff check src/ && ruff format --check src/ && mypy src/ && pytest
+ruff check src/ tests/ && ruff format --check src/ tests/ && mypy src/ && pytest
 ```
 
 ## Fixing Issues
 
 ```bash
-ruff check src/ --fix               # Auto-fix lint issues
-ruff format src/                    # Auto-format code
+ruff check src/ tests/ --fix        # Auto-fix lint issues
+ruff format src/ tests/             # Auto-format code
 ```
 
 ## CLI Commands
@@ -70,6 +70,6 @@ parliament members search "Test" --pretty
 
 ## Key Files
 
-- CLI specification: `specs/cli-spec.md`
-- Implementation plan: `IMPLEMENTATION_PLAN.md`
 - Project documentation: `CLAUDE.md`
+- Open work: `ROADMAP.md`
+- Past specs, plans and loop prompts: `docs/archive/`

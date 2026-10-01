@@ -101,6 +101,30 @@ class TestHelperFunctions:
         result = composite._extract_member_id(member_response)
         assert result is None
 
+    def test_extract_member_id_from_pruned_response(self):
+        """_extract_member_id handles search results after MCP response pruning.
+
+        Pruning flattens the Members API value wrappers, which previously made
+        get_my_mp report "No current MP found" for every postcode.
+        """
+        from uk_parliament_mcp.pruning import prune_response
+
+        raw = json.dumps(
+            {
+                "url": "https://members-api.parliament.uk/api/Members/Search",
+                "data": {
+                    "items": [
+                        {"value": {"id": 5257, "nameDisplayAs": "Rachel Blake"}, "links": []}
+                    ],
+                    "totalResults": 1,
+                },
+            }
+        )
+        member_data = composite._parse_response(prune_response(raw))
+
+        assert composite._extract_member_id(member_data) == 5257
+        assert composite._first_search_item(member_data)["nameDisplayAs"] == "Rachel Blake"
+
 
 class TestGetMpProfile:
     """Tests for get_mp_profile tool."""

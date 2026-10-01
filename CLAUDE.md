@@ -4,568 +4,68 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-UK Parliament MCP Server (Unofficial) - A community-built Model Context Protocol server that bridges AI assistants with UK Parliament data APIs. Not affiliated with or endorsed by UK Parliament. Built with Python 3.11+, it provides 209 tools covering MPs/Lords, bills, votes, committees, Hansard, and more.
+UK Parliament MCP Server (Unofficial), a community project that is not affiliated with or endorsed by UK Parliament. One Python 3.11+ package (`uk-parliament-mcp`) ships two front ends over the public `*.parliament.uk` REST APIs:
 
-## Installation
+- **MCP server** (`uk-parliament-mcp` / `python -m uk_parliament_mcp`): FastMCP over stdio, with 205 read-only tools plus prompts and resources.
+- **CLI** (`parliament`): a Typer app with command groups (`members`, `bills`, `votes`, `committees`, `hansard`, `composite`, `live`, `digest`, `watch`, `api`, `guide`, …).
 
-```bash
-# From PyPI (recommended)
-pip install uk-parliament-mcp
+End-user usage of both is documented in `README.md`.
 
-# Or run without installing
-uvx uk-parliament-mcp
-```
-
-## CLI Usage
-
-The package includes a `parliament` CLI tool for terminal access to all 209 Parliament API tools:
+## Commands
 
 ```bash
-# Search for an MP
-parliament members search "Keir Starmer"
+pip install -e ".[dev]"                 # dev install (Python 3.11+)
 
-# Get comprehensive MP profile
-parliament composite mp-profile 4514 --pretty
+# Validation (CI runs exactly these on 3.11 and 3.12)
+ruff check src/ tests/ && ruff format --check src/ tests/ && mypy src/ && pytest
 
-# Search bills
-parliament bills search "Online Safety"
+ruff check src/ tests/ --fix && ruff format src/ tests/   # auto-fix
 
-# Check how an MP voted on a topic
-parliament composite check-vote 172 "climate"
+# Tests (pytest adds --cov by default via pyproject addopts)
+pytest tests/test_tools/                                  # MCP tool tests
+pytest tests/test_cli/                                    # CLI tests
+pytest tests/test_tools/test_members.py::TestMembersToolsRegistration -q
+pytest -k "search_member" --no-cov                        # single test, skip coverage
+PARLIAMENT_LIVE_TESTS=1 pytest tests/live --no-cov        # call the real APIs (skipped otherwise; runs weekly in CI)
 
-# Get live chamber activity
-parliament live commons-now
-
-# Search Hansard debates
-parliament hansard search-debates "NHS" --house 1
-
-# Find your MP by postcode
-parliament my-mp "SW1A 1AA"
-
-# Browse the API catalogue
-parliament api list
-
-# Interactively try an API endpoint
-parliament api try
+python -m uk_parliament_mcp             # run MCP server (stdio)
+parliament --help                       # run CLI
+python scripts/generate_api_metadata.py # regenerate cli/api_metadata.json from context/*.json specs
 ```
 
-### Command Structure
-
-```
-parliament <group> <command> [options]
-```
-
-**Available command groups:**
-- `api` - 7 commands for browsing and trying the Parliament API catalogue
-- `composite` - 5 high-level tools combining multiple API calls
-- `members` - 38 commands for MPs, Lords, constituencies, parties
-- `bills` - 21 commands for legislation, amendments, stages
-- `votes` - 5 commands for Commons and Lords divisions
-- `committees` - 30 commands for committee info, evidence
-- `hansard` - 30 commands for parliamentary record
-- `questions` - 11 commands for oral, written questions, and EDMs
-- `interests` - 6 commands for register of interests
-- `live` - 22 commands for live activity and calendar
-- `legislation` - 18 commands for SIs and treaties
-- `procedures` - 11 commands for Erskine May procedure rules
-- `digest` - Daily/weekly parliamentary summary (aggregates 9 APIs)
-- `watch` - Live Parliament dashboard with auto-refresh
-- `guide` - Help and guidance commands
-
-### Output Modes
-
-```bash
-# Default: auto (rich table in terminal, JSON when piped)
-parliament members search "Starmer"
-
-# Explicit format selection
-parliament members search "Starmer" --format table
-parliament members search "Starmer" --format markdown
-parliament members search "Starmer" --format csv
-parliament members search "Starmer" --format json
-
-# Select specific fields (case-insensitive)
-parliament members search "Starmer" --fields "id,nameDisplayAs,latestParty.name"
-
-# Raw JSON with full {url, data} wrapper
-parliament members search "Starmer" --raw
-
-# Pretty-printed JSON
-parliament members search "Starmer" --pretty
-
-# Just the data (strips url wrapper)
-parliament members search "Starmer" --data-only | jq '.items[0]'
-```
-
-**Global flags:**
-- `--format` / `-f` - Output format: `json`, `table`, `markdown`, `csv`, `auto` (default: `auto`)
-- `--fields` - Comma-separated field paths for column selection (case-insensitive)
-- `--raw` - Output full wrapper JSON (url + data), disabling auto-formatting
-- `--pretty` / `-p` - Pretty-print JSON output
-- `--data-only` / `-d` - Return only the data field, not the {url, data} wrapper
-
-### Common Use Cases
-
-**MP research:**
-```bash
-# Full profile in one call (use member_id)
-parliament composite mp-profile 4514 --pretty
-
-# Search by name
-parliament members search "Sunak"
-
-# Get biography
-parliament members biography 4514
-
-# Check registered interests
-parliament interests search "Starmer"
-```
-
-**Bill tracking:**
-```bash
-# Comprehensive bill overview
-parliament composite bill-overview "Online Safety" --pretty
-
-# Search bills
-parliament bills search "education"
-
-# Get bill stages
-parliament bills stages 123
-
-# Check amendments
-parliament bills amendments 123
-```
-
-**Voting records:**
-```bash
-# Check MP's vote on topic (use member_id)
-parliament composite check-vote 172 "climate" --pretty
-
-# Search Commons divisions
-parliament votes search "environment" --house 1
-
-# Get specific division
-parliament votes get-division 12345 --house 1
-```
-
-**Committee research:**
-```bash
-# Full committee summary
-parliament composite committee-summary "Treasury" --pretty
-
-# Search committees
-parliament committees search "Health"
-
-# Get committee evidence
-parliament committees oral-evidence 456
-```
-
-**Live activity:**
-```bash
-# What's happening now in Commons
-parliament live commons-now --pretty
-
-# Today's calendar
-parliament live calendar Commons 2025-01-15 2025-01-31
-
-# Next sitting date
-parliament live next-sitting-date Commons 2025-01-15
-```
-
-**Daily/weekly digest:**
-```bash
-# Today's summary across all data sources
-parliament digest --pretty
-
-# Specific date
-parliament digest --date 2025-01-15
-
-# Weekly summary (Mon-Fri)
-parliament digest --period week
-
-# Commons only
-parliament digest --house 1
-
-# JSON output for piping
-parliament digest --format json | jq '.commons_divisions | length'
-```
-
-### Help System
-
-```bash
-# Show all command groups
-parliament --help
-
-# Show commands in a group
-parliament members --help
-
-# Show command details
-parliament members search --help
-
-# Get tool reference
-parliament guide tools
-
-# Get detailed domain guidance
-parliament guide topic members
-
-# Get research workflow
-parliament guide workflow "How did my MP vote on X?"
-
-# Interactive API explorer
-parliament api try --help
-```
-
-### Interactive Try It Mode
-
-Browse APIs, select endpoints, fill in parameters, call the API, and view results interactively:
-
-```bash
-# Full interactive flow — select API, endpoint, fill params
-parliament api try
-
-# Jump to endpoint selection for a specific API
-parliament api try members
-
-# Jump straight to parameter input for a specific endpoint
-parliament api try members "Members/Search"
-parliament api try bills "Bills/{billId}"
-```
-
-After each API call, an action menu lets you:
-- **[T]ry again** — re-prompt all parameters for the same endpoint
-- **[M]odify params** — edit previous values (shown as defaults)
-- **[R]elated endpoints** — browse related endpoints sharing the same tags
-- **[N]ew endpoint** — pick a different endpoint from the same API
-- **[Q]uit** — exit
-
-### Piping and Scripting
-
-The CLI outputs raw JSON by default, making it easy to pipe to tools like `jq` and `grep`:
-
-```bash
-# Extract specific fields
-parliament members search "Starmer" | jq '.data[0].id'
-
-# Filter results
-parliament bills search "education" | jq '.items[] | select(.currentStage == "Royal Assent")'
-
-# Count results
-parliament votes search "climate" --house 1 | jq '.data | length'
-
-# Save to file
-parliament composite mp-profile "Sunak" --pretty > profile.json
-
-# Chain multiple commands
-MP_ID=$(parliament members search "Starmer" | jq -r '.data[0].id')
-parliament members biography $MP_ID --pretty
-```
-
-## Development Setup
-
-```bash
-# Create virtual environment and install dependencies
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-# .venv\Scripts\activate   # Windows
-
-pip install -e ".[dev]"
-
-# Run the MCP server (stdio transport)
-python -m uk_parliament_mcp
-
-# Run tests
-pytest
-
-# Type checking
-mypy src/
-
-# Linting
-ruff check src/
-ruff format src/
-```
-
-## CI/CD
-
-GitHub Actions workflows in `.github/workflows/`:
-
-- **ci.yml**: Runs on push/PR - linting (ruff), type checking (mypy), tests (pytest)
-- **publish.yml**: Runs on GitHub Release - builds and publishes to PyPI via Trusted Publishing
-
-**Release process:**
-1. Update version in `src/uk_parliament_mcp/__init__.py`
-2. Commit and push
-3. Create GitHub Release with tag (e.g., `v1.0.1`)
-4. Package auto-publishes to PyPI
+mypy runs in `strict` mode. Ruff line length is 100, but E501 is ignored because tool docstrings are long single lines.
 
 ## Architecture
 
 ```
-AI Assistant ──(MCP/stdio)──> uk_parliament_mcp ──(HTTP)──> UK Parliament APIs
+MCP client ──stdio──> server.py (FastMCP) ──> tools/*.py ─┐
+                                                          ├─> http_client.py ──HTTP──> *.parliament.uk
+terminal ──> cli/main.py (Typer) ──> cli/*.py ────────────┘
 ```
 
-**Key Components:**
+- **`config.py`**: the single source of every API base URL (`MEMBERS_API_BASE`, `BILLS_API_BASE`, …) and the house constants. Tools, CLI and tests all import from here, so don't hardcode base URLs.
+- **`http_client.py`**: `build_url(base, params)` drops `None`/empty params. `get_result(url)` runs a shared `ParliamentHTTPClient` with a 30s timeout and 3 retries with backoff on 408/429/5xx. It always returns a JSON **string** shaped `{url, data}` or `{url, error, statusCode}` and never raises for HTTP errors. `get_result_cached(url, cache_key)` adds a 15-minute in-memory cache for reference data. Every URL called is recorded (`get_called_urls`) so the CLI can show its sources.
+- **`pruning.py`**: applied inside the HTTP client to successful responses. It strips nulls and empties, flattens value wrappers and truncates arrays (`PARLIAMENT_MAX_ARRAY`, default 20) to save MCP context tokens. You can turn it off with `PARLIAMENT_PRUNING=false`. `cli/main.py:main()` calls `disable_pruning()`, so **CLI output is unpruned and MCP output is pruned**.
+- **`server.py`**: `create_server()` calls `register_tools(mcp)` on each `tools/` module, then `core.register_prompts` (the `/parliament` prompt) and `resources.register_resources` (`parliament://…` resources). Server `instructions` is `core.SYSTEM_PROMPT`.
+- **`tools/*.py`**: one module per API. Each defines `register_tools(mcp)` containing nested `@mcp.tool()` async functions that `build_url` → `return await get_result(url)` and pass raw API JSON through. `composite.py` combines several calls (MP profile, bill overview, my-MP by postcode, …). `core.py` holds the guidance text (`SYSTEM_PROMPT`, `QUICK_REFERENCE`, per-topic guides, workflows) and the guidance tools (`order_order`, `parliament_guide`, `parliament_workflow`, `get_cli_reference`).
+- **`cli/*.py`**: these do **not** call the MCP tool functions. Each command builds its own URL with `config` + `build_url` and hands it to `cli/utils.py` (`output_result`, or `output_paginated` with a config from `cli/pagination.py`). Global flags (`--format/--fields/--raw/--pretty/--data-only`) are handled in `cli/utils.py` and `cli/formatters.py`. `renderers.py` does Rich output for composite results. `api.py`/`try_it.py` drive the API explorer from `api_metadata.json`, which is generated from the OpenAPI specs in `context/`.
 
-- **`__main__.py`**: Entry point. Configures logging to stderr (stdout reserved for MCP protocol), creates and runs the FastMCP server.
+## Adding or changing a tool
 
-- **`server.py`**: FastMCP server setup. Creates the MCP server with server-level instructions and registers all tool modules.
+1. Add a nested `@mcp.tool()` async function in the matching `tools/<api>.py`. Import the base URL from `config.py` and use `build_url` + `get_result`.
+2. Write the docstring in the 4-part semantic format `Action | keywords, synonyms | Use case | Returns`, followed by an `Args:` section. The docstring is the tool description the LLM sees.
+3. Add the matching Typer command in `cli/<group>.py`. The CLI and the MCP tool are separate implementations. `tests/test_consistency.py` fails if an endpoint (`f"{X_API_BASE}/path"`) is called on one side only. Deliberate one-sided endpoints go in its `MCP_ONLY_ENDPOINTS`/`CLI_ONLY_ENDPOINTS` allowlists.
+4. Add tests in `tests/test_tools/test_<api>.py` (mirrors the source layout). Tests patch the module-level name, e.g. `patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock)`, and assert on the URL. Registration tests list the expected tool names per module.
+5. **Tool count is hardcoded** ("205") in `tools/core.py` (`QUICK_REFERENCE`, the `all` guide, docstrings), `cli/main.py` help, `cli/guide.py`, `README.md`, this file and `tests/test_tools/test_core.py`. `tests/test_consistency.py` checks these files against the number of registered tools. Also update the per-topic counts in the guide text in `core.py`, which are not checked.
 
-- **`http_client.py`**: HTTP client with retry logic. Provides:
-  - HTTP request handling with 3-retry exponential backoff
-  - 30-second timeout protection
-  - URL building with parameter filtering (`build_url`)
-  - Consistent response format: `{url, data}` or `{url, error, statusCode}`
+## Conventions
 
-- **`tools/*.py`**: 16 tool modules (209 total tools) each targeting a specific Parliament API:
-  | Module | API Domain | Purpose |
-  |--------|------------|---------|
-  | composite.py | Multiple APIs | High-level tools combining multiple API calls |
-  | members.py | members-api.parliament.uk | MPs, Lords, constituencies, parties |
-  | bills.py | bills-api.parliament.uk | Legislation, amendments, stages |
-  | commons_votes.py | commonsvotes-api.parliament.uk | Commons divisions |
-  | lords_votes.py | lordsvotes-api.parliament.uk | Lords divisions |
-  | committees.py | committees-api.parliament.uk | Committee info, evidence |
-  | hansard.py | hansard-api.parliament.uk | Parliamentary record |
-  | oral_questions.py | oralquestionsandmotions-api.parliament.uk | EDMs, questions |
-  | written_questions.py | writtenquestions-api.parliament.uk | Written PQs, statements |
-  | interests.py | interests-api.parliament.uk | Register of interests |
-  | now.py | now-api.parliament.uk | Live chamber activity |
-  | whatson.py | whatson-api.parliament.uk | Calendar, sessions |
-  | statutory_instruments.py | statutoryinstruments-api.parliament.uk | Acts, SIs |
-  | treaties.py | treaties-api.parliament.uk | International treaties |
-  | erskine_may.py | erskinemay-api.parliament.uk | Procedure rules |
-  | core.py | N/A | Session management & agent guidance |
+- House IDs: 1 = Commons, 2 = Lords (`config.HOUSE_COMMONS`/`HOUSE_LORDS`). Dates are `YYYY-MM-DD`. Pagination is `skip`/`take`.
+- All tools are read-only and idempotent. Responses are API JSON passed through, not reshaped (apart from pruning).
+- Logging goes to stderr; stdout is reserved for the MCP stdio protocol.
+- Open work is listed in `ROADMAP.md`. Finished plans and specs are in `docs/archive/`.
+- `AGENTS.md` is a short operational guide used by the `loop.sh`/`loop.ps1` autonomous build loop, which reads `PROMPT_plan.md`/`PROMPT_build.md` from the repo root. Past prompts are in `docs/archive/`.
 
-- **`context/`**: OpenAPI spec JSON files for each Parliament API (reference documentation)
+## Release
 
-## Adding New Tools
-
-Follow the established pattern in any `tools/*.py` file:
-
-```python
-"""New API tools for [description]."""
-from urllib.parse import quote
-
-from mcp.server.fastmcp import FastMCP
-
-from uk_parliament_mcp.http_client import build_url, get_result
-
-NEW_API_BASE = "https://api.parliament.uk"
-
-
-def register_tools(mcp: FastMCP) -> None:
-    """Register new tools with the MCP server."""
-
-    @mcp.tool()
-    async def get_something(param: str) -> str:
-        """Action | keywords, synonyms | Use case | Returns format
-
-        Args:
-            param: Description of the parameter.
-
-        Returns:
-            Description of what is returned.
-        """
-        url = f"{NEW_API_BASE}/endpoint?param={quote(param)}"
-        return await get_result(url)
-```
-
-Tool descriptions use a 4-part semantic format: `Action | Keywords | Use case | Returns`
-
-Then register in `server.py`:
-```python
-from uk_parliament_mcp.tools import new_api
-# ...
-new_api.register_tools(mcp)
-```
-
-## Key Conventions
-
-- **House IDs**: 1 = Commons, 2 = Lords
-- **Date format**: YYYY-MM-DD throughout
-- **Pagination**: `skip`/`take` parameters where supported
-- All tools are read-only and idempotent
-- Raw JSON responses from Parliament APIs are passed through (not transformed)
-- Use `build_url(base, params)` for URL construction with parameter filtering
-- Use `await get_result(url)` for HTTP requests with retry logic
-
-## Server Instructions (Automatic Context)
-
-The server provides automatic context to MCP clients via the `instructions` parameter in FastMCP. This means:
-
-- **No initialization required**: Clients receive guidance during MCP handshake without needing to call `order_order()` or `/parliament` first
-- **Automatic behavior**: Per MCP spec, clients may add these instructions to the system prompt
-- **Consistent sessions**: Every session starts with proper guidance about data sources and citation requirements
-
-The instructions use the same `SYSTEM_PROMPT` from `core.py`, ensuring consistency across all initialization methods.
-
-**How clients receive context:**
-1. Client connects to MCP server
-2. Server responds with `instructions` in initialize response
-3. Client incorporates instructions (implementation varies by client)
-4. Assistant automatically knows to use Parliament tools and cite sources
-
-## Agent Skill (MCP Prompt)
-
-The server also provides a `/parliament` agent skill that appears in the "/" command menu in MCP clients like Claude Desktop:
-
-### `/parliament` (or `parliament` prompt)
-Initialize a UK Parliament research session. Invocable as a slash command in Claude Desktop.
-
-**Parameters:**
-- `topic` (optional) - Jump directly to detailed guidance for a specific domain
-
-**Example usage in Claude Desktop:**
-```
-/parliament              # Start session with quick reference
-/parliament members      # Start session + detailed members guidance
-```
-
-This prompt is separate from the guidance **tools** below - prompts appear in the "/" menu and provide session context, while tools are called explicitly during research.
-
-## Composite Tools
-
-High-level tools that combine multiple API calls for common research tasks. Use these first for efficiency:
-
-### `get_mp_profile(member_id)`
-Get comprehensive MP/Lord profile in one call. Combines member details + biography + interests + voting.
-- Returns: Basic info, biography, registered interests, recent votes
-- Example: `get_mp_profile(4514)` (search for member_id first using `get_member_by_name()`)
-
-### `check_mp_vote(member_id, topic)`
-Check how an MP voted on a specific topic. Combines member lookup + division search.
-- Returns: MP info and divisions on the topic where they voted
-- Example: `check_mp_vote(172, "climate")` (search for member_id first using `get_member_by_name()`)
-
-### `get_bill_overview(search_term)`
-Get comprehensive bill overview. Combines bill search + details + stages + publications.
-- Returns: Bill details, legislative stages, associated documents
-- Example: `get_bill_overview("Online Safety")`
-
-### `get_committee_summary(topic)`
-Get comprehensive committee summary. Combines committee search + details + evidence + publications.
-- Returns: Committee info, witness testimonies, written submissions, reports
-- Example: `get_committee_summary("Treasury")`
-
-### `get_my_mp(postcode, topic)`
-Find MP by UK postcode. Combines constituency lookup + member search + biography + interests + votes.
-- Returns: Constituency, MP profile, biography, registered interests, election result, recent votes
-- Example: `get_my_mp("SW1A 1AA", "climate")`
-
-## Agent Guidance Tools
-
-The server also includes guidance **tools** to help AI assistants navigate the 209 available tools:
-
-### `order_order()`
-Start a UK Parliament research session. Say "Order Order" (like the Speaker) to activate. Returns:
-- System prompt with data source transparency requirements
-- Quick reference of all tool categories with entry points
-- Key conventions (house IDs, date formats, pagination)
-
-### `parliament_guide(topic)`
-Get detailed guidance for a specific domain. Available topics:
-- `composite` - 5 high-level tools combining multiple API calls
-- `members` - 39 tools for MPs, Lords, constituencies, parties
-- `bills` - 21 tools for legislation, amendments, stages
-- `votes` - 10 tools for Commons and Lords divisions
-- `committees` - 30 tools for committee info, meetings, evidence
-- `hansard` - 30 tools for parliamentary record search
-- `questions` - EDMs, oral questions
-- `interests` - Register of Interests
-- `live` - Current activity, calendar (now + whatson)
-- `legislation` - SIs, treaties
-- `procedures` - 13 tools for Erskine May, bill types, stage definitions
-- `all` - Condensed reference of all 209 tools
-- `conventions` - Date formats, house IDs, pagination
-- `workflows` - Overview of common research patterns
-
-### `parliament_workflow(query)`
-Get step-by-step workflow for a research task. Matches queries to predefined patterns:
-- "How did my MP vote on X?" → MP voting workflow
-- "Track bill progress" → Bill tracking workflow
-- "What committee examined X?" → Committee research workflow
-- "Does MP have conflicts of interest?" → Interests workflow
-- "What's happening now?" → Live activity workflow
-- And more (backgrounds, Hansard, elections, EDMs, treaties)
-
-### `get_cli_reference(group, search)`
-Get CLI command reference. Returns all command groups, or details for a specific group, or search results matching a keyword.
-- Example: `get_cli_reference()`, `get_cli_reference(group="members")`, `get_cli_reference(search="vote")`
-
-Example usage:
-```
-# Start session
-order_order()
-
-# Get detailed guidance
-parliament_guide("members")
-
-# Plan a research task
-parliament_workflow("How did my MP vote on climate?")
-```
-
-## Dependencies
-
-- mcp (>=1.0.0) - Anthropic's official MCP library
-- httpx (>=0.27.0) - Async HTTP client
-- tenacity (>=8.2.0) - Retry logic (available but manual retry used)
-- typer (>=0.9.0) - CLI framework for the parliament command
-
-### Dev Dependencies
-
-- pytest (>=8.0.0) - Testing
-- pytest-asyncio (>=0.23.0) - Async test support
-- pytest-httpx (>=0.30.0) - HTTP mocking
-- ruff (>=0.3.0) - Linting and formatting
-- mypy (>=1.8.0) - Type checking
-
-## Project Structure
-
-```
-src/uk_parliament_mcp/
-├── __init__.py
-├── __main__.py         # MCP server entry point
-├── server.py           # FastMCP server setup
-├── http_client.py      # HTTP client with retry
-├── cli/                # CLI tool (parliament command)
-│   ├── __init__.py
-│   ├── main.py         # CLI entry point and app assembly
-│   ├── utils.py        # Output formatting, async runner
-│   ├── formatters.py   # Output format handling (table, markdown, csv)
-│   ├── pagination.py   # Auto-pagination for CLI commands
-│   ├── renderers.py    # Rich terminal rendering for composite results
-│   ├── api.py          # API explorer commands (7 commands)
-│   ├── try_it.py       # Interactive "Try It" mode for API endpoints
-│   ├── api_metadata.json # API catalogue metadata
-│   ├── composite.py    # Composite commands (5 commands)
-│   ├── members.py      # Member commands (38 commands)
-│   ├── bills.py        # Bill commands (21 commands)
-│   ├── votes.py        # Votes commands (5 commands)
-│   ├── committees.py   # Committee commands (30 commands)
-│   ├── hansard.py      # Hansard commands (30 commands)
-│   ├── questions.py    # Questions commands (11 commands)
-│   ├── interests.py    # Interests commands (6 commands)
-│   ├── live.py         # Live/calendar commands (22 commands)
-│   ├── legislation.py  # SI/treaty commands (18 commands)
-│   ├── procedures.py   # Erskine May commands (11 commands)
-│   ├── digest.py       # Daily/weekly digest (aggregates 9 APIs)
-│   ├── watch.py        # Live dashboard with auto-refresh
-│   └── guide.py        # Help/guidance commands (4 commands)
-└── tools/              # MCP tool modules
-    ├── __init__.py
-    ├── core.py         # Session management & guidance (4 tools)
-    ├── composite.py    # High-level composite tools (5 tools)
-    ├── members.py      # Member tools (39 tools)
-    ├── bills.py        # Bills tools (21 tools)
-    ├── committees.py   # Committees tools (30 tools)
-    ├── commons_votes.py    # Commons votes (5 tools)
-    ├── lords_votes.py      # Lords votes (5 tools)
-    ├── hansard.py          # Hansard (30 tools)
-    ├── oral_questions.py   # EDMs & oral questions (5 tools)
-    ├── written_questions.py # Written PQs & statements (7 tools)
-    ├── interests.py        # Interests (6 tools)
-    ├── now.py              # Live activity (3 tools)
-    ├── whatson.py          # Calendar & procedural dates (19 tools)
-    ├── statutory_instruments.py  # SIs & Acts (13 tools)
-    ├── treaties.py         # Treaties (6 tools)
-    └── erskine_may.py      # Procedure (11 tools)
-```
+The version lives in `src/uk_parliament_mcp/__init__.py` (hatch dynamic version). Publishing a GitHub Release (tag `vX.Y.Z`) triggers `publish.yml`, which pushes to PyPI via Trusted Publishing. `build-exe.yml` builds standalone `parliament` executables with PyInstaller (`parliament.spec`, `scripts/build-exe.py`).

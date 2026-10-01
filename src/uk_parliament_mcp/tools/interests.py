@@ -3,7 +3,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.config import INTERESTS_API_BASE
-from uk_parliament_mcp.http_client import get_result
+from uk_parliament_mcp.http_client import get_result, get_result_cached
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -30,7 +30,7 @@ def register_tools(mcp: FastMCP) -> None:
             Categories of interests that must be declared.
         """
         url = f"{INTERESTS_API_BASE}/Categories"
-        return await get_result(url)
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
     async def get_registers_of_interests() -> str:

@@ -188,7 +188,9 @@ class TestGetCalendarCategories:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_calendar_categories builds correct URL."""
-        with patch("uk_parliament_mcp.tools.whatson.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.whatson.get_result_cached", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -263,6 +265,22 @@ class TestGetParliamentaryDiary:
             assert "queryParameters.startDate=2024-01-01" in call_url
             assert "queryParameters.endDate=2024-01-31" in call_url
 
+    @pytest.mark.asyncio
+    async def test_defaults_start_date_to_today(self):
+        """get_parliamentary_diary sends today's date when no date filter is given (API 500s otherwise)."""
+        from datetime import date
+
+        with patch("uk_parliament_mcp.tools.whatson.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            whatson.register_tools(mcp)
+
+            await mcp.call_tool("get_parliamentary_diary", {"house": "Commons"})
+
+            call_url = mock.call_args[0][0]
+            assert f"queryParameters.startDate={date.today().isoformat()}" in call_url
+
 
 class TestGetSpeakerEvents:
     """Tests for get_speaker_events tool."""
@@ -294,7 +312,9 @@ class TestGetCalendarLocations:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_calendar_locations builds correct URL."""
-        with patch("uk_parliament_mcp.tools.whatson.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.whatson.get_result_cached", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -416,7 +436,9 @@ class TestGetCalendarTags:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_calendar_tags builds correct URL."""
-        with patch("uk_parliament_mcp.tools.whatson.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.whatson.get_result_cached", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -435,7 +457,9 @@ class TestGetCalendarTypes:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_calendar_types builds correct URL."""
-        with patch("uk_parliament_mcp.tools.whatson.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.whatson.get_result_cached", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")

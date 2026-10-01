@@ -5,6 +5,158 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Pin `mcp<2`. mcp 2.x renamed `FastMCP` to `MCPServer` and removed `mcp.server.fastmcp`, so fresh installs pulled in 2.x and failed on import.
+- Statutory Instruments tools that called the retired v1 API (every request returned HTTP 400) now use v2: `get_laying_bodies`, `get_si_procedures`, `get_si_procedure`
+- `get_si_procedure` / `parliament legislation si-procedure` now take the alphanumeric procedure ID the API uses (was typed as an integer)
+- `get_my_mp` reported "No current MP found" for every postcode over MCP: it read the search result before MCP response pruning had flattened it. (The CLI, which doesn't prune, was unaffected.)
+- `search_historical_members` / `members search-historical` now require both name and date. The API returns HTTP 400 unless both are given.
+- `get_parliamentary_diary` / `live parliamentary-diary` default the start date to today when no date filter is given. The API returns HTTP 500 without one.
+
+### Added
+- `search_statutory_instruments` / `parliament legislation search-si` filters: procedure, recommended for procedure change, laying body, department, house, skip/take. Name is now optional. Use the "Proposed negative statutory instrument" procedure ID to list PNSIs.
+- Reference-data tools (bill types and stages, committee types, interest categories, policy interests, SI laying bodies and procedures, treaty organisations and series, Erskine May parts, calendar categories/locations/tags/types) cache responses for 15 minutes within an MCP session
+- `ROADMAP.md` listing open work
+- Tests that every CLI command runs, that MCP tools and CLI commands cover the same API endpoints, and that documented tool counts match the registered tools
+- Weekly live API check (`.github/workflows/live-api.yml`, `tests/live/`) that calls every argument-free tool and a set of tools with stable arguments against the real Parliament APIs
+
+### Changed
+- Repository URLs in package metadata, CLI help and CONTRIBUTING.md now point to `uk-parliament-data-mcp`
+- Pre-commit hooks updated (current ruff; mypy runs from the project environment)
+- CI lints and format-checks `tests/`
+- Completed plans and specs moved to `docs/archive/`
+- `context/statutoryinstruments-api.json` and the `parliament api` catalogue updated to the live v2 spec
+
+### Removed
+- `get_si_business_item`, `search_proposed_negative_sis`, `get_proposed_negative_si`, `get_proposed_negative_si_business_items` and their CLI commands (`si-business-item`, `search-pnsis`, `get-pnsi`, `pnsi-business`). Parliament retired these endpoints with the v1 API and there is no v2 equivalent. Proposed negatives are now returned by `search_statutory_instruments` and `get_statutory_instrument` (205 tools, down from 209).
+- Unused `validators.py` and `verify_readme_rendering.py`
+
+## [1.17.1] - 2026-03-10
+
+### Fixed
+- Stale tool counts (163 → 209) in CLI help text
+
+## [1.17.0] - 2026-03-10
+
+### Added
+- 46 new Parliament API tools (163 → 209) with matching CLI commands and tests
+
+## [1.16.0] - 2026-03-10
+
+### Added
+- PyInstaller packaging for standalone `parliament` executables
+- `/parliament-research` slash command
+
+## [1.15.3] - 2026-02-22
+
+### Fixed
+- Documentation drift in tool signatures, counts and CLI examples
+- Test failures and lint warnings
+
+## [1.15.2] - 2026-02-09
+
+### Added
+- Watch dashboard keyboard controls; Commons/Lords calendar panels with scroll indicators
+
+### Fixed
+- Cross-platform mypy and headless CI key-reader tests
+
+## [1.15.0] - 2026-02-08
+
+### Added
+- Interactive `parliament api try` explorer and `parliament api explore` URL parser
+- Truncation warning for human-friendly CLI output; striped table rows
+
+### Changed
+- `--json` flag standardised to `--format` across `api`, `guide` and main commands
+
+### Removed
+- Shell tab completion (broken)
+
+## [1.14.0] - 2026-02-08
+
+### Added
+- `parliament api` commands for browsing Parliament API specs
+- URL logging after every CLI command
+- Case-insensitive `--fields` matching, with a hint listing available fields
+- Performance tests for request counts and parallel execution
+
+### Changed
+- Duplicate search commands merged into a single `search` with optional filters
+- Shared CLI type aliases and output helpers extracted across CLI modules
+
+## [1.13.0] - 2026-02-07
+
+### Added
+- `parliament digest` daily/weekly summary with enriched bills and links
+
+### Fixed
+- Hansard debate links in digest
+
+### Removed
+- `daily-reports` CLI command (Parliament API returns broken blob URLs)
+
+## [1.11.0] - 2026-02-06
+
+### Added
+- `parliament my-mp` postcode lookup
+
+### Fixed
+- Division number mismatch between `my-mp` and `votes get-division`
+
+## [1.9.0] - 2026-02-06
+
+### Added
+- Watch dashboard house colours, time tracking and Parliament TV links
+- Missing API parameters on CLI commands; `nameContains` filter for answering bodies and departments
+
+### Changed
+- Response pruning disabled for CLI output
+
+## [1.8.0] - 2026-02-06
+
+### Added
+- Unofficial disclaimer and LICENSE file
+
+## [1.6.0] - 2026-02-05
+
+### Added
+- MCP response pruning and MCP resources
+- Watch dashboard, rich CLI output for live and composite commands
+- CLI auto-pagination for `skip`/`take` commands
+
+### Fixed
+- Windows console encoding errors for Unicode output
+
+## [1.5.0] - 2026-02-05
+
+### Added
+- `parliament` CLI for terminal access to the Parliament APIs, with table and markdown output
+- `parliament reference` command
+
+### Fixed
+- Commons Votes API URL now uses HTTPS
+
+## [1.4.0] - 2026-02-05
+
+### Added
+- 46 new tools for Erskine May, Hansard, Committees and Members, and advanced filtering on existing tools (161 total)
+
+### Fixed
+- Written Questions API 301 redirect; members tools corrected against the live API
+
+## [1.3.0] - 2026-02-03
+
+### Added
+- 15 tools for government structure, EDM details, SI/treaty details and procedural dates
+
+## [1.2.1] - 2026-02-03
+
+### Fixed
+- Hansard API base URL
+
 ## [1.1.0] - 2026-02-03
 
 ### Added

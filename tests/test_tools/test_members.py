@@ -773,7 +773,9 @@ class TestGetConstituencyLatestElection:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert call_url == f"{MEMBERS_API_BASE}/Location/Constituency/3510/ElectionResult/Latest"
+            assert (
+                call_url == f"{MEMBERS_API_BASE}/Location/Constituency/3510/ElectionResult/Latest"
+            )
 
 
 class TestGetConstituencyElectionResult:
@@ -840,19 +842,13 @@ class TestSearchHistoricalMembers:
     """Tests for search_historical_members tool."""
 
     @pytest.mark.asyncio
-    async def test_builds_correct_url_no_params(self):
-        """search_historical_members builds correct URL with no params."""
-        with patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock) as mock:
-            mock.return_value = '{"url": "test", "data": "{}"}'
+    async def test_name_and_date_are_required(self):
+        """search_historical_members requires name and date (the API returns 400 otherwise)."""
+        mcp = FastMCP(name="test")
+        members.register_tools(mcp)
+        tool = next(t for t in await mcp.list_tools() if t.name == "search_historical_members")
 
-            mcp = FastMCP(name="test")
-            members.register_tools(mcp)
-
-            await mcp.call_tool("search_historical_members", {})
-
-            mock.assert_called_once()
-            call_url = mock.call_args[0][0]
-            assert call_url == f"{MEMBERS_API_BASE}/Members/SearchHistorical"
+        assert set(tool.inputSchema["required"]) == {"name", "date_to_search_for"}
 
     @pytest.mark.asyncio
     async def test_builds_correct_url_with_name(self):
@@ -863,11 +859,17 @@ class TestSearchHistoricalMembers:
             mcp = FastMCP(name="test")
             members.register_tools(mcp)
 
-            await mcp.call_tool("search_historical_members", {"name": "Churchill"})
+            await mcp.call_tool(
+                "search_historical_members",
+                {"name": "Churchill", "date_to_search_for": "1950-01-01"},
+            )
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert "name=Churchill" in call_url
+            assert call_url == (
+                f"{MEMBERS_API_BASE}/Members/SearchHistorical"
+                "?name=Churchill&dateToSearchFor=1950-01-01"
+            )
 
 
 class TestGetSpeakerAndDeputies:
@@ -938,9 +940,7 @@ class TestGetLordsInterestsRegister:
             mcp = FastMCP(name="test")
             members.register_tools(mcp)
 
-            await mcp.call_tool(
-                "get_lords_interests_register", {"search_term": "finance"}
-            )
+            await mcp.call_tool("get_lords_interests_register", {"search_term": "finance"})
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]

@@ -104,7 +104,9 @@ class TestInterestsCategories:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """interests_categories builds correct URL."""
-        with patch("uk_parliament_mcp.tools.interests.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.interests.get_result_cached", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
