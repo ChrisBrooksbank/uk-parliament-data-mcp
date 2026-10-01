@@ -19,11 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `search_statutory_instruments` / `parliament legislation search-si` filters: procedure, recommended for procedure change, laying body, department, house, skip/take. Name is now optional. Use the "Proposed negative statutory instrument" procedure ID to list PNSIs.
 - Reference-data tools (bill types and stages, committee types, interest categories, policy interests, SI laying bodies and procedures, treaty organisations and series, Erskine May parts, calendar categories/locations/tags/types) cache responses for 15 minutes within an MCP session
 - `ROADMAP.md` listing open work
+- README demos recorded from real sessions: an MCP demo (Claude Code with only this server attached) and a CLI demo, with scripts to re-record both (`scripts/record-mcp-demo.sh`, `scripts/record-cli-demo.sh`)
 - Tests that every CLI command runs, that MCP tools and CLI commands cover the same API endpoints, and that documented tool counts match the registered tools
 - Weekly live API check (`.github/workflows/live-api.yml`, `tests/live/`) that calls every argument-free tool and a set of tools with stable arguments against the real Parliament APIs
 
 ### Changed
 - Repository URLs in package metadata, CLI help and CONTRIBUTING.md now point to `uk-parliament-data-mcp`
+- `get_member_voting` docstring explains that page 1 is the most recent page even though the API reports `skip=20` (an agent took the quirk for an offset and refetched)
 - Pre-commit hooks updated (current ruff; mypy runs from the project environment)
 - CI lints and format-checks `tests/`
 - Completed plans and specs moved to `docs/archive/`

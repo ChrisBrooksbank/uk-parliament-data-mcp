@@ -1,9 +1,26 @@
-# UK Parliament AI Assistant
+<h1 align="center">UK Parliament AI Assistant</h1>
 
-[![PyPI version](https://badge.fury.io/py/uk-parliament-mcp.svg)](https://badge.fury.io/py/uk-parliament-mcp)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/actions/workflows/ci.yml)
+<p align="center"><strong>Ask your AI assistant about MPs, votes, bills and debates, and get answers from live UK Parliament data with every source cited.</strong></p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/ChrisBrooksbank/uk-parliament-data-mcp/main/docs/media/mcp-demo.gif" width="100%" alt="An AI assistant using the MCP server: asked who the MP for SW1A 1AA is and how they voted on the assisted dying bill, it calls get_my_mp and answers with the vote and the Parliament API URLs it used">
+</p>
+
+<p align="center"><em>A real, unedited Claude Code session with only this MCP server attached (<a href="https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/blob/main/scripts/record-mcp-demo.sh">how it's recorded</a>).</em></p>
+
+<p align="center">
+  <a href="#claude-desktop-setup"><strong>Claude Desktop</strong></a> ·
+  <a href="#vs-code-setup"><strong>VS Code</strong></a> ·
+  <a href="#cli-usage"><strong>Command-line tool</strong></a> ·
+  <a href="#example-prompts"><strong>Example prompts</strong></a>
+</p>
+
+<p align="center">
+  <a href="https://badge.fury.io/py/uk-parliament-mcp"><img src="https://badge.fury.io/py/uk-parliament-mcp.svg" alt="PyPI version"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python 3.11+"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/actions/workflows/ci.yml"><img src="https://github.com/ChrisBrooksbank/uk-parliament-data-mcp/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+</p>
 
 > **Disclaimer:** This is an unofficial, independent project. It is not created, endorsed, or supported by UK Parliament. All data is sourced from the publicly available [parliament.uk APIs](https://developer.parliament.uk/).
 >
@@ -14,10 +31,6 @@ An MCP (Model Context Protocol) server that gives AI assistants access to UK Par
 ## MCP Server for AI Assistants
 
 Connect your AI assistant to 205 UK Parliament API tools for comprehensive parliamentary research.
-
-https://github.com/user-attachments/assets/30f2df13-dff9-44e6-b1f6-5eebfb665d9e
-
-*Claude Desktop using the server to check the parliamentary calendar. Every answer ends with the Parliament API URLs it came from.*
 
 Prefer the terminal? See the [CLI demo](#cli-usage).
 
@@ -389,7 +402,7 @@ Show me the JSON returned from the last MCP call.
 
 The package includes a `parliament` CLI for terminal access to all 205 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
 
-![parliament CLI demo: Commons votes on the Terminally Ill Adults Bill, the MP for SW1A 1AA with their election result and recent votes, and a member search](docs/media/cli-demo.gif)
+![parliament CLI demo: Commons votes on the Terminally Ill Adults Bill, the MP for SW1A 1AA with their election result and recent votes, and a member search](https://raw.githubusercontent.com/ChrisBrooksbank/uk-parliament-data-mcp/main/docs/media/cli-demo.gif)
 
 *Recorded against the live Parliament APIs ([`scripts/record-cli-demo.sh`](scripts/record-cli-demo.sh)).*
 
