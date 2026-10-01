@@ -1618,3 +1618,199 @@ class TestManualScrollBehavior:
         # Second press: resume
         auto_scroll = not auto_scroll
         assert auto_scroll is True
+
+
+# ---------------------------------------------------------------------------
+# Data fetching, the watch command and the live loop
+# ---------------------------------------------------------------------------
+
+
+class TestFetching:
+    @pytest.mark.parametrize(
+        "payload",
+        [
+            [{"Description": "Event"}],
+            {"items": [{"Description": "Event"}]},
+            {"results": [{"Description": "Event"}]},
+        ],
+    )
+    async def test_calendar_shapes(self, payload: object) -> None:
+        from uk_parliament_mcp.cli import watch
+
+        response = json.dumps({"url": "u", "data": payload})
+        with patch.object(watch, "get_result", return_value=response) as mock:
+            events = await watch._fetch_calendar_today()
+        assert events == [{"Description": "Event"}]
+        assert "events/list.json" in mock.call_args[0][0]
+
+    async def test_calendar_error_or_unknown_shape(self) -> None:
+        from uk_parliament_mcp.cli import watch
+
+        with patch.object(watch, "get_result", return_value='{"url": "u", "error": "x"}'):
+            assert await watch._fetch_calendar_today() == []
+        with patch.object(watch, "get_result", return_value='{"url": "u", "data": {"x": 1}}'):
+            assert await watch._fetch_calendar_today() == []
+
+    async def test_fetch_all_data_filters_house_and_survives_errors(self) -> None:
+        from uk_parliament_mcp.cli import watch
+
+        async def boom() -> None:
+            raise RuntimeError("network down")
+
+        async def calendar() -> list[dict[str, str]]:
+            return [{"Description": "Event"}]
+
+        with (
+            patch.object(watch, "_fetch_commons_now", side_effect=boom),
+            patch.object(watch, "_fetch_lords_now") as lords,
+            patch.object(watch, "_fetch_calendar_today", side_effect=calendar),
+        ):
+            data = await watch._fetch_all_data("commons")
+        assert data == {"commons": None, "calendar": [{"Description": "Event"}]}
+        lords.assert_not_called()
+
+
+class TestWatchCommandOptions:
+    def test_invalid_house(self) -> None:
+        from typer.testing import CliRunner
+
+        from uk_parliament_mcp.cli.main import app
+
+        result = CliRunner().invoke(app, ["watch", "senate"])
+        assert result.exit_code == 1
+        assert "Invalid house" in result.stdout
+
+    def test_raw_fetches_once_and_prints_json(self) -> None:
+        from typer.testing import CliRunner
+
+        from uk_parliament_mcp.cli import watch
+        from uk_parliament_mcp.cli.main import app
+
+        async def fake(house: str | None) -> dict[str, object]:
+            return {"lords": None, "calendar": [], "house": house}
+
+        with patch.object(watch, "_fetch_all_data", side_effect=fake):
+            result = CliRunner().invoke(app, ["watch", "LORDS", "--raw"])
+        assert result.exit_code == 0
+        assert json.loads(result.stdout)["house"] == "lords"
+
+    def test_interval_is_clamped_to_minimum(self) -> None:
+        from typer.testing import CliRunner
+
+        from uk_parliament_mcp.cli import watch
+        from uk_parliament_mcp.cli.main import app
+
+        seen: dict[str, object] = {}
+
+        async def fake_run(house: str | None, interval: int) -> None:
+            seen.update(house=house, interval=interval)
+
+        with patch.object(watch, "_run_watch", side_effect=fake_run):
+            result = CliRunner().invoke(app, ["watch", "--interval", "5"])
+        assert result.exit_code == 0
+        assert seen == {"house": None, "interval": watch.MIN_INTERVAL}
+
+
+class TestRunWatchLoop:
+    async def test_keys_scroll_pause_and_quit(self) -> None:
+        """Feed key presses into the loop and check it renders, scrolls and quits."""
+        from uk_parliament_mcp.cli import watch
+
+        updates: list[object] = []
+        renders: list[dict[str, object]] = []
+
+        class FakeLive:
+            def __init__(self, *args: object, **kwargs: object) -> None:
+                pass
+
+            def __enter__(self) -> FakeLive:
+                return self
+
+            def __exit__(self, *args: object) -> None:
+                return None
+
+            def update(self, renderable: object) -> None:
+                updates.append(renderable)
+
+        def fake_render(data: dict[str, object], **kwargs: object) -> str:
+            renders.append(kwargs)
+            return "dashboard"
+
+        def fake_reader(key_queue: queue.Queue[str], stop: threading.Event) -> threading.Thread:
+            for key in ("down", "down", "up", "space", "q"):
+                key_queue.put(key)
+            thread = threading.Thread(target=stop.wait, daemon=True)
+            thread.start()
+            return thread
+
+        async def fake_fetch(house: str | None) -> dict[str, object]:
+            return {"commons": None, "lords": None, "calendar": []}
+
+        with (
+            patch.object(watch, "Live", FakeLive),
+            patch.object(watch, "_render_dashboard", side_effect=fake_render),
+            patch.object(watch, "_start_key_reader", side_effect=fake_reader),
+            patch.object(watch, "_fetch_all_data", side_effect=fake_fetch),
+        ):
+            await watch._run_watch(None, interval=30)
+
+        assert updates == ["dashboard"]
+        # down, down, up -> offset 1 and paused; space -> auto-scroll back on
+        assert renders[0]["scroll_offset_commons"] == 1
+        assert renders[0]["scroll_offset_lords"] == 1
+        assert renders[0]["auto_scroll_paused"] is False
+
+    async def test_auto_scroll_advances_long_calendars(self) -> None:
+        from uk_parliament_mcp.cli import watch
+
+        renders: list[dict[str, object]] = []
+        calls = 0
+
+        class FakeLive:
+            def __init__(self, *args: object, **kwargs: object) -> None:
+                pass
+
+            def __enter__(self) -> FakeLive:
+                return self
+
+            def __exit__(self, *args: object) -> None:
+                return None
+
+            def update(self, renderable: object) -> None:
+                pass
+
+        stop_after = 3
+
+        def fake_render(data: dict[str, object], **kwargs: object) -> str:
+            nonlocal calls
+            calls += 1
+            renders.append(kwargs)
+            if calls >= stop_after:
+                key_queue_ref[0].put("q")
+            return "dashboard"
+
+        key_queue_ref: list[queue.Queue[str]] = []
+
+        def fake_reader(key_queue: queue.Queue[str], stop: threading.Event) -> threading.Thread:
+            key_queue_ref.append(key_queue)
+            thread = threading.Thread(target=stop.wait, daemon=True)
+            thread.start()
+            return thread
+
+        events = [{"House": "Commons", "Description": f"E{i}"} for i in range(200)]
+
+        async def fake_fetch(house: str | None) -> dict[str, object]:
+            return {"commons": None, "calendar": events}
+
+        with (
+            patch.object(watch, "Live", FakeLive),
+            patch.object(watch, "_render_dashboard", side_effect=fake_render),
+            patch.object(watch, "_start_key_reader", side_effect=fake_reader),
+            patch.object(watch, "_fetch_all_data", side_effect=fake_fetch),
+            patch.object(watch, "POLL_INTERVAL", 0.001),
+            patch.object(watch, "SCROLL_INTERVAL", 0.001),
+        ):
+            await watch._run_watch("commons", interval=30)
+
+        offsets = [r["scroll_offset_commons"] for r in renders]
+        assert offsets == sorted(offsets) and offsets[-1] > 0

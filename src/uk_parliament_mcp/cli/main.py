@@ -53,8 +53,8 @@ app.add_typer(live.app, name="live")
 app.add_typer(legislation.app, name="legislation")
 app.add_typer(procedures.app, name="procedures")
 app.add_typer(guide.app, name="guide")
-app.add_typer(watch.app, name="watch")
-app.add_typer(digest.app, name="digest")
+app.command("watch")(watch.watch)
+app.command("digest")(digest.digest)
 
 
 # Top-level reference command for easy discoverability

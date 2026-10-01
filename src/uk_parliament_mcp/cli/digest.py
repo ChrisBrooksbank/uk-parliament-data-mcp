@@ -355,7 +355,7 @@ async def _get_digest_async(target_date: str | None, period: str, house: int | N
 # ---------------------------------------------------------------------------
 
 
-@app.callback(invoke_without_command=True)
+@app.command()
 def digest(
     target_date: str | None = typer.Option(
         None,
