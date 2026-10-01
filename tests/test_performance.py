@@ -8,6 +8,7 @@ all HTTP is mocked.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import time
 from unittest.mock import AsyncMock, patch
@@ -166,8 +167,12 @@ class TestSingleRequestTools:
         tools = await server.list_tools()
 
         for tool in tools:
-            with patch(mock_target, new_callable=AsyncMock) as mock_get:
+            with contextlib.ExitStack() as stack:
+                mock_get = stack.enter_context(patch(mock_target, new_callable=AsyncMock))
                 mock_get.return_value = MOCK_RESPONSE
+                # Reference-data tools fetch through the cache; count those calls too
+                if hasattr(module, "get_result_cached"):
+                    stack.enter_context(patch.object(module, "get_result_cached", mock_get))
 
                 # Build minimal valid arguments from the tool's input schema
                 args = _build_minimal_args(tool.inputSchema)

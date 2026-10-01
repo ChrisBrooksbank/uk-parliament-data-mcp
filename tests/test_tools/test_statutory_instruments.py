@@ -249,7 +249,8 @@ class TestGetLayingBodies:
     async def test_builds_correct_url(self):
         """get_laying_bodies builds correct URL."""
         with patch(
-            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
+            "uk_parliament_mcp.tools.statutory_instruments.get_result_cached",
+            new_callable=AsyncMock,
         ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
@@ -270,7 +271,8 @@ class TestGetSiProcedures:
     async def test_get_si_procedures_builds_correct_url(self):
         """get_si_procedures builds correct URL."""
         with patch(
-            "uk_parliament_mcp.tools.statutory_instruments.get_result", new_callable=AsyncMock
+            "uk_parliament_mcp.tools.statutory_instruments.get_result_cached",
+            new_callable=AsyncMock,
         ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 

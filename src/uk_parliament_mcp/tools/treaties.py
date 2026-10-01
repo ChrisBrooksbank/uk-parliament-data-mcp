@@ -3,7 +3,7 @@
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.config import TREATIES_API_BASE
-from uk_parliament_mcp.http_client import build_url, get_result
+from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -77,7 +77,7 @@ def register_tools(mcp: FastMCP) -> None:
             List of government organisations that can lay treaties, with their IDs.
         """
         url = f"{TREATIES_API_BASE}/GovernmentOrganisation"
-        return await get_result(url)
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
     async def get_treaty_series_memberships() -> str:
@@ -87,7 +87,7 @@ def register_tools(mcp: FastMCP) -> None:
             List of treaty series membership types (Country, EU, Miscellaneous).
         """
         url = f"{TREATIES_API_BASE}/SeriesMembership"
-        return await get_result(url)
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
     async def get_treaty(treaty_id: str) -> str:

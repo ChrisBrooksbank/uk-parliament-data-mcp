@@ -5,7 +5,7 @@ from urllib.parse import quote
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.config import MEMBERS_API_BASE
-from uk_parliament_mcp.http_client import build_url, get_result
+from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -510,7 +510,7 @@ def register_tools(mcp: FastMCP) -> None:
             List of policy interest categories with IDs for use in member searches.
         """
         url = f"{MEMBERS_API_BASE}/Reference/PolicyInterests"
-        return await get_result(url)
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
     async def get_constituency_by_id(constituency_id: int) -> str:

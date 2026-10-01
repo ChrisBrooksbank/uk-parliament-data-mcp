@@ -188,7 +188,9 @@ class TestGetCalendarCategories:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_calendar_categories builds correct URL."""
-        with patch("uk_parliament_mcp.tools.whatson.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.whatson.get_result_cached", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -294,7 +296,9 @@ class TestGetCalendarLocations:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_calendar_locations builds correct URL."""
-        with patch("uk_parliament_mcp.tools.whatson.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.whatson.get_result_cached", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -416,7 +420,9 @@ class TestGetCalendarTags:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_calendar_tags builds correct URL."""
-        with patch("uk_parliament_mcp.tools.whatson.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.whatson.get_result_cached", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")
@@ -435,7 +441,9 @@ class TestGetCalendarTypes:
     @pytest.mark.asyncio
     async def test_builds_correct_url(self):
         """get_calendar_types builds correct URL."""
-        with patch("uk_parliament_mcp.tools.whatson.get_result", new_callable=AsyncMock) as mock:
+        with patch(
+            "uk_parliament_mcp.tools.whatson.get_result_cached", new_callable=AsyncMock
+        ) as mock:
             mock.return_value = '{"url": "test", "data": "{}"}'
 
             mcp = FastMCP(name="test")

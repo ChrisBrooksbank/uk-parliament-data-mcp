@@ -8,7 +8,7 @@ from uk_parliament_mcp.config import (
     STATUTORY_INSTRUMENTS_API_BASE,
     STATUTORY_INSTRUMENTS_API_BASE_V1,
 )
-from uk_parliament_mcp.http_client import build_url, get_result
+from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
 def register_tools(mcp: FastMCP) -> None:
@@ -117,7 +117,7 @@ def register_tools(mcp: FastMCP) -> None:
             List of all laying bodies with IDs and names.
         """
         url = f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/LayingBody"
-        return await get_result(url)
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
     async def get_si_procedures() -> str:
@@ -129,7 +129,7 @@ def register_tools(mcp: FastMCP) -> None:
             List of all SI procedures with IDs and names.
         """
         url = f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/Procedure"
-        return await get_result(url)
+        return await get_result_cached(url, cache_key=url)
 
     @mcp.tool()
     async def get_si_procedure(procedure_id: int) -> str:
