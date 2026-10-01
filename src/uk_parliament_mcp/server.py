@@ -6,18 +6,17 @@ from uk_parliament_mcp import resources
 from uk_parliament_mcp.tools import (
     bills,
     committees,
-    commons_votes,
     composite,
     core,
     erskine_may,
     hansard,
     interests,
-    lords_votes,
     members,
     now,
     oral_questions,
     statutory_instruments,
     treaties,
+    votes,
     whatson,
     written_questions,
 )
@@ -34,8 +33,7 @@ def create_server() -> FastMCP:
     members.register_tools(mcp)
     bills.register_tools(mcp)
     committees.register_tools(mcp)
-    commons_votes.register_tools(mcp)
-    lords_votes.register_tools(mcp)
+    votes.register_tools(mcp)
     hansard.register_tools(mcp)
     oral_questions.register_tools(mcp)
     interests.register_tools(mcp)

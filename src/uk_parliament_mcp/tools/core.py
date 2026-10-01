@@ -135,7 +135,7 @@ These tools combine multiple API calls - use them first for efficiency:
 Note: Composite tools require member_id (int) — search first with get_member_by_name()
 
 ### Key Conventions
-- House: every tool accepts 1 or 'Commons', 2 or 'Lords'
+- House IDs: 1 = Commons, 2 = Lords; every house parameter also accepts 'Commons' or 'Lords'
 - Dates: YYYY-MM-DD format
 - Pagination: skip/take parameters (typical defaults: 20-30)
 - IDs: Use search tools first to get member_id, bill_id, etc.
@@ -147,8 +147,7 @@ Note: Composite tools require member_id (int) — search first with get_member_b
 | members | 39 | get_member_by_name(name) |
 | bills | 21 | search_bills(search_term) |
 | committees | 30 | search_committees(search_term) |
-| commons_votes | 5 | search_commons_divisions(search_term) |
-| lords_votes | 5 | search_lords_divisions(search_term) |
+| votes | 10 | search_commons_divisions(search_term), search_lords_divisions(search_term) |
 | hansard | 30 | search_hansard(house, start_date, end_date, search_term) |
 | oral_questions | 5 | search_early_day_motions(search_term) |
 | written_questions | 7 | search_written_questions(search_term) |
@@ -158,6 +157,7 @@ Note: Composite tools require member_id (int) — search first with get_member_b
 | statutory_instruments | 9 | search_statutory_instruments() |
 | treaties | 6 | search_treaties(search_text) |
 | erskine_may | 11 | search_erskine_may(search_term) |
+| core | 4 | parliament_guide(topic) |
 
 ### Common Patterns
 1. Use composite tools first for common queries (saves multiple calls)

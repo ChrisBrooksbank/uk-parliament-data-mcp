@@ -99,7 +99,7 @@ class TestQuickReference:
         assert "members" in QUICK_REFERENCE
         assert "bills" in QUICK_REFERENCE
         assert "committees" in QUICK_REFERENCE
-        assert "votes" in QUICK_REFERENCE or "commons_votes" in QUICK_REFERENCE
+        assert "| votes |" in QUICK_REFERENCE
 
     def test_quick_reference_mentions_guidance_tools(self):
         """Quick reference points to parliament_guide and parliament_workflow."""
