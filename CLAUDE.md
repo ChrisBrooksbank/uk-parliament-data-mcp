@@ -62,7 +62,8 @@ terminal ──> cli/main.py (Typer) ──> cli/*.py ────────�
 - House IDs: 1 = Commons, 2 = Lords (`config.HOUSE_COMMONS`/`HOUSE_LORDS`). Dates are `YYYY-MM-DD`. Pagination is `skip`/`take`.
 - All tools are read-only and idempotent. Responses are API JSON passed through, not reshaped (apart from pruning).
 - Logging goes to stderr; stdout is reserved for the MCP stdio protocol.
-- `AGENTS.md` is a short operational guide used by the `loop.sh`/`PROMPT_*.md` autonomous build loop, alongside `IMPLEMENTATION_PLAN*.md` and `specs/`.
+- Open work is listed in `ROADMAP.md`. Finished plans and specs are in `docs/archive/`.
+- `AGENTS.md` is a short operational guide used by the `loop.sh`/`loop.ps1` autonomous build loop, which reads `PROMPT_plan.md`/`PROMPT_build.md` from the repo root. Past prompts are in `docs/archive/`.
 
 ## Release
 

@@ -70,6 +70,6 @@ parliament members search "Test" --pretty
 
 ## Key Files
 
-- CLI specification: `specs/cli-spec.md`
-- Implementation plan: `IMPLEMENTATION_PLAN.md`
 - Project documentation: `CLAUDE.md`
+- Open work: `ROADMAP.md`
+- Past specs, plans and loop prompts: `docs/archive/`

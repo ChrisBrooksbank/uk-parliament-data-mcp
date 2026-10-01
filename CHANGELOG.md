@@ -7,8 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Reference-data tools (bill types and stages, committee types, interest categories, policy interests, SI laying bodies and procedures, treaty organisations and series, Erskine May parts, calendar categories/locations/tags/types) cache responses for 15 minutes within an MCP session
+- `ROADMAP.md` listing open work
+- Tests that every CLI command runs, that MCP tools and CLI commands cover the same API endpoints, and that documented tool counts match the registered tools
+
 ### Changed
 - Repository URLs in package metadata, CLI help and CONTRIBUTING.md now point to `uk-parliament-data-mcp`
+- `STATUTORY_INSTRUMENTS_API_BASE_V1` moved to `config.py`
+- Pre-commit hooks updated (current ruff; mypy runs from the project environment)
+- CI lints and format-checks `tests/`
+- Completed plans and specs moved to `docs/archive/`
+
+### Removed
+- Unused `validators.py` and `verify_readme_rendering.py`
 
 ## [1.17.1] - 2026-03-10
 
