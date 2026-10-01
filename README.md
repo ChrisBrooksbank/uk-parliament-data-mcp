@@ -32,15 +32,6 @@ An MCP (Model Context Protocol) server that gives AI assistants access to UK Par
 
 Connect your AI assistant to 205 UK Parliament API tools for comprehensive parliamentary research.
 
-<details>
-<summary>Watch it in Claude Desktop</summary>
-
-https://github.com/user-attachments/assets/30f2df13-dff9-44e6-b1f6-5eebfb665d9e
-
-*Claude Desktop using the server to check the parliamentary calendar.*
-
-</details>
-
 Prefer the terminal? See the [CLI demo](#cli-usage).
 
 
