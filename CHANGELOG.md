@@ -7,19 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Statutory Instruments tools that called the retired v1 API (every request returned HTTP 400) now use v2: `get_laying_bodies`, `get_si_procedures`, `get_si_procedure`
+- `get_si_procedure` / `parliament legislation si-procedure` now take the alphanumeric procedure ID the API uses (was typed as an integer)
+
 ### Added
+- `search_statutory_instruments` / `parliament legislation search-si` filters: procedure, recommended for procedure change, laying body, department, house, skip/take. Name is now optional. Use the "Proposed negative statutory instrument" procedure ID to list PNSIs.
 - Reference-data tools (bill types and stages, committee types, interest categories, policy interests, SI laying bodies and procedures, treaty organisations and series, Erskine May parts, calendar categories/locations/tags/types) cache responses for 15 minutes within an MCP session
 - `ROADMAP.md` listing open work
 - Tests that every CLI command runs, that MCP tools and CLI commands cover the same API endpoints, and that documented tool counts match the registered tools
 
 ### Changed
 - Repository URLs in package metadata, CLI help and CONTRIBUTING.md now point to `uk-parliament-data-mcp`
-- `STATUTORY_INSTRUMENTS_API_BASE_V1` moved to `config.py`
 - Pre-commit hooks updated (current ruff; mypy runs from the project environment)
 - CI lints and format-checks `tests/`
 - Completed plans and specs moved to `docs/archive/`
+- `context/statutoryinstruments-api.json` and the `parliament api` catalogue updated to the live v2 spec
 
 ### Removed
+- `get_si_business_item`, `search_proposed_negative_sis`, `get_proposed_negative_si`, `get_proposed_negative_si_business_items` and their CLI commands (`si-business-item`, `search-pnsis`, `get-pnsi`, `pnsi-business`). Parliament retired these endpoints with the v1 API and there is no v2 equivalent. Proposed negatives are now returned by `search_statutory_instruments` and `get_statutory_instrument` (205 tools, down from 209).
 - Unused `validators.py` and `verify_readme_rendering.py`
 
 ## [1.17.1] - 2026-03-10

@@ -27,7 +27,7 @@ TOOL_COUNT_FILES = [
 ]
 
 # A three-digit number followed within a few words by "tool(s)", e.g.
-# "209 tools", "209 available tools", "209 Parliament API tools".
+# "205 tools", "205 available tools", "205 Parliament API tools".
 TOOL_COUNT_RE = re.compile(r"\b(\d{3})\b(?:[ \w-]{0,30}?)\btools?\b")
 
 # f"{MEMBERS_API_BASE}/Members/{member_id}/Biography" -> (MEMBERS_API_BASE, /Members/{}/Biography)

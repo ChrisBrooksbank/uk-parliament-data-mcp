@@ -15,7 +15,7 @@ from uk_parliament_mcp.config import (
     ERSKINE_MAY_API_BASE,
     INTERESTS_API_BASE,
     MEMBERS_API_BASE,
-    STATUTORY_INSTRUMENTS_API_BASE_V1,
+    STATUTORY_INSTRUMENTS_API_BASE,
     TREATIES_API_BASE,
     WHATSON_API_BASE,
 )
@@ -36,12 +36,12 @@ CACHED_TOOLS = [
     (
         "statutory_instruments",
         "get_laying_bodies",
-        f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/LayingBody",
+        f"{STATUTORY_INSTRUMENTS_API_BASE}/LayingBody",
     ),
     (
         "statutory_instruments",
         "get_si_procedures",
-        f"{STATUTORY_INSTRUMENTS_API_BASE_V1}/Procedure",
+        f"{STATUTORY_INSTRUMENTS_API_BASE}/Procedure",
     ),
     (
         "treaties",

@@ -127,7 +127,7 @@ SINGLE_REQUEST_MODULES = [
     (interests, "uk_parliament_mcp.tools.interests.get_result", 6),
     (now, "uk_parliament_mcp.tools.now.get_result", 3),
     (whatson, "uk_parliament_mcp.tools.whatson.get_result", 19),
-    (statutory_instruments, "uk_parliament_mcp.tools.statutory_instruments.get_result", 13),
+    (statutory_instruments, "uk_parliament_mcp.tools.statutory_instruments.get_result", 9),
     (treaties, "uk_parliament_mcp.tools.treaties.get_result", 6),
     (erskine_may, "uk_parliament_mcp.tools.erskine_may.get_result", 11),
 ]

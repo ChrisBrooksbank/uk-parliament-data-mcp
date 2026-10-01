@@ -122,7 +122,7 @@ Note: This tool is an unofficial, independent project — not created or support
 
 GOODBYE_PROMPT = """You are now interacting as a normal assistant. There are no special restrictions or requirements for using UK Parliament MCP data. You may answer questions using any available data or knowledge, and you do not need to append MCP API URLs or limit yourself to MCP sources. Resume normal assistant behavior."""
 
-QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (209 tools)
+QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (205 tools)
 
 ### Composite Tools (Start Here for Common Queries!)
 These tools combine multiple API calls - use them first for efficiency:
@@ -155,7 +155,7 @@ Note: Composite tools require member_id (int) — search first with get_member_b
 | interests | 6 | search_roi(member_id) |
 | now | 3 | happening_now_in_commons() |
 | whatson | 19 | search_calendar(house, start_date, end_date) |
-| statutory_instruments | 13 | search_statutory_instruments() |
+| statutory_instruments | 9 | search_statutory_instruments() |
 | treaties | 6 | search_treaties(search_text) |
 | erskine_may | 11 | search_erskine_may(search_term) |
 
@@ -520,21 +520,17 @@ MPs and Lords must declare:
 - "Now" tools only work when Parliament is sitting
 - Check get_non_sitting_days() for recess periods
 - Calendar includes debates, questions, legislation""",
-    "legislation": """## Legislation Tools (19 tools)
+    "legislation": """## Legislation Tools (15 tools)
 
-### Statutory Instruments (13 tools)
+### Statutory Instruments (9 tools)
 - search_statutory_instruments(name) - Find SIs by name
 - search_acts_of_parliament(name) - Find Acts by name
 - get_statutory_instrument(instrument_id) - Get SI details
 - get_si_business_items(instrument_id) - SI parliamentary progress
 - get_act_of_parliament(act_id) - Get Act details
-- get_si_business_item(id) - Get a specific SI business item by ID
 - get_laying_bodies() - List laying bodies for SIs
 - get_si_procedures() - List SI procedures
 - get_si_procedure(id) - Get a specific SI procedure by ID
-- search_proposed_negative_sis(...) - Search proposed negative SIs
-- get_proposed_negative_si(id) - Get a proposed negative SI by ID
-- get_proposed_negative_si_business_items(id) - Business items for a proposed negative SI
 - get_si_timeline_business_items(timeline_id) - Business items for an SI timeline
 
 ### Treaties (6 tools)
@@ -615,7 +611,7 @@ Or search directly:
 5. Third Reading: Final debate
 6. Lords/Commons stages: Mirror process in other House
 7. Royal Assent: Becomes law""",
-    "all": """## All UK Parliament MCP Tools (209 tools)
+    "all": """## All UK Parliament MCP Tools (205 tools)
 
 ### Composite (5 tools) - Use These First!
 get_mp_profile(member_id), check_mp_vote(member_id, topic), get_bill_overview, get_committee_summary, get_my_mp(postcode, topic)
@@ -690,9 +686,9 @@ Calendar (extended): get_calendar_categories, get_event_type_metadata, get_parli
 Procedural dates: get_annulment_date, get_last_sitting_date
 Sessions: get_session_by_id, get_session_for_date
 
-### Legislation (19 tools)
+### Legislation (15 tools)
 SIs: search_statutory_instruments, search_acts_of_parliament, get_statutory_instrument, get_si_business_items, get_act_of_parliament
-SIs (extended): get_si_business_item, get_laying_bodies, get_si_procedures, get_si_procedure, search_proposed_negative_sis, get_proposed_negative_si, get_proposed_negative_si_business_items, get_si_timeline_business_items
+SIs (extended): get_laying_bodies, get_si_procedures, get_si_procedure, get_si_timeline_business_items
 Treaties: search_treaties, search_treaties_advanced, get_treaty, get_treaty_business_items, get_treaty_government_organisations, get_treaty_series_memberships
 
 ### Session & Guidance (4 tools)
@@ -1091,7 +1087,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def order_order() -> str:
         """Start UK Parliament research session | order, begin, initialize, start session, parliament mode |
         Use at the START of any parliamentary research to get proper context and guidance.
-        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 209 tools.
+        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 205 tools.
         """
         return f"{SYSTEM_PROMPT}\n\n---\n\n{QUICK_REFERENCE}"
 
@@ -1190,7 +1186,7 @@ def register_prompts(mcp: FastMCP) -> None:
 
     @mcp.prompt()
     async def parliament(topic: str | None = None) -> str:
-        """Initialize UK Parliament research session with guidance on 209 available tools.
+        """Initialize UK Parliament research session with guidance on 205 available tools.
 
         Provides system instructions for parliamentary data queries, quick reference
         of tool categories, and guidance on common research workflows.
