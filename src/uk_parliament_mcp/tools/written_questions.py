@@ -45,7 +45,7 @@ def register_tools(mcp: FastMCP) -> None:
             {
                 "searchTerm": search_term,
                 "askingMemberId": asking_member_id,
-                "answeringBodyId": answering_body_id,
+                "answeringBodies": answering_body_id,
                 "answered": answered,
                 "tabledWhenFrom": tabled_from,
                 "tabledWhenTo": tabled_to,
@@ -129,8 +129,8 @@ def register_tools(mcp: FastMCP) -> None:
             f"{WRITTEN_QUESTIONS_API_BASE}/writtenstatements/statements",
             {
                 "searchTerm": search_term,
-                "memberId": member_id,
-                "answeringBodyId": answering_body_id,
+                "members": member_id,
+                "answeringBodies": answering_body_id,
                 "madeWhenFrom": made_from,
                 "madeWhenTo": made_to,
                 "house": house,

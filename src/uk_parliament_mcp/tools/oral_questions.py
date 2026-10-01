@@ -21,7 +21,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Recent EDMs with titles, sponsors, supporters, and tabling dates.
         """
-        url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotions/list?parameters.orderBy=DateTabledDesc&skip=0&take={take}"
+        url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotions/list?parameters.orderBy=DateTabledDesc&parameters.skip=0&parameters.take={take}"
         return await get_result(url)
 
     @mcp.tool()
@@ -118,7 +118,7 @@ def register_tools(mcp: FastMCP) -> None:
         Args:
             answering_body_id: Filter by department/body answering (0 for all).
             asking_member_id: Filter by member asking (0 for all).
-            question_status: Filter by status (empty for all).
+            question_status: Filter by status, e.g. 'ToBeAsked', 'Withdrawn', 'Unstarred', 'Transferred', 'Submitted' (empty for all).
             skip: Number of results to skip.
             take: Number of results to return.
 
@@ -127,11 +127,11 @@ def register_tools(mcp: FastMCP) -> None:
         """
         params = []
         if answering_body_id:
-            params.append(f"parameters.answeringBodyId={answering_body_id}")
+            params.append(f"parameters.answeringBodyIds={answering_body_id}")
         if asking_member_id:
-            params.append(f"parameters.askingMemberId={asking_member_id}")
+            params.append(f"parameters.askingMemberIds={asking_member_id}")
         if question_status:
-            params.append(f"parameters.questionStatus={quote(question_status)}")
+            params.append(f"parameters.statuses={quote(question_status)}")
         params.append(f"parameters.skip={skip}")
         params.append(f"parameters.take={take}")
         query = "&".join(params)

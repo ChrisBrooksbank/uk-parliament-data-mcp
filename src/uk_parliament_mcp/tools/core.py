@@ -122,15 +122,19 @@ Note: This tool is an unofficial, independent project — not created or support
 
 GOODBYE_PROMPT = """You are now interacting as a normal assistant. There are no special restrictions or requirements for using UK Parliament MCP data. You may answer questions using any available data or knowledge, and you do not need to append MCP API URLs or limit yourself to MCP sources. Resume normal assistant behavior."""
 
-QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (205 tools)
+QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (210 tools)
 
 ### Composite Tools (Start Here for Common Queries!)
 These tools combine multiple API calls - use them first for efficiency:
 - get_mp_profile(member_id) - Complete MP profile in one call
-- check_mp_vote(member_id, topic) - Check how an MP voted on a topic
+- check_mp_vote(member_id, topic) - Check how an MP or Lord voted on a topic
 - get_bill_overview(search_term) - Full bill info with stages
 - get_committee_summary(topic) - Committee with evidence and publications
 - get_my_mp(postcode, topic) - Find MP by UK postcode with full profile
+- compare_member_votes(member_id_a, member_id_b, topic) - Do two members vote alike?
+- get_member_bills(member_id) - Bills a member has sponsored
+- get_bill_committees(bill_id) / get_committee_bills(committee_id) - Which committees examined which bills
+- search_parliament(query) - Search members, bills, committees, Hansard and written questions at once
 
 Note: Composite tools require member_id (int) — search first with get_member_by_name()
 
@@ -143,7 +147,7 @@ Note: Composite tools require member_id (int) — search first with get_member_b
 ### Tool Categories & Entry Points
 | Module | Tools | Start With |
 |--------|-------|------------|
-| composite | 5 | get_mp_profile(member_id) |
+| composite | 10 | search_parliament(query), get_mp_profile(member_id) |
 | members | 39 | get_member_by_name(name) |
 | bills | 21 | search_bills(search_term) |
 | committees | 30 | search_committees(search_term) |
@@ -169,7 +173,7 @@ Use parliament_guide(topic) for detailed tool information.
 Use parliament_workflow(query) for step-by-step research planning."""
 
 GUIDANCE_CONTENT = {
-    "composite": """## Composite Tools (5 tools)
+    "composite": """## Composite Tools (10 tools)
 
 High-level tools that combine multiple API calls for common research tasks.
 Use these FIRST for common queries to reduce tool calls and improve efficiency.
@@ -184,9 +188,18 @@ Search first with get_member_by_name(name) to get the member_id.
   - Example: get_mp_profile(4514)  # Keir Starmer's member_id
 
 - check_mp_vote(member_id, topic) - Check voting stance on a topic
-  - Combines: member lookup + division search with member filter
-  - Returns: MP info and divisions on the topic where they voted
-  - Example: check_mp_vote(172, "climate")  # Boris Johnson's member_id
+  - Combines: member lookup + the member's division votes (Commons or Lords)
+  - Returns: Member info and each matching division with their vote (Aye/No, Content/Not Content)
+  - Example: check_mp_vote(172, "climate")  # Diane Abbott's member_id
+
+- compare_member_votes(member_id_a, member_id_b, topic) - Do two members vote alike?
+  - Combines: both members' details + both voting records, joined by division
+  - Returns: Agreement count and rate, each shared division with both votes
+  - Example: compare_member_votes(4514, 172, "welfare")
+
+- get_member_bills(member_id) - Bills a member has sponsored
+  - Combines: member details + bill search by sponsor
+  - Returns: Bills with current stage, most recently updated first
 
 - get_my_mp(postcode, topic) - Find MP by UK postcode
   - Combines: constituency lookup + member search + biography + interests + votes
@@ -199,11 +212,30 @@ Search first with get_member_by_name(name) to get the member_id.
   - Returns: Bill details, legislative stages, associated documents
   - Example: get_bill_overview("Online Safety")
 
+- get_bill_committees(bill_id) - Which committees examined a bill
+  - Combines: bill details + stages + committee business search + business details + publications
+  - Returns: Committee stages (with sittings) and select committee scrutiny with the committee
+  - Example: get_bill_committees(3764)  # Renters' Rights Bill
+
 ### Committee Research
 - get_committee_summary(topic) - Committee with evidence and reports
   - Combines: committee search + details + oral evidence + written evidence + publications
   - Returns: Committee info, witness testimonies, written submissions, reports
   - Example: get_committee_summary("Treasury")
+
+- get_committee_bills(committee_id) - Which bills a committee examined
+  - Combines: committee details + legislative scrutiny business + bill lookup
+  - Returns: Each scrutiny item with the bill it examined and its current stage
+  - Example: get_committee_bills(172)  # Lords Constitution Committee
+
+### Not Sure Where to Look?
+- search_parliament(query) - One search across Parliament
+  - Combines: member, bill, committee, Hansard and written question searches
+  - Returns: Top matches and totals for each, with the tool to call next
+  - Example: search_parliament("net zero")
+
+### When Nothing Is Found
+Composite tools add a "suggestions" list (e.g. try the surname only, widen the topic) when a lookup comes back empty.
 
 ### When to Use Individual Tools Instead
 Use the individual tools (in members, bills, etc.) when you need:
@@ -611,10 +643,10 @@ Or search directly:
 5. Third Reading: Final debate
 6. Lords/Commons stages: Mirror process in other House
 7. Royal Assent: Becomes law""",
-    "all": """## All UK Parliament MCP Tools (205 tools)
+    "all": """## All UK Parliament MCP Tools (210 tools)
 
-### Composite (5 tools) - Use These First!
-get_mp_profile(member_id), check_mp_vote(member_id, topic), get_bill_overview, get_committee_summary, get_my_mp(postcode, topic)
+### Composite (10 tools) - Use These First!
+get_mp_profile(member_id), check_mp_vote(member_id, topic), compare_member_votes(member_id_a, member_id_b, topic), get_member_bills(member_id), get_bill_overview, get_bill_committees(bill_id), get_committee_summary, get_committee_bills(committee_id), get_my_mp(postcode, topic), search_parliament(query)
 Note: get_mp_profile and check_mp_vote require member_id (int) — search first with get_member_by_name()
 
 ### Members (39 tools)
@@ -1087,7 +1119,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def order_order() -> str:
         """Start UK Parliament research session | order, begin, initialize, start session, parliament mode |
         Use at the START of any parliamentary research to get proper context and guidance.
-        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 205 tools.
+        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 210 tools.
         """
         return f"{SYSTEM_PROMPT}\n\n---\n\n{QUICK_REFERENCE}"
 
@@ -1186,7 +1218,7 @@ def register_prompts(mcp: FastMCP) -> None:
 
     @mcp.prompt()
     async def parliament(topic: str | None = None) -> str:
-        """Initialize UK Parliament research session with guidance on 205 available tools.
+        """Initialize UK Parliament research session with guidance on 210 available tools.
 
         Provides system instructions for parliamentary data queries, quick reference
         of tool categories, and guidance on common research workflows.

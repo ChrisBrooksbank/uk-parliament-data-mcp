@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 UK Parliament MCP Server (Unofficial), a community project that is not affiliated with or endorsed by UK Parliament. One Python 3.11+ package (`uk-parliament-mcp`) ships two front ends over the public `*.parliament.uk` REST APIs:
 
-- **MCP server** (`uk-parliament-mcp` / `python -m uk_parliament_mcp`): FastMCP over stdio, with 205 read-only tools plus prompts and resources.
+- **MCP server** (`uk-parliament-mcp` / `python -m uk_parliament_mcp`): FastMCP over stdio, with 210 read-only tools plus prompts and resources.
 - **CLI** (`parliament`): a Typer app with command groups (`members`, `bills`, `votes`, `committees`, `hansard`, `composite`, `live`, `digest`, `watch`, `api`, `guide`, …).
 
 End-user usage of both is documented in `README.md`.
@@ -56,7 +56,7 @@ terminal ──> cli/main.py (Typer) ──> cli/*.py ────────�
 2. Write the docstring in the 4-part semantic format `Action | keywords, synonyms | Use case | Returns`, followed by an `Args:` section. The docstring is the tool description the LLM sees.
 3. Add the matching Typer command in `cli/<group>.py`. The CLI and the MCP tool are separate implementations. `tests/test_consistency.py` fails if an endpoint (`f"{X_API_BASE}/path"`) is called on one side only. Deliberate one-sided endpoints go in its `MCP_ONLY_ENDPOINTS`/`CLI_ONLY_ENDPOINTS` allowlists.
 4. Add tests in `tests/test_tools/test_<api>.py` (mirrors the source layout). Tests patch the module-level name, e.g. `patch("uk_parliament_mcp.tools.members.get_result", new_callable=AsyncMock)`, and assert on the URL. Registration tests list the expected tool names per module.
-5. **Tool count is hardcoded** ("205") in `tools/core.py` (`QUICK_REFERENCE`, the `all` guide, docstrings), `cli/main.py` help, `cli/guide.py`, `README.md`, this file and `tests/test_tools/test_core.py`. `tests/test_consistency.py` checks these files against the number of registered tools. Also update the per-topic counts in the guide text in `core.py`, which are not checked.
+5. **Tool count is hardcoded** ("210") in `tools/core.py` (`QUICK_REFERENCE`, the `all` guide, docstrings), `cli/main.py` help, `cli/guide.py`, `README.md`, this file and `tests/test_tools/test_core.py`. `tests/test_consistency.py` checks these files against the number of registered tools. Also update the per-topic counts in the guide text in `core.py`, which are not checked.
 
 ## Conventions
 

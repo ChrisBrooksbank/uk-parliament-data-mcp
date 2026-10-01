@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Callable, Coroutine
 from typing import Any
 from urllib.parse import quote
 
@@ -11,54 +12,32 @@ import typer
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.renderers import (
+    render_bill_committees,
     render_bill_overview,
     render_check_vote,
+    render_committee_bills,
     render_committee_summary,
+    render_compare_votes,
+    render_member_bills,
     render_mp_profile,
     render_my_mp,
+    render_search_parliament,
 )
 from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async, should_render_rich
 from uk_parliament_mcp.config import (
     BILLS_API_BASE,
     COMMITTEES_API_BASE,
-    COMMONS_VOTES_API_BASE,
+    HOUSE_COMMONS,
     INTERESTS_API_BASE,
     MEMBERS_API_BASE,
 )
 from uk_parliament_mcp.http_client import build_url, get_result
+from uk_parliament_mcp.tools import composite
+from uk_parliament_mcp.tools.composite import _extract_member_id, _parse_response
 
 app = typer.Typer(
     help="High-level composite commands combining multiple API calls", no_args_is_help=True
 )
-
-
-def _parse_response(response: str) -> dict[str, Any]:
-    """Parse JSON response and extract data."""
-    try:
-        parsed: dict[str, Any] = json.loads(response)
-        if "data" in parsed:
-            # Data is a JSON string, parse it
-            data = parsed["data"]
-            if isinstance(data, str):
-                result: dict[str, Any] = json.loads(data)
-                return result
-            return dict(data) if isinstance(data, dict) else {"data": data}
-        return parsed
-    except (json.JSONDecodeError, TypeError):
-        return {"error": "Failed to parse response"}
-
-
-def _extract_member_id(member_response: dict[str, Any]) -> int | None:
-    """Extract member_id from member search response."""
-    try:
-        items = member_response.get("items", [])
-        if items:
-            member_id = items[0].get("value", {}).get("id")
-            if isinstance(member_id, int):
-                return member_id
-    except (KeyError, IndexError, TypeError):
-        pass
-    return None
 
 
 async def _get_mp_profile_async(member_id: int) -> str:
@@ -100,34 +79,9 @@ async def _get_mp_profile_async(member_id: int) -> str:
     )
 
 
-async def _check_mp_vote_async(member_id: int, topic: str) -> str:
-    """Check how an MP voted on a specific topic."""
-    # Fetch member info and divisions in parallel
-    member_url = f"{MEMBERS_API_BASE}/Members/{member_id}"
-    divisions_url = build_url(
-        f"{COMMONS_VOTES_API_BASE}/divisions.json/search",
-        {
-            "queryParameters.searchTerm": topic,
-            "memberId": member_id,
-        },
-    )
-
-    member_response, divisions_response = await asyncio.gather(
-        get_result(member_url), get_result(divisions_url)
-    )
-
-    member_data = _parse_response(member_response)
-    basic_info = member_data.get("value", {})
-
-    return json.dumps(
-        {
-            "member_id": member_id,
-            "member_info": basic_info,
-            "topic_searched": topic,
-            "divisions": _parse_response(divisions_response),
-            "sources": {"member": member_url, "divisions": divisions_url},
-        }
-    )
+async def _check_mp_vote_async(member_id: int, topic: str, take: int = 25) -> str:
+    """Check how a member voted on a specific topic (in whichever House they sit)."""
+    return json.dumps(await composite.check_member_votes(member_id, topic, take))
 
 
 async def _get_bill_overview_async(search_term: str) -> str:
@@ -280,6 +234,7 @@ def mp_profile(
 def check_vote(
     member_id: int = typer.Argument(..., help="Parliament member ID (e.g., 4514)"),
     topic: str = typer.Argument(..., help="Topic or keyword to search divisions"),
+    take: int = typer.Option(25, "--take", "-n", help="Number of divisions to return"),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
     data_only: bool = typer.Option(
         True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
@@ -293,12 +248,12 @@ def check_vote(
     ),
 ) -> None:
     """
-    Check how an MP voted on a specific topic.
+    Check how an MP or Lord voted on a specific topic.
 
-    Combines member lookup and division search.
-    Returns MP info and divisions on the topic where they voted.
+    Looks up the member, then their votes in their own House on divisions
+    matching the topic: Aye/No (Commons) or Content/Not Content (Lords).
     """
-    result = run_async(_check_mp_vote_async(member_id, topic))
+    result = run_async(_check_mp_vote_async(member_id, topic, take))
     if should_render_rich(output_format, raw):
         render_check_vote(result)
     else:
@@ -405,13 +360,7 @@ async def _get_my_mp_async(postcode: str, topic: str | None = None) -> str:
     # Optionally search topic-specific votes
     topic_votes_url = None
     if topic:
-        topic_votes_url = build_url(
-            f"{COMMONS_VOTES_API_BASE}/divisions.json/search",
-            {
-                "queryParameters.searchTerm": topic,
-                "memberId": member_id,
-            },
-        )
+        topic_votes_url = composite.member_voting_url(member_id, HOUSE_COMMONS, topic)
         tasks.append(get_result(topic_votes_url))
 
     results = await asyncio.gather(*tasks)
@@ -439,7 +388,7 @@ async def _get_my_mp_async(postcode: str, topic: str | None = None) -> str:
     }
 
     if topic and len(results) > 4:
-        output["topic_votes"] = _parse_response(results[4])
+        output["topic_votes"] = composite.normalise_member_votes(_parse_response(results[4]))
         output["topic_searched"] = topic
         output["sources"]["topic_votes"] = topic_votes_url
 
@@ -474,3 +423,123 @@ def my_mp(
         render_my_mp(result)
     else:
         echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+
+
+async def _as_json(coro: Coroutine[Any, Any, dict[str, Any]]) -> str:
+    return json.dumps(await coro)
+
+
+def _emit(
+    result: str,
+    renderer: Callable[[str], None],
+    pretty: bool,
+    data_only: bool,
+    output_format: OutputFormat,
+    fields: str | None,
+    raw: bool,
+) -> None:
+    if should_render_rich(output_format, raw):
+        renderer(result)
+    else:
+        echo_utf8(format_output(result, pretty, data_only, output_format, fields, raw))
+
+
+_PRETTY = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output")
+_DATA_ONLY = typer.Option(
+    True, "--data-only", "-d", help="Return data only (use --no-data-only for wrapper)"
+)
+_FORMAT = typer.Option(
+    OutputFormat.AUTO, "--format", "-f", help="Output format: json, table, markdown, csv, auto"
+)
+_RAW = typer.Option(False, "--raw", help="Output full wrapper JSON (url + data)")
+_FIELDS = typer.Option(None, "--fields", help="Comma-separated field paths for columns")
+
+
+@app.command("compare-votes")
+def compare_votes(
+    member_id_a: int = typer.Argument(..., help="First member ID (e.g., 4514)"),
+    member_id_b: int = typer.Argument(..., help="Second member ID, same House (e.g., 172)"),
+    topic: str | None = typer.Option(None, "--topic", "-t", help="Only divisions on this topic"),
+    take: int = typer.Option(50, "--take", "-n", help="Recent divisions per member to compare"),
+    pretty: bool = _PRETTY,
+    data_only: bool = _DATA_ONLY,
+    output_format: OutputFormat = _FORMAT,
+    raw: bool = _RAW,
+    fields: str | None = _FIELDS,
+) -> None:
+    """
+    Compare how two MPs (or two Lords) voted, division by division.
+
+    Shows how often they agreed and each division both voted in.
+    """
+    result = run_async(_as_json(composite.compare_votes(member_id_a, member_id_b, topic, take)))
+    _emit(result, render_compare_votes, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("member-bills")
+def member_bills(
+    member_id: int = typer.Argument(..., help="Parliament member ID (e.g., 4514)"),
+    take: int = typer.Option(20, "--take", "-n", help="Number of bills to return"),
+    pretty: bool = _PRETTY,
+    data_only: bool = _DATA_ONLY,
+    output_format: OutputFormat = _FORMAT,
+    raw: bool = _RAW,
+    fields: str | None = _FIELDS,
+) -> None:
+    """
+    List the bills a member has sponsored, most recently updated first.
+    """
+    result = run_async(_as_json(composite.member_bills(member_id, take)))
+    _emit(result, render_member_bills, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("bill-committees")
+def bill_committees(
+    bill_id: int = typer.Argument(..., help="Bill ID (e.g., 3764)"),
+    pretty: bool = _PRETTY,
+    data_only: bool = _DATA_ONLY,
+    output_format: OutputFormat = _FORMAT,
+    raw: bool = _RAW,
+    fields: str | None = _FIELDS,
+) -> None:
+    """
+    Find the committees that examined a bill.
+
+    Shows the bill's committee stages and select committee business on it.
+    """
+    result = run_async(_as_json(composite.bill_committees(bill_id)))
+    _emit(result, render_bill_committees, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("committee-bills")
+def committee_bills(
+    committee_id: int = typer.Argument(..., help="Committee ID (e.g., 172)"),
+    take: int = typer.Option(10, "--take", "-n", help="Number of scrutiny items (max 20)"),
+    pretty: bool = _PRETTY,
+    data_only: bool = _DATA_ONLY,
+    output_format: OutputFormat = _FORMAT,
+    raw: bool = _RAW,
+    fields: str | None = _FIELDS,
+) -> None:
+    """
+    Find the bills a committee has examined (its legislative scrutiny).
+    """
+    result = run_async(_as_json(composite.committee_bills(committee_id, take)))
+    _emit(result, render_committee_bills, pretty, data_only, output_format, fields, raw)
+
+
+@app.command("search")
+def search(
+    query: str = typer.Argument(..., help="Search text (e.g., 'renters rights')"),
+    take: int = typer.Option(5, "--take", "-n", help="Top matches per kind of record"),
+    pretty: bool = _PRETTY,
+    data_only: bool = _DATA_ONLY,
+    output_format: OutputFormat = _FORMAT,
+    raw: bool = _RAW,
+    fields: str | None = _FIELDS,
+) -> None:
+    """
+    Search members, bills, committees, Hansard and written questions at once.
+    """
+    result = run_async(_as_json(composite.search_everything(query, take)))
+    _emit(result, render_search_parliament, pretty, data_only, output_format, fields, raw)

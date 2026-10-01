@@ -168,21 +168,26 @@ class TestCheckVote:
 
     @pytest.fixture
     def mock_divisions_response(self) -> str:
-        """Mock divisions response."""
+        """Mock membervoting response (the member's vote on each division)."""
         return json.dumps(
             {
-                "url": "https://commonsvotes-api.parliament.uk/data/divisions.json/search",
+                "url": "https://commonsvotes-api.parliament.uk/data/divisions.json/membervoting",
                 "data": json.dumps(
-                    {
-                        "items": [
-                            {
+                    [
+                        {
+                            "MemberId": 1234,
+                            "MemberVotedAye": True,
+                            "MemberVotedNo": False,
+                            "MemberWasTeller": False,
+                            "PublishedDivision": {
                                 "DivisionId": 123,
+                                "Date": "2024-01-10T00:00:00",
                                 "Title": "Climate Change Act",
                                 "AyeCount": 300,
                                 "NoCount": 200,
-                            }
-                        ]
-                    }
+                            },
+                        }
+                    ]
                 ),
             }
         )
@@ -209,11 +214,11 @@ class TestCheckVote:
 
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
-            if "Members/" in url and "divisions" not in url:
+            if "members-api" in url:
                 return mock_member_response
             return mock_divisions_response
 
-        with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.tools.composite.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["composite", "check-vote", "1234", "climate"])
 
         assert result.exit_code == 0
@@ -222,8 +227,17 @@ class TestCheckVote:
         assert "member_info" in output
         assert "topic_searched" in output
         assert output["topic_searched"] == "climate"
-        assert "divisions" in output
-        assert "sources" in output
+        assert output["votes"] == [
+            {
+                "division_id": 123,
+                "date": "2024-01-10",
+                "title": "Climate Change Act",
+                "vote": "Aye",
+                "ayes": 300,
+                "noes": 200,
+            }
+        ]
+        assert "membervoting?queryParameters.memberId=1234" in output["sources"]["votes"]
 
     def test_check_vote_data_only(
         self,
@@ -235,11 +249,11 @@ class TestCheckVote:
 
         async def mock_get_result(url: str) -> str:
             """Mock async get_result."""
-            if "Members/" in url and "divisions" not in url:
+            if "members-api" in url:
                 return mock_member_response
             return mock_divisions_response
 
-        with patch("uk_parliament_mcp.cli.composite.get_result", new=mock_get_result):
+        with patch("uk_parliament_mcp.tools.composite.get_result", new=mock_get_result):
             result = cli_runner.invoke(app, ["composite", "check-vote", "1234", "topic", "-d"])
 
         assert result.exit_code == 0

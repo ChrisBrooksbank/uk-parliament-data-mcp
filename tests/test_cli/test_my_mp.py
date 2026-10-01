@@ -119,15 +119,20 @@ class TestMyMp:
         """Mock topic-specific votes response."""
         return json.dumps(
             {
-                "url": "https://commonsvotes-api.parliament.uk/data/divisions.json/search",
+                "url": "https://commonsvotes-api.parliament.uk/data/divisions.json/membervoting",
                 "data": json.dumps(
                     [
                         {
-                            "DivisionId": 999,
-                            "Title": "Climate Change Act",
-                            "Date": "2024-03-15T00:00:00",
-                            "AyeCount": 300,
-                            "NoCount": 150,
+                            "MemberId": 172,
+                            "MemberVotedAye": False,
+                            "MemberVotedNo": True,
+                            "PublishedDivision": {
+                                "DivisionId": 999,
+                                "Title": "Climate Change Act",
+                                "Date": "2024-03-15T00:00:00",
+                                "AyeCount": 300,
+                                "NoCount": 150,
+                            },
                         }
                     ]
                 ),
@@ -239,7 +244,8 @@ class TestMyMp:
         assert result.exit_code == 0
         output = json.loads(result.stdout)
         assert output["member_id"] == 172
-        assert "topic_votes" in output
+        assert output["topic_votes"][0]["vote"] == "No"
+        assert output["topic_votes"][0]["division_id"] == 999
         assert output["topic_searched"] == "climate"
 
     def test_my_mp_pretty_output(
