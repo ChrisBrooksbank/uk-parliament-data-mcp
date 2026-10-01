@@ -19,17 +19,16 @@ from mcp.server.fastmcp import FastMCP
 from uk_parliament_mcp.tools import (
     bills,
     committees,
-    commons_votes,
     composite,
     erskine_may,
     hansard,
     interests,
-    lords_votes,
     members,
     now,
     oral_questions,
     statutory_instruments,
     treaties,
+    votes,
     whatson,
     written_questions,
 )
@@ -119,8 +118,7 @@ SINGLE_REQUEST_MODULES = [
     (members, "uk_parliament_mcp.tools.members.get_result", 39),
     (bills, "uk_parliament_mcp.tools.bills.get_result", 21),
     (committees, "uk_parliament_mcp.tools.committees.get_result", 30),
-    (commons_votes, "uk_parliament_mcp.tools.commons_votes.get_result", 5),
-    (lords_votes, "uk_parliament_mcp.tools.lords_votes.get_result", 5),
+    (votes, "uk_parliament_mcp.tools.votes.get_result", 10),
     (hansard, "uk_parliament_mcp.tools.hansard.get_result", 30),
     (oral_questions, "uk_parliament_mcp.tools.oral_questions.get_result", 5),
     (written_questions, "uk_parliament_mcp.tools.written_questions.get_result", 7),
@@ -199,7 +197,9 @@ def _build_minimal_args(schema: dict) -> dict:
             continue
 
         prop_type = prop.get("type", "string")
-        if prop_type == "string":
+        if name.endswith("house"):
+            args[name] = 1  # house parameters reject anything but 1/2 or Commons/Lords
+        elif prop_type == "string":
             args[name] = "test"
         elif prop_type == "integer" or prop_type == "number":
             args[name] = 1

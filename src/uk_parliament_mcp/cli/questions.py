@@ -43,7 +43,7 @@ def get_recently_tabled_edms(
     Early Day Motions are formal political statements used by MPs to express opinions,
     build cross-party support, and raise issues. Use for tracking political sentiment.
     """
-    url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotions/list?parameters.orderBy=DateTabledDesc&skip=0&take={take}"
+    url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotions/list?parameters.orderBy=DateTabledDesc&parameters.skip=0&parameters.take={take}"
     output_result(url, pretty, data_only, output_format, fields, raw)
 
 
@@ -215,9 +215,9 @@ def search_oral_questions(
     url = build_url(
         f"{ORAL_QUESTIONS_API_BASE}/oralquestions/list",
         {
-            "parameters.answeringBodyId": answering_body_id,
-            "parameters.askingMemberId": asking_member_id,
-            "parameters.questionStatus": question_status,
+            "parameters.answeringBodyIds": answering_body_id,
+            "parameters.askingMemberIds": asking_member_id,
+            "parameters.statuses": question_status,
             "parameters.questionType": question_type,
             "parameters.answeringDateStart": answering_date_start,
             "parameters.answeringDateEnd": answering_date_end,
@@ -296,7 +296,7 @@ def search_written_questions(
             "searchTerm": search_term,
             "askingMemberId": asking_member_id,
             "answeringMemberId": answering_member_id,
-            "answeringBodyId": answering_body_id,
+            "answeringBodies": answering_body_id,
             "answered": answered,
             "questionStatus": question_status,
             "includeWithdrawn": include_withdrawn,
@@ -404,8 +404,8 @@ def search_written_statements(
         f"{WRITTEN_QUESTIONS_API_BASE}/writtenstatements/statements",
         {
             "searchTerm": search_term,
-            "memberId": member_id,
-            "answeringBodyId": answering_body_id,
+            "members": member_id,
+            "answeringBodies": answering_body_id,
             "madeWhenFrom": made_from,
             "madeWhenTo": made_to,
             "house": house,

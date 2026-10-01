@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import BILLS_API_BASE
+from uk_parliament_mcp.config import BILLS_API_BASE, house_name
 from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
@@ -13,7 +13,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_recently_updated_bills(take: int = 10) -> str:
-        """Get most recently updated bills and current legislative activity | recent bills, new legislation, latest laws, parliamentary bills, legislative updates, current proposals | Use for tracking new legislation, monitoring bill progress, or finding recently introduced/updated laws | Returns bill titles, stages, sponsors, dates, and current status | Data freshness: updated frequently
+        """Get most recently updated bills and current legislative activity | recent bills, new legislation, latest laws, parliamentary bills, legislative updates, current proposals | Use for tracking new legislation, monitoring bill progress, or finding recently introduced/updated laws | Returns bill titles, stages, sponsors, dates, and current status | Data freshness: updated frequently See also: search_bills, get_bill_overview.
 
         Args:
             take: Number of bills to return. Default: 10, recommended max: 50. Higher numbers may slow response.
@@ -29,7 +29,7 @@ def register_tools(mcp: FastMCP) -> None:
         search_term: str,
         member_id: int | None = None,
     ) -> str:
-        """Search for parliamentary bills by title, subject, or keyword. Use when researching proposed legislation, finding bills on specific topics, or tracking legislative progress.
+        """Search for parliamentary bills by title, subject, or keyword. Use when researching proposed legislation, finding bills on specific topics, or tracking legislative progress. See also: get_bill_overview, get_recently_updated_bills, search_acts_of_parliament.
 
         Args:
             search_term: Search term for bill titles or content (e.g. 'environment', 'health', 'finance').
@@ -63,7 +63,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_bill_by_id(bill_id: int) -> str:
-        """Get detailed information about a specific bill by ID. Use when you need comprehensive bill details including title, sponsors, stages, summary, and current status.
+        """Get detailed information about a specific bill by ID. Use when you need comprehensive bill details including title, sponsors, stages, summary, and current status. See also: get_bill_overview, get_bill_stages, get_bill_committees.
 
         Args:
             bill_id: Unique bill ID number.
@@ -80,7 +80,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int | None = None,
         take: int | None = None,
     ) -> str:
-        """Get all stages of a specific bill by bill ID. Use when tracking a bill's progress through Parliament, understanding its legislative journey, or finding specific stages like Committee Stage or Third Reading.
+        """Get all stages of a specific bill by bill ID. Use when tracking a bill's progress through Parliament, understanding its legislative journey, or finding specific stages like Committee Stage or Third Reading. See also: get_bill_stage_details, get_bill_stage_amendments, get_bill_committees.
 
         Args:
             bill_id: Bill ID to get stages for.
@@ -121,7 +121,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int | None = None,
         take: int | None = None,
     ) -> str:
-        """Get all amendments for a specific bill stage. Use when researching proposed changes to legislation, tracking amendment activity, or understanding what modifications are being suggested to a bill.
+        """Get all amendments for a specific bill stage. Use when researching proposed changes to legislation, tracking amendment activity, or understanding what modifications are being suggested to a bill. See also: get_amendment_by_id, get_bill_stage_ping_pong_items.
 
         Args:
             bill_id: Bill ID.
@@ -228,7 +228,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_bill_publications(bill_id: int) -> str:
-        """Get all publications for a specific bill. Use when researching bill documents, impact assessments, explanatory notes, or tracking document versions throughout the legislative process.
+        """Get all publications for a specific bill. Use when researching bill documents, impact assessments, explanatory notes, or tracking document versions throughout the legislative process. See also: get_bill_stage_publications, get_publication_document.
 
         Args:
             bill_id: Bill ID to get publications for.
@@ -354,16 +354,16 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_sittings(
-        house: str | None = None,
+        house: int | str | None = None,
         date_from: str | None = None,
         date_to: str | None = None,
         skip: int | None = None,
         take: int | None = None,
     ) -> str:
-        """Get parliamentary sittings with optional filtering by house and date range. Use when researching when Parliament was in session, finding specific sitting dates, or tracking parliamentary activity.
+        """Get parliamentary sittings with optional filtering by house and date range. Use when researching when Parliament was in session, finding specific sitting dates, or tracking parliamentary activity. See also: get_sitting_dates, get_hansard_calendar.
 
         Args:
-            house: Optional: house name ('Commons' or 'Lords').
+            house: Optional: 'Commons' or 'Lords' (1 or 2 also accepted).
             date_from: Optional: start date in YYYY-MM-DD format.
             date_to: Optional: end date in YYYY-MM-DD format.
             skip: Optional: number of records to skip (for pagination).
@@ -372,6 +372,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Parliamentary sittings matching the criteria.
         """
+        house = house_name(house)
         url = build_url(
             f"{BILLS_API_BASE}/Sittings",
             {

@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import COMMITTEES_API_BASE
+from uk_parliament_mcp.config import COMMITTEES_API_BASE, house_id
 from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
@@ -13,7 +13,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_committee_meetings(from_date: str, to_date: str) -> str:
-        """Find committee meetings and hearings by date range | committee meetings, parliamentary hearings, committee schedule, committee calendar, when committees meet | Use for finding committee schedules, planning attendance, or researching past committee activity | Returns meeting details including committees, dates, times, and topics | Covers both Commons and Lords committees
+        """Find committee meetings and hearings by date range | committee meetings, parliamentary hearings, committee schedule, committee calendar, when committees meet | Use for finding committee schedules, planning attendance, or researching past committee activity | Returns meeting details including committees, dates, times, and topics | Covers both Commons and Lords committees See also: get_events, get_committees_next_events.
 
         Args:
             from_date: Start date. Format: YYYY-MM-DD. Example: 2024-01-15
@@ -27,7 +27,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_committees(search_term: str) -> str:
-        """Search for parliamentary committees by name or subject area. Use when you need to find which committee covers a specific policy area or when researching committee work.
+        """Search for parliamentary committees by name or subject area. Use when you need to find which committee covers a specific policy area or when researching committee work. See also: get_committee_summary, get_committee_by_id, get_committee_bills.
 
         Args:
             search_term: Search term for committee names or subject areas (e.g. 'Treasury', 'Health', 'Defence').
@@ -54,7 +54,7 @@ def register_tools(mcp: FastMCP) -> None:
         include_banners: bool = False,
         show_on_website_only: bool = True,
     ) -> str:
-        """Get comprehensive committee profile and membership details | committee information, committee members, committee purpose, parliamentary committee, scrutiny committee | Use for understanding committee roles, finding committee members, or researching committee activities | Returns full committee details including purpose, members, departments scrutinized, and contact information
+        """Get comprehensive committee profile and membership details | committee information, committee members, committee purpose, parliamentary committee, scrutiny committee | Use for understanding committee roles, finding committee members, or researching committee activities | Returns full committee details including purpose, members, departments scrutinized, and contact information See also: get_committee_summary, get_committee_members, get_committee_bills.
 
         Args:
             committee_id: Committee ID. Required: get from committee search first. Example: 739
@@ -252,7 +252,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int = 0,
         take: int = 30,
     ) -> str:
-        """Search for committee publications including reports, government responses, and other documents. Use when researching committee outputs, finding reports on specific topics, or tracking publication dates and paper numbers.
+        """Search for committee publications including reports, government responses, and other documents. Use when researching committee outputs, finding reports on specific topics, or tracking publication dates and paper numbers. See also: get_publication_by_id, get_committee_publications_summary.
 
         Args:
             search_term: Optional: search term for publication titles or content.
@@ -313,7 +313,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int = 0,
         take: int = 30,
     ) -> str:
-        """Search for written evidence submissions to committees. Use when researching stakeholder submissions, witness statements, or public input to committee inquiries. Can filter by committee, business, witness names, or publication dates.
+        """Search for written evidence submissions to committees. Use when researching stakeholder submissions, witness statements, or public input to committee inquiries. Can filter by committee, business, witness names, or publication dates. See also: get_written_evidence_by_id, get_oral_evidence.
 
         Args:
             committee_business_id: Optional: committee business ID to filter by.
@@ -354,7 +354,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int = 0,
         take: int = 30,
     ) -> str:
-        """Search for oral evidence sessions from committee hearings. Use when researching witness testimonies, committee hearings, or transcripts from evidence sessions. Can filter by committee, business, witness names, or meeting dates.
+        """Search for oral evidence sessions from committee hearings. Use when researching witness testimonies, committee hearings, or transcripts from evidence sessions. Can filter by committee, business, witness names, or meeting dates. See also: get_oral_evidence_by_id, get_written_evidence.
 
         Args:
             committee_business_id: Optional: committee business ID to filter by.
@@ -399,7 +399,7 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Search for committee business (inquiries, investigations) | committee inquiries, investigations, call for evidence |
         Use to find committee inquiries by topic, status, or whether accepting evidence.
-        Returns committee business items matching the criteria.
+        Returns committee business items matching the criteria. See also: get_committee_business_by_id, get_bill_committees.
 
         Args:
             search_term: Optional: search term for business titles or content.
@@ -440,7 +440,7 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Get detailed information about a specific committee business item | inquiry details, investigation details |
         Use when you need complete details about a specific inquiry or investigation.
-        Returns full business details including evidence calls and reports.
+        Returns full business details including evidence calls and reports. See also: get_committee_business_publications_summary, get_bill_committees.
 
         Args:
             business_id: Committee business ID.
@@ -469,7 +469,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_committees_next_events(
-        house: int | None = None,
+        house: int | str | None = None,
         event_from_date: str | None = None,
         skip: int = 0,
         take: int = 30,
@@ -479,7 +479,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns list of committees with their next scheduled event.
 
         Args:
-            house: Optional: filter by house (1 = Commons, 2 = Lords).
+            house: Optional: filter by house - 1 or 'Commons', 2 or 'Lords'.
             event_from_date: Optional: start date in YYYY-MM-DD format (default today).
             skip: Number of records to skip (for pagination).
             take: Number of records to return (default 30).
@@ -487,6 +487,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Committees with their next scheduled events.
         """
+        house = house_id(house)
         url = build_url(
             f"{COMMITTEES_API_BASE}/Committees/NextEvent",
             {
@@ -584,7 +585,7 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Get committee memberships for one or more members | member committees, MP committees |
         Use to find which committees a member serves on.
-        Returns committee memberships for the specified members.
+        Returns committee memberships for the specified members. See also: get_committee_members.
 
         Args:
             member_ids: Comma-separated list of member IDs (e.g. '4514' or '4514,172').
@@ -754,7 +755,7 @@ def register_tools(mcp: FastMCP) -> None:
         search_term: str | None = None,
         start_date_from: str | None = None,
         start_date_to: str | None = None,
-        house: int | None = None,
+        house: int | str | None = None,
         location_id: int | None = None,
         event_type_id: int | None = None,
         include_activity_attendees: bool = False,
@@ -770,7 +771,7 @@ def register_tools(mcp: FastMCP) -> None:
             search_term: Optional: search term for activity titles or content (min 2 chars).
             start_date_from: Optional: start date from in YYYY-MM-DD format.
             start_date_to: Optional: start date to in YYYY-MM-DD format.
-            house: Optional: filter by house (1 = Commons, 2 = Lords).
+            house: Optional: filter by house - 1 or 'Commons', 2 or 'Lords'.
             location_id: Optional: location ID to filter events.
             event_type_id: Optional: filter by event type ID.
             include_activity_attendees: Include attendees with each activity. Default: false.
@@ -781,6 +782,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Event activities matching the specified criteria.
         """
+        house = house_id(house)
         url = build_url(
             f"{COMMITTEES_API_BASE}/Events/Activities",
             {

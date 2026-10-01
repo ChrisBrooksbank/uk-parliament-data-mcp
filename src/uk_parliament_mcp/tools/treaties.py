@@ -2,7 +2,7 @@
 
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import TREATIES_API_BASE
+from uk_parliament_mcp.config import TREATIES_API_BASE, house_name
 from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
@@ -11,7 +11,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_treaties(search_text: str) -> str:
-        """Search UK international treaties and agreements under parliamentary scrutiny | treaties, international agreements, trade deals, diplomatic treaties, international law, bilateral agreements | Use for researching international relations, trade agreements, or diplomatic commitments | Returns treaty details including titles, countries involved, and parliamentary scrutiny status
+        """Search UK international treaties and agreements under parliamentary scrutiny | treaties, international agreements, trade deals, diplomatic treaties, international law, bilateral agreements | Use for researching international relations, trade agreements, or diplomatic commitments | Returns treaty details including titles, countries involved, and parliamentary scrutiny status See also: search_treaties_advanced, get_treaty, get_treaty_business_items.
 
         Args:
             search_text: Search term for treaties. Examples: 'trade', 'EU', 'climate', 'Brexit'. Searches titles and content.
@@ -31,7 +31,7 @@ def register_tools(mcp: FastMCP) -> None:
         debate_scheduled: bool | None = None,
         motions_tabled: bool | None = None,
         committee_raised_concerns: bool | None = None,
-        house: str | None = None,
+        house: int | str | None = None,
         skip: int = 0,
         take: int = 20,
     ) -> str:
@@ -45,13 +45,14 @@ def register_tools(mcp: FastMCP) -> None:
             debate_scheduled: Optional: filter to treaties where debate has been scheduled.
             motions_tabled: Optional: filter to treaties where motions have been tabled.
             committee_raised_concerns: Optional: filter to treaties where a committee has raised concerns.
-            house: Optional: 'Commons' or 'Lords'.
+            house: Optional: 'Commons' or 'Lords' (1 or 2 also accepted).
             skip: Number of records to skip (for pagination).
             take: Number of records to return (default 20).
 
         Returns:
             Treaties matching the specified filters with scrutiny status.
         """
+        house = house_name(house)
         url = build_url(
             f"{TREATIES_API_BASE}/Treaty",
             {

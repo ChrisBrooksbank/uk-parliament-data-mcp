@@ -40,6 +40,15 @@ jobs:
       - name: Build executable
         run: python scripts/build-exe.py
 
+      - name: Smoke-test executable
+        shell: bash
+        run: |
+          "dist/${{ matrix.exe_name }}" --help
+          "dist/${{ matrix.exe_name }}" guide --help
+          "dist/${{ matrix.exe_name }}" composite --help
+          # A real request: fails if the HTTP stack was left out of the bundle
+          "dist/${{ matrix.exe_name }}" bills types --format json | grep -q '"items"'
+
       - name: Rename artifact
         shell: bash
         run: mv "dist/${{ matrix.exe_name }}" "dist/${{ matrix.artifact }}"

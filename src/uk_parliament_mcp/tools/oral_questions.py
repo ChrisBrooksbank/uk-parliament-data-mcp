@@ -13,7 +13,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_recently_tabled_edms(take: int = 10) -> str:
-        """Get recently tabled Early Day Motions - formal political statements | EDMs, political motions, backbench initiatives, MP opinions, parliamentary statements, political positions, cross-party support | Use for tracking political sentiment, finding MP stances on issues, monitoring backbench activity, or researching political movements | Returns recent EDMs with titles, sponsors, supporters, and tabling dates | Data freshness: updated daily
+        """Get recently tabled Early Day Motions - formal political statements | EDMs, political motions, backbench initiatives, MP opinions, parliamentary statements, political positions, cross-party support | Use for tracking political sentiment, finding MP stances on issues, monitoring backbench activity, or researching political movements | Returns recent EDMs with titles, sponsors, supporters, and tabling dates | Data freshness: updated daily See also: search_early_day_motions.
 
         Args:
             take: Number of EDMs to return. Default: 10, recommended max: 50. Recent motions returned first.
@@ -21,7 +21,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Recent EDMs with titles, sponsors, supporters, and tabling dates.
         """
-        url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotions/list?parameters.orderBy=DateTabledDesc&skip=0&take={take}"
+        url = f"{ORAL_QUESTIONS_API_BASE}/EarlyDayMotions/list?parameters.orderBy=DateTabledDesc&parameters.skip=0&parameters.take={take}"
         return await get_result(url)
 
     @mcp.tool()
@@ -37,7 +37,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int = 0,
         take: int = 25,
     ) -> str:
-        """Search EDMs by topic | Early Day Motions, backbench motions, MP opinions, prayers against SIs | Use to find motions on specific issues, by member, or withdrawn motions | Returns EDMs with sponsors and signature counts
+        """Search EDMs by topic | Early Day Motions, backbench motions, MP opinions, prayers against SIs | Use to find motions on specific issues, by member, or withdrawn motions | Returns EDMs with sponsors and signature counts See also: get_early_day_motion, edms_for_member_id, get_recently_tabled_edms.
 
         Args:
             search_term: Optional: search term for EDM topics or content.
@@ -76,7 +76,7 @@ def register_tools(mcp: FastMCP) -> None:
         answering_date_start: str,
         answering_date_end: str,
     ) -> str:
-        """Get scheduled oral question times for ministers in Parliament. Use when you want to know when specific departments will answer questions or when particular topics will be discussed.
+        """Get scheduled oral question times for ministers in Parliament. Use when you want to know when specific departments will answer questions or when particular topics will be discussed. See also: search_oral_questions.
 
         Args:
             answering_date_start: Start date for question times in YYYY-MM-DD format.
@@ -113,12 +113,12 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Search oral questions | PQs, question time, oral PQs, minister questions |
         Search oral parliamentary questions (not EDMs) |
-        Returns list of oral questions with details
+        Returns list of oral questions with details See also: search_oral_question_times, search_written_questions.
 
         Args:
             answering_body_id: Filter by department/body answering (0 for all).
             asking_member_id: Filter by member asking (0 for all).
-            question_status: Filter by status (empty for all).
+            question_status: Filter by status, e.g. 'ToBeAsked', 'Withdrawn', 'Unstarred', 'Transferred', 'Submitted' (empty for all).
             skip: Number of results to skip.
             take: Number of results to return.
 
@@ -127,11 +127,11 @@ def register_tools(mcp: FastMCP) -> None:
         """
         params = []
         if answering_body_id:
-            params.append(f"parameters.answeringBodyId={answering_body_id}")
+            params.append(f"parameters.answeringBodyIds={answering_body_id}")
         if asking_member_id:
-            params.append(f"parameters.askingMemberId={asking_member_id}")
+            params.append(f"parameters.askingMemberIds={asking_member_id}")
         if question_status:
-            params.append(f"parameters.questionStatus={quote(question_status)}")
+            params.append(f"parameters.statuses={quote(question_status)}")
         params.append(f"parameters.skip={skip}")
         params.append(f"parameters.take={take}")
         query = "&".join(params)

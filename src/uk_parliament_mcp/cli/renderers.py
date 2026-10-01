@@ -802,43 +802,10 @@ def render_check_vote(result_json: str) -> None:
 
     console.print(Panel(header_text, title="[bold]Vote Check[/bold]", border_style="blue"))
 
-    # Divisions table
-    divisions = data.get("divisions", {})
-    if isinstance(divisions, dict):
-        div_items = divisions.get("items", divisions.get("results", []))
-        if not isinstance(div_items, list):
-            div_items = []
-    elif isinstance(divisions, list):
-        div_items = divisions
-    else:
-        div_items = []
-
-    if div_items:
-        table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
-        table.add_column("ID", style="cyan", width=8)
-        table.add_column("Title", ratio=1)
-        table.add_column("Date", width=10)
-        table.add_column("Ayes", width=6, justify="right")
-        table.add_column("Noes", width=6, justify="right")
-        for div in div_items[:20]:
-            if isinstance(div, dict):
-                div_id = div.get("DivisionId", div.get("divisionId", ""))
-                title = str(div.get("Title", div.get("title", "")))
-                date = str(div.get("Date", div.get("date", "")))[:10]
-                ayes = str(div.get("AyeCount", div.get("ayeCount", "")))
-                noes = str(div.get("NoCount", div.get("noCount", "")))
-                div_text = Text(str(div_id))
-                if div_id:
-                    div_text.stylize(
-                        f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}"
-                    )
-                table.add_row(div_text, title, date, ayes, noes)
-        if table.row_count > 0:
-            console.print(Panel(table, title="[bold]Divisions[/bold]", border_style="dim"))
-        else:
-            console.print("[dim]No divisions found for this topic[/dim]")
-    else:
-        console.print("[dim]No divisions found for this topic[/dim]")
+    house = (member_info.get("latestHouseMembership") or {}).get("house")
+    console.print(_member_votes_panel(data.get("votes") or [], house, "Votes"))
+    for suggestion in data.get("suggestions") or []:
+        console.print(f"[dim]- {suggestion}[/dim]")
 
 
 def render_bill_overview(result_json: str) -> None:
@@ -1285,48 +1252,8 @@ def render_my_mp(result_json: str) -> None:
     # --- Topic votes (only if --votes was provided) ---
     topic_votes = data.get("topic_votes")
     topic_searched = data.get("topic_searched", "")
-    if topic_votes is not None:
-        if isinstance(topic_votes, dict):
-            div_items = topic_votes.get("items", topic_votes.get("results", []))
-            if not isinstance(div_items, list):
-                div_items = []
-        elif isinstance(topic_votes, list):
-            div_items = topic_votes
-        else:
-            div_items = []
-
-        if div_items:
-            table = Table(
-                show_header=True, header_style="bold", expand=True, row_styles=["", "dim"]
-            )
-            table.add_column("ID", style="cyan", width=8)
-            table.add_column("Title", ratio=1)
-            table.add_column("Date", width=10)
-            table.add_column("Ayes", width=6, justify="right")
-            table.add_column("Noes", width=6, justify="right")
-            for div in div_items[:20]:
-                if isinstance(div, dict):
-                    div_id = div.get("DivisionId", div.get("divisionId", ""))
-                    title = str(div.get("Title", div.get("title", "")))
-                    date = str(div.get("Date", div.get("date", "")))[:10]
-                    ayes = str(div.get("AyeCount", div.get("ayeCount", "")))
-                    noes = str(div.get("NoCount", div.get("noCount", "")))
-                    div_text = Text(str(div_id))
-                    if div_id:
-                        div_text.stylize(
-                            f"link https://votes.parliament.uk/Votes/Commons/Division/{div_id}"
-                        )
-                    table.add_row(div_text, title, date, ayes, noes)
-            if table.row_count > 0:
-                panel_title = (
-                    f'[bold]Votes on "{topic_searched}"[/bold]'
-                    if topic_searched
-                    else "[bold]Topic Votes[/bold]"
-                )
-                console.print(Panel(table, title=panel_title, border_style="dim"))
-        else:
-            if topic_searched:
-                console.print(f'[dim]No divisions found for "{topic_searched}"[/dim]')
+    if isinstance(topic_votes, list):
+        console.print(_member_votes_panel(topic_votes, 1, f'Votes on "{topic_searched}"'))
 
 
 # ---------------------------------------------------------------------------
@@ -1996,3 +1923,301 @@ def render_digest(result_json: str) -> None:
     has_any = any(_section_has_data(data.get(s)) for s in sections)
     if not has_any:
         console.print("[dim]No parliamentary activity found for this date/period.[/dim]")
+
+
+# ---------------------------------------------------------------------------
+# Composite command helpers and renderers
+# ---------------------------------------------------------------------------
+
+_VOTE_STYLES = {
+    "Aye": "green",
+    "Content": "green",
+    "No": "red",
+    "Not Content": "red",
+    "Teller": "yellow",
+}
+
+
+def _division_link(division_id: Any, house: Any) -> Text:
+    text = Text(str(division_id or ""))
+    if division_id:
+        chamber = "Lords" if house in (2, "Lords") else "Commons"
+        text.stylize(f"link https://votes.parliament.uk/Votes/{chamber}/Division/{division_id}")
+    return text
+
+
+def _member_votes_panel(votes: list[dict[str, Any]], house: Any, title: str) -> Panel | Text:
+    """Table of normalised member votes (from tools.composite.normalise_member_votes)."""
+    rows = [v for v in votes if isinstance(v, dict)]
+    if not rows:
+        return Text("No matching divisions found", style="dim")
+    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+    table.add_column("ID", style="cyan", width=8)
+    table.add_column("Title", ratio=1)
+    table.add_column("Date", width=10)
+    table.add_column("Vote", width=11)
+    table.add_column("For", width=5, justify="right")
+    table.add_column("Against", width=7, justify="right")
+    for v in rows[:25]:
+        vote = str(v.get("vote", ""))
+        table.add_row(
+            _division_link(v.get("division_id"), house),
+            str(v.get("title", "")),
+            str(v.get("date", "")),
+            Text(vote, style=_VOTE_STYLES.get(vote, "")),
+            str(v.get("ayes", "")),
+            str(v.get("noes", "")),
+        )
+    return Panel(table, title=f"[bold]{title}[/bold]", border_style="dim")
+
+
+def _print_error_and_suggestions(console: Console, data: dict[str, Any]) -> bool:
+    """Print an error (if any) and suggestions. Returns True when there was an error."""
+    if data.get("error"):
+        console.print(f"[red]{data['error']}[/red]")
+    for suggestion in data.get("suggestions") or []:
+        console.print(f"[dim]- {suggestion}[/dim]")
+    return bool(data.get("error"))
+
+
+def _load(result_json: str) -> dict[str, Any] | None:
+    try:
+        data = json.loads(result_json)
+    except (json.JSONDecodeError, TypeError):
+        Console().print("[red]Failed to parse result[/red]")
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _member_label(member: dict[str, Any] | None) -> str:
+    member = member or {}
+    party = f" ({member['party']})" if member.get("party") else ""
+    return f"{member.get('name') or 'Unknown'}{party}"
+
+
+def render_compare_votes(result_json: str) -> None:
+    """Render a two-member vote comparison."""
+    data = _load(result_json)
+    if data is None:
+        return
+    console = Console()
+    members = data.get("members") or {}
+    if _print_error_and_suggestions(console, data):
+        return
+    summary = data.get("summary") or {}
+    header = Text()
+    header.append(f"A: {_member_label(members.get('a'))}\n", style="bold")
+    header.append(f"B: {_member_label(members.get('b'))}", style="bold")
+    if data.get("topic_searched"):
+        header.append(f"\nTopic: {data['topic_searched']}", style="dim")
+    rate = summary.get("agreement_rate")
+    header.append(
+        f"\n\nBoth voted in {summary.get('divisions_both_voted_in', 0)} divisions: "
+        f"agreed {summary.get('agreed', 0)}, disagreed {summary.get('disagreed', 0)}"
+        + (f" ({rate:.0%} agreement)" if isinstance(rate, (int, float)) else "")
+    )
+    console.print(Panel(header, title="[bold]Vote Comparison[/bold]", border_style="blue"))
+
+    house = (members.get("a") or {}).get("house")
+    divisions = [d for d in data.get("divisions") or [] if isinstance(d, dict)]
+    if divisions:
+        table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+        table.add_column("ID", style="cyan", width=8)
+        table.add_column("Title", ratio=1)
+        table.add_column("Date", width=10)
+        table.add_column("A", width=11)
+        table.add_column("B", width=11)
+        for d in divisions[:30]:
+            style = "green" if d.get("agree") else "red"
+            table.add_row(
+                _division_link(d.get("division_id"), house),
+                str(d.get("title", "")),
+                str(d.get("date", "")),
+                Text(str(d.get("a_vote", "")), style=style),
+                Text(str(d.get("b_vote", "")), style=style),
+            )
+        console.print(Panel(table, title="[bold]Shared Divisions[/bold]", border_style="dim"))
+    console.print(f"[dim]{summary.get('note', '')}[/dim]")
+
+
+def _bills_table(bills: list[dict[str, Any] | None]) -> Table:
+    table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+    table.add_column("ID", style="cyan", width=6)
+    table.add_column("Title", ratio=1)
+    table.add_column("Stage", width=22)
+    table.add_column("Updated", width=10)
+    for bill in bills:
+        if not bill:
+            continue
+        bill_id = bill.get("bill_id")
+        id_text = Text(str(bill_id or ""))
+        if bill_id:
+            id_text.stylize(f"link https://bills.parliament.uk/bills/{bill_id}")
+        stage = "Act" if bill.get("is_act") else str(bill.get("current_stage") or "")
+        table.add_row(
+            id_text, str(bill.get("short_title", "")), stage, str(bill.get("last_update", ""))
+        )
+    return table
+
+
+def render_member_bills(result_json: str) -> None:
+    """Render the bills a member has sponsored."""
+    data = _load(result_json)
+    if data is None:
+        return
+    console = Console()
+    title = f"Bills sponsored by {_member_label(data.get('member'))} ({data.get('total_bills', 0)})"
+    bills = data.get("bills") or []
+    if bills:
+        console.print(
+            Panel(_bills_table(bills), title=f"[bold]{title}[/bold]", border_style="blue")
+        )
+    else:
+        console.print(f"[bold]{title}[/bold]")
+    _print_error_and_suggestions(console, data)
+
+
+def render_bill_committees(result_json: str) -> None:
+    """Render the committees that examined a bill."""
+    data = _load(result_json)
+    if data is None:
+        return
+    console = Console()
+    if _print_error_and_suggestions(console, data):
+        return
+    console.print(
+        Panel(
+            Text(str(data.get("short_title", "")), style="bold"),
+            title=f"[bold]Committees on bill {data.get('bill_id')}[/bold]",
+            border_style="blue",
+        )
+    )
+    stages = data.get("committee_stages") or []
+    if stages:
+        table = Table(show_header=True, header_style="bold", expand=True)
+        table.add_column("Stage", ratio=1)
+        table.add_column("House", width=8)
+        table.add_column("Sittings", ratio=1)
+        for stage in stages:
+            sittings = stage.get("sittings") or []
+            span = f"{sittings[0]} to {sittings[-1]} ({len(sittings)})" if sittings else ""
+            table.add_row(str(stage.get("stage", "")), str(stage.get("house", "")), span)
+        console.print(Panel(table, title="[bold]Committee Stages[/bold]", border_style="dim"))
+    business = data.get("committee_business") or []
+    if business:
+        table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+        table.add_column("Committee", ratio=1)
+        table.add_column("Business", ratio=1)
+        table.add_column("Opened", width=10)
+        table.add_column("Link", width=9)
+        for item in business:
+            committee = item.get("committee") or {}
+            confirmed = data.get("bill_id") in (item.get("linked_bill_ids") or [])
+            table.add_row(
+                str(committee.get("name") or "-"),
+                str(item.get("title", "")),
+                str(item.get("open_date") or ""),
+                Text("confirmed" if confirmed else "title", style="green" if confirmed else "dim"),
+            )
+        console.print(Panel(table, title="[bold]Committee Business[/bold]", border_style="dim"))
+
+
+def render_committee_bills(result_json: str) -> None:
+    """Render the bills a committee has examined."""
+    data = _load(result_json)
+    if data is None:
+        return
+    console = Console()
+    committee = data.get("committee") or {}
+    title = (
+        f"Bills examined by {committee.get('name', 'committee')} "
+        f"({data.get('total_legislative_scrutiny', 0)} scrutiny items)"
+    )
+    items = data.get("bills_examined") or []
+    if items:
+        table = Table(show_header=True, header_style="bold", expand=True, row_styles=["", "dim"])
+        table.add_column("Opened", width=10)
+        table.add_column("Business", ratio=1)
+        table.add_column("Bill", ratio=1)
+        table.add_column("Stage", width=22)
+        for item in items:
+            bill = item.get("bill") or {}
+            stage = "Act" if bill.get("is_act") else str(bill.get("current_stage") or "")
+            bill_id = bill.get("bill_id")
+            bill_text = Text(str(bill.get("short_title") or "-"))
+            if bill_id:
+                bill_text.stylize(f"link https://bills.parliament.uk/bills/{bill_id}")
+            table.add_row(
+                str(item.get("open_date") or ""), str(item.get("title", "")), bill_text, stage
+            )
+        console.print(Panel(table, title=f"[bold]{title}[/bold]", border_style="blue"))
+    else:
+        console.print(f"[bold]{title}[/bold]")
+    _print_error_and_suggestions(console, data)
+
+
+def render_search_parliament(result_json: str) -> None:
+    """Render cross-API search results."""
+    data = _load(result_json)
+    if data is None:
+        return
+    console = Console()
+    totals = data.get("totals") or {}
+    console.print(
+        Panel(
+            Text(f"Search: {data.get('query', '')}", style="bold"),
+            title="[bold]Parliament Search[/bold]",
+            border_style="blue",
+        )
+    )
+    sections: list[tuple[str, str, list[str]]] = [
+        (
+            "Members",
+            "members",
+            [
+                f"{m.get('name')} ({m.get('party')}, {m.get('house')}) - id {m.get('member_id')}"
+                for m in data.get("members") or []
+            ],
+        ),
+        (
+            "Bills",
+            "bills",
+            [f"{b.get('short_title')} - id {b.get('bill_id')}" for b in data.get("bills") or []],
+        ),
+        (
+            "Committees",
+            "committees",
+            [
+                f"{c.get('name')} ({c.get('house')}) - id {c.get('id')}"
+                for c in data.get("committees") or []
+                if c
+            ],
+        ),
+        (
+            "Hansard debates",
+            "hansard_debates",
+            [
+                f"{d.get('date')} {d.get('house')}: {d.get('title')}"
+                for d in data.get("hansard_debates") or []
+            ],
+        ),
+        (
+            "Written questions",
+            "written_questions",
+            [
+                f"{q.get('date_tabled')} {q.get('heading')} ({q.get('answering_body')})"
+                for q in data.get("written_questions") or []
+            ],
+        ),
+    ]
+    for label, key, lines in sections:
+        total = totals.get(key)
+        heading = (
+            f"[bold]{label}[/bold] [dim]({total if total is not None else len(lines)} total)[/dim]"
+        )
+        console.print(heading)
+        for line in lines:
+            console.print(f"  {line}")
+        if not lines:
+            console.print("  [dim]none[/dim]")
+    _print_error_and_suggestions(console, data)

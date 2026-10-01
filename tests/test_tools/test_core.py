@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.tools import core
 from uk_parliament_mcp.tools.core import (
-    GOODBYE_PROMPT,
     GUIDANCE_CONTENT,
     QUICK_REFERENCE,
     SYSTEM_PROMPT,
@@ -79,10 +80,6 @@ class TestSystemPromptContent:
         """System prompt requires appending API URLs to responses."""
         assert "URL" in SYSTEM_PROMPT
 
-    def test_goodbye_prompt_removes_restrictions(self):
-        """Goodbye prompt removes MCP-specific restrictions."""
-        assert "no special restrictions" in GOODBYE_PROMPT
-
 
 class TestQuickReference:
     """Tests for quick reference content."""
@@ -99,7 +96,7 @@ class TestQuickReference:
         assert "members" in QUICK_REFERENCE
         assert "bills" in QUICK_REFERENCE
         assert "committees" in QUICK_REFERENCE
-        assert "votes" in QUICK_REFERENCE or "commons_votes" in QUICK_REFERENCE
+        assert "| votes |" in QUICK_REFERENCE
 
     def test_quick_reference_mentions_guidance_tools(self):
         """Quick reference points to parliament_guide and parliament_workflow."""
@@ -150,7 +147,7 @@ class TestParliamentGuide:
         """parliament_guide with 'all' returns comprehensive tool list."""
         content_list, _ = await mcp.call_tool("parliament_guide", {"topic": "all"})
         text = content_list[0].text
-        assert "205 tools" in text
+        assert "210 tools" in text
         assert "Members" in text
         assert "Bills" in text
         assert "Votes" in text
@@ -380,3 +377,26 @@ class TestParliamentPrompt:
         result = await mcp.get_prompt("parliament", {"topic": "BILLS"})
         text = result.messages[0].content.text
         assert "Bills Tools" in text
+
+
+class TestGetCliReference:
+    """get_cli_reference introspects the Typer app (regression: it once returned nothing)."""
+
+    async def _call(self, **arguments: str) -> dict:
+        from mcp.server.fastmcp import FastMCP
+
+        mcp = FastMCP(name="test")
+        core.register_tools(mcp)
+        result = await mcp.call_tool("get_cli_reference", arguments)
+        content = result[0] if isinstance(result, tuple) else result
+        return json.loads(content[0].text)
+
+    async def test_lists_all_groups(self):
+        data = await self._call()
+        assert data["total_commands"] > 150
+        assert "composite" in {g["name"] for g in data["groups"]}
+
+    async def test_group_filter(self):
+        data = await self._call(group="votes")
+        assert [g["name"] for g in data["groups"]] == ["votes"]
+        assert data["groups"][0]["commands"]

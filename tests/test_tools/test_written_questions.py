@@ -109,7 +109,7 @@ class TestSearchWrittenQuestions:
             call_url = mock.call_args[0][0]
             assert "searchTerm=NHS" in call_url
             assert "askingMemberId=123" in call_url
-            assert "answeringBodyId=456" in call_url
+            assert "answeringBodies=456" in call_url
             assert "answered=Answered" in call_url
             assert "tabledWhenFrom=2024-01-01" in call_url
             assert "tabledWhenTo=2024-12-31" in call_url
@@ -261,8 +261,8 @@ class TestSearchWrittenStatements:
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
             assert "searchTerm=economy" in call_url
-            assert "memberId=789" in call_url
-            assert "answeringBodyId=456" in call_url
+            assert "members=789" in call_url
+            assert "answeringBodies=456" in call_url
             assert "madeWhenFrom=2024-01-01" in call_url
             assert "madeWhenTo=2024-12-31" in call_url
             assert "house=Lords" in call_url

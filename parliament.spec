@@ -56,6 +56,10 @@ a = Analysis(
         "uk_parliament_mcp.cli.renderers",
         "uk_parliament_mcp.cli.utils",
         "uk_parliament_mcp.http_client",
+        # MCP tool modules whose guide text and composite logic the CLI reuses;
+        # they import mcp only for type checking
+        "uk_parliament_mcp.tools.core",
+        "uk_parliament_mcp.tools.composite",
     ],
     hookspath=[],
     hooksconfig={},
@@ -64,9 +68,8 @@ a = Analysis(
         # MCP server components (not needed for CLI)
         "uk_parliament_mcp.server",
         "uk_parliament_mcp.__main__",
-        "uk_parliament_mcp.tools",
         "mcp",
-        "anyio",
+        # (not anyio: httpx's async transport needs it)
         "starlette",
         "uvicorn",
         # Test frameworks

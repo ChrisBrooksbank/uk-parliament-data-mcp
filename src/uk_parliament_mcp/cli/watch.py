@@ -505,7 +505,7 @@ async def _run_watch(house: str | None = None, interval: int = 30) -> None:
             reader_thread.join(timeout=1.0)
 
 
-@app.callback(invoke_without_command=True)
+@app.command()
 def watch(
     house: str | None = typer.Argument(
         None,

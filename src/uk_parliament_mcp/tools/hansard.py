@@ -2,7 +2,7 @@
 
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import HANSARD_API_BASE
+from uk_parliament_mcp.config import HANSARD_API_BASE, house_id, house_name
 from uk_parliament_mcp.http_client import build_url, get_result
 
 
@@ -11,7 +11,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_hansard(
-        house: int,
+        house: int | str,
         start_date: str,
         end_date: str,
         search_term: str,
@@ -19,10 +19,10 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int = 0,
         take: int = 20,
     ) -> str:
-        """Search Hansard (official parliamentary record) for speeches and debates. Use when researching what was said in Parliament on specific topics, by specific members, or in specific time periods. House: 1=Commons, 2=Lords.
+        """Search Hansard (official parliamentary record) for speeches and debates. Use when researching what was said in Parliament on specific topics, by specific members, or in specific time periods. House: 1 or "Commons", 2 or "Lords". See also: search_hansard_full, search_hansard_contributions, search_parliament.
 
         Args:
-            house: House number: 1 for Commons, 2 for Lords.
+            house: House: 1 or 'Commons', 2 or 'Lords'.
             start_date: Start date in YYYY-MM-DD format.
             end_date: End date in YYYY-MM-DD format.
             search_term: Search term for speeches or debates (e.g. 'climate change', 'NHS').
@@ -33,6 +33,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Hansard records matching the search criteria.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/search/debates.json",
             {
@@ -51,7 +52,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_debate_by_id(debate_section_id: str) -> str:
         """Get full debate transcript | Hansard, speeches, contributions |
         Use after search_hansard to get complete debate with all member speeches.
-        Returns debate title, date, house, and all contributions.
+        Returns debate title, date, house, and all contributions. See also: get_debate_speakers, get_debate_divisions, get_member_hansard_contributions.
 
         Args:
             debate_section_id: External ID from search_hansard results.
@@ -85,7 +86,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_debate_divisions(debate_section_id: str) -> str:
         """Get votes that occurred during a debate | Hansard, divisions, voting |
         Use to find divisions (votes) that took place in a specific debate.
-        Returns list of divisions with aye/noe counts.
+        Returns list of divisions with aye/noe counts. See also: get_division_details, get_commons_division_by_id.
 
         Args:
             debate_section_id: External ID of debate section (from search_hansard).
@@ -121,19 +122,20 @@ def register_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     async def get_hansard_sitting_day(
         sitting_date: str,
-        house: int,
+        house: int | str,
     ) -> str:
         """Get full agenda/sections for a sitting day | Hansard, daily business, agenda |
         Use to see all debates and business for a specific day.
-        Returns all debate sections for that day.
+        Returns all debate sections for that day. See also: get_hansard_section_trees, get_hansard_calendar.
 
         Args:
             sitting_date: Date in YYYY-MM-DD format.
-            house: House number: 1 for Commons, 2 for Lords.
+            house: House: 1 or 'Commons', 2 or 'Lords'.
 
         Returns:
             All debate sections for that day.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/overview/sectionsforday.json",
             {
@@ -147,7 +149,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_hansard_calendar(
         year: int,
         month: int,
-        house: int,
+        house: int | str,
     ) -> str:
         """Get all sitting dates for a month | Hansard, calendar, sitting days |
         Use to discover which days have Hansard records available.
@@ -156,11 +158,12 @@ def register_tools(mcp: FastMCP) -> None:
         Args:
             year: Year (e.g. 2024).
             month: Month number (1-12).
-            house: House number: 1 for Commons, 2 for Lords.
+            house: House: 1 or 'Commons', 2 or 'Lords'.
 
         Returns:
             List of sitting dates for the month.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/overview/calendar.json",
             {
@@ -173,7 +176,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_hansard_full(
-        house: int | None = None,
+        house: int | str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         search_term: str | None = None,
@@ -183,10 +186,10 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Full search across all Hansard content types | Hansard, comprehensive search |
         Use for broad searches across debates, statements, questions, and petitions.
-        Returns mixed results from all Hansard content types.
+        Returns mixed results from all Hansard content types. See also: search_hansard, search_parliament.
 
         Args:
-            house: House number: 1 for Commons, 2 for Lords (optional).
+            house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
             start_date: Start date in YYYY-MM-DD format (optional).
             end_date: End date in YYYY-MM-DD format (optional).
             search_term: Search term for speeches or debates (optional).
@@ -197,6 +200,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Hansard records matching the search criteria across all types.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/search.json",
             {
@@ -214,7 +218,7 @@ def register_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     async def search_hansard_contributions(
         contribution_type: str,
-        house: int | None = None,
+        house: int | str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         search_term: str | None = None,
@@ -224,11 +228,11 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Search Hansard by contribution type | Hansard, spoken, written, interventions |
         Use to find specific types of parliamentary contributions.
-        Returns contributions of the specified type.
+        Returns contributions of the specified type. See also: get_member_contribution_summary, get_debate_by_id.
 
         Args:
             contribution_type: Type of contribution: 'Spoken', 'Written', 'Intervention', 'Question', 'Answer'.
-            house: House number: 1 for Commons, 2 for Lords (optional).
+            house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
             start_date: Start date in YYYY-MM-DD format (optional).
             end_date: End date in YYYY-MM-DD format (optional).
             search_term: Search term (optional).
@@ -239,6 +243,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Contributions of the specified type.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/search/contributions/{contribution_type}.json",
             {
@@ -256,7 +261,7 @@ def register_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     async def search_hansard_members(
         search_term: str,
-        house: int | None = None,
+        house: int | str | None = None,
         include_former: bool = True,
         include_current: bool = True,
         skip: int = 0,
@@ -268,7 +273,7 @@ def register_tools(mcp: FastMCP) -> None:
 
         Args:
             search_term: Name or partial name to search for.
-            house: House number: 1 for Commons, 2 for Lords (optional).
+            house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
             include_former: Include former members (default true).
             include_current: Include current members (default true).
             skip: Number of results to skip for pagination (default 0).
@@ -277,6 +282,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Members matching the search term.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/search/members.json",
             {
@@ -292,7 +298,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_hansard_divisions(
-        house: int | None = None,
+        house: int | str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         search_term: str | None = None,
@@ -302,10 +308,10 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Search for divisions (votes) in Hansard | Hansard, divisions, votes |
         Use to find recorded votes in Parliament.
-        Returns divisions matching the search criteria.
+        Returns divisions matching the search criteria. See also: search_commons_divisions, search_lords_divisions.
 
         Args:
-            house: House number: 1 for Commons, 2 for Lords (optional).
+            house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
             start_date: Start date in YYYY-MM-DD format (optional).
             end_date: End date in YYYY-MM-DD format (optional).
             search_term: Search term (optional).
@@ -316,6 +322,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Divisions matching the search criteria.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/search/divisions.json",
             {
@@ -389,7 +396,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_debate_by_title(
-        house: str,
+        house: int | str,
         date: str,
         section_title: str,
     ) -> str:
@@ -398,13 +405,14 @@ def register_tools(mcp: FastMCP) -> None:
         Returns the debate matching the title and date.
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
             date: Date in YYYY-MM-DD format.
             section_title: Title of the debate section.
 
         Returns:
             Debate matching the title and date.
         """
+        house = house_name(house)
         url = build_url(
             f"{HANSARD_API_BASE}/debates/topleveldebatebytitle.json",
             {
@@ -416,33 +424,35 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def get_hansard_last_sitting_date(house: str) -> str:
+    async def get_hansard_last_sitting_date(house: int | str) -> str:
         """Get the most recent sitting date with Hansard | Hansard, latest, most recent |
         Use to find the most recent day Parliament sat.
         Returns the last sitting date.
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
 
         Returns:
             Most recent sitting date.
         """
+        house = house_name(house)
         url = f"{HANSARD_API_BASE}/overview/lastsittingdate.json?house={house}"
         return await get_result(url)
 
     @mcp.tool()
-    async def get_hansard_linked_dates(house: str, date: str) -> str:
+    async def get_hansard_linked_dates(house: int | str, date: str) -> str:
         """Get previous and next sitting dates | Hansard, navigation, sitting dates |
         Use to navigate between sitting days.
         Returns previous and next sitting dates relative to given date.
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
             date: Date in YYYY-MM-DD format.
 
         Returns:
             Previous and next sitting dates.
         """
+        house = house_name(house)
         url = build_url(
             f"{HANSARD_API_BASE}/overview/linkedsittingdates.json",
             {
@@ -454,7 +464,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_hansard_section_trees(
-        house: str,
+        house: int | str,
         date: str,
         section: str,
     ) -> str:
@@ -463,13 +473,14 @@ def register_tools(mcp: FastMCP) -> None:
         Returns hierarchical tree of debate sections.
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
             date: Date in YYYY-MM-DD format.
             section: Section name (e.g. 'Debate', 'WestHall', 'Petitions', 'GEN'). Get valid names from get_hansard_sitting_day.
 
         Returns:
             Hierarchical structure of debates.
         """
+        house = house_name(house)
         url = build_url(
             f"{HANSARD_API_BASE}/overview/sectiontrees.json",
             {
@@ -482,7 +493,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_historic_sitting_days(
-        house: str | None = None,
+        house: int | str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         has_sitting_sections: bool | None = None,
@@ -490,7 +501,7 @@ def register_tools(mcp: FastMCP) -> None:
         """Search historic sitting days | historical Hansard, past sessions, sitting history | Use to find which days Parliament sat historically | Returns list of sitting days in date range
 
         Args:
-            house: Optional: 'Commons' or 'Lords'.
+            house: Optional: 'Commons' or 'Lords' (1 or 2 also accepted).
             start_date: Optional: start date in YYYY-MM-DD format.
             end_date: Optional: end date in YYYY-MM-DD format.
             has_sitting_sections: Optional: filter to days with available sitting sections.
@@ -498,6 +509,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             List of historic sitting days matching criteria.
         """
+        house = house_name(house)
         url = build_url(
             f"{HANSARD_API_BASE}/historicsittingdays",
             {
@@ -510,16 +522,17 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def get_historic_sitting_day(house: str, sitting_date: str) -> str:
+    async def get_historic_sitting_day(house: int | str, sitting_date: str) -> str:
         """Get details of a historic sitting day | historical Hansard, past session details | Use to get details of a specific historic sitting day | Returns sitting day details with sections
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
             sitting_date: Date in YYYY-MM-DD format.
 
         Returns:
             Details of the historic sitting day.
         """
+        house = house_name(house)
         url = f"{HANSARD_API_BASE}/historicsittingdays/{house}/{sitting_date}"
         return await get_result(url)
 
@@ -544,16 +557,17 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def get_hansard_pdfs_for_day(date: str, house: int) -> str:
+    async def get_hansard_pdfs_for_day(date: str, house: int | str) -> str:
         """Get PDF documents for a specific sitting day | Hansard, PDFs, daily documents | Use to retrieve official PDF transcripts for a parliamentary sitting day | Returns list of PDF links for that day
 
         Args:
             date: Date in YYYY-MM-DD format.
-            house: House number: 1 for Commons, 2 for Lords.
+            house: House: 1 or 'Commons', 2 or 'Lords'.
 
         Returns:
             List of PDF documents available for that sitting day.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/overview/pdfsforday.json",
             {
@@ -566,19 +580,20 @@ def register_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     async def get_hansard_speakers_for_day(
         date: str,
-        house: int,
+        house: int | str,
         section: str,
     ) -> str:
         """Get list of speakers for a specific sitting day section | Hansard, speakers, daily list | Use to find who spoke in a particular section of parliamentary business on a given day | Returns list of speakers for that section
 
         Args:
             date: Date in YYYY-MM-DD format.
-            house: House number: 1 for Commons, 2 for Lords.
+            house: House: 1 or 'Commons', 2 or 'Lords'.
             section: Section name (e.g. 'Debate', 'WestHall', 'Petitions', 'GEN').
 
         Returns:
             List of speakers for the specified day and section.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/overview/speakerslist/{date}/{house}.json",
             {"section": section},
@@ -587,7 +602,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_committee_debates(
-        house: int | None = None,
+        house: int | str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         search_term: str | None = None,
@@ -598,7 +613,7 @@ def register_tools(mcp: FastMCP) -> None:
         """Search committee debates in Hansard | Hansard, committees, select committee debates | Use to find debates and discussions from parliamentary committees | Returns committee debates matching the search criteria
 
         Args:
-            house: House number: 1 for Commons, 2 for Lords (optional).
+            house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
             start_date: Start date in YYYY-MM-DD format (optional).
             end_date: End date in YYYY-MM-DD format (optional).
             search_term: Search term (optional).
@@ -609,6 +624,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Committee debates matching the search criteria.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/search/committeedebates.json",
             {
@@ -625,7 +641,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_hansard_committees(
-        house: int | None = None,
+        house: int | str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         search_term: str | None = None,
@@ -635,7 +651,7 @@ def register_tools(mcp: FastMCP) -> None:
         """Search committees that appear in Hansard | Hansard, committee search, parliamentary committees | Use to find committees by name or keyword in Hansard records | Returns committees matching the search criteria
 
         Args:
-            house: House number: 1 for Commons, 2 for Lords (optional).
+            house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
             start_date: Start date in YYYY-MM-DD format (optional).
             end_date: End date in YYYY-MM-DD format (optional).
             search_term: Search term (optional).
@@ -645,6 +661,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Committees matching the search criteria.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/search/committees.json",
             {
@@ -660,7 +677,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_debate_by_column(
-        house: int | None = None,
+        house: int | str | None = None,
         column_number: int | None = None,
         volume_number: int | None = None,
         series_number: int | None = None,
@@ -668,7 +685,7 @@ def register_tools(mcp: FastMCP) -> None:
         """Get a debate by Hansard column number | Hansard, column reference, volume | Use when you have a Hansard column reference (e.g. from a citation) and need to find the debate | Returns the debate at the specified column
 
         Args:
-            house: House number: 1 for Commons, 2 for Lords (optional).
+            house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
             column_number: Hansard column number (optional).
             volume_number: Hansard volume number (optional).
             series_number: Hansard series number (optional).
@@ -676,6 +693,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Debate at the specified column reference.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/search/debatebycolumn.json",
             {
@@ -690,17 +708,18 @@ def register_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     async def get_debate_by_external_id(
         content_item_external_id: str,
-        house: int,
+        house: int | str,
     ) -> str:
         """Get a debate by its external content item ID | Hansard, external ID, debate lookup | Use when you have an external content item ID to retrieve the specific debate | Returns the debate matching the external ID
 
         Args:
             content_item_external_id: External content item ID.
-            house: House number: 1 for Commons, 2 for Lords.
+            house: House: 1 or 'Commons', 2 or 'Lords'.
 
         Returns:
             Debate matching the external content item ID.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/search/debatebyexternalid.json",
             {
@@ -712,7 +731,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_hansard_petitions(
-        house: int | None = None,
+        house: int | str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         search_term: str | None = None,
@@ -722,7 +741,7 @@ def register_tools(mcp: FastMCP) -> None:
         """Search petitions in Hansard | Hansard, petitions, parliamentary petitions | Use to find petitions presented in Parliament | Returns petitions matching the search criteria
 
         Args:
-            house: House number: 1 for Commons, 2 for Lords (optional).
+            house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
             start_date: Start date in YYYY-MM-DD format (optional).
             end_date: End date in YYYY-MM-DD format (optional).
             search_term: Search term (optional).
@@ -732,6 +751,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Petitions matching the search criteria.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/search/petitions.json",
             {
@@ -749,7 +769,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_hansard_timeline_stats(
         contribution_type: str | None = None,
         is_debates_search: bool | None = None,
-        house: int | None = None,
+        house: int | str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         search_term: str | None = None,
@@ -760,7 +780,7 @@ def register_tools(mcp: FastMCP) -> None:
         Args:
             contribution_type: Type of contribution to filter by (optional).
             is_debates_search: Whether to search debates only (optional).
-            house: House number: 1 for Commons, 2 for Lords (optional).
+            house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
             start_date: Start date in YYYY-MM-DD format (optional).
             end_date: End date in YYYY-MM-DD format (optional).
             search_term: Search term (optional).
@@ -769,6 +789,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Timeline statistics for contributions matching the criteria.
         """
+        house = house_id(house)
         url = build_url(
             f"{HANSARD_API_BASE}/timeline-stats.json",
             {

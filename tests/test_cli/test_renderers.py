@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from io import StringIO
+from typing import Any
 from unittest.mock import patch
 
 from rich.console import Console
@@ -267,34 +268,35 @@ class TestRenderCheckVote:
             "member_id": 1234,
             "member_info": {"nameDisplayAs": "Test MP"},
             "topic_searched": "climate",
-            "divisions": {
-                "items": [
-                    {
-                        "DivisionId": 456,
-                        "Title": "Climate Change Act",
-                        "Date": "2024-01-15",
-                        "AyeCount": 300,
-                        "NoCount": 200,
-                    }
-                ]
-            },
+            "votes": [
+                {
+                    "division_id": 456,
+                    "title": "Climate Change Act",
+                    "date": "2024-01-15",
+                    "vote": "Aye",
+                    "ayes": 300,
+                    "noes": 200,
+                }
+            ],
             "sources": {},
         }
         output = StringIO()
-        console = Console(file=output, force_terminal=True)
+        console = Console(file=output, force_terminal=True, width=150)
         with patch("uk_parliament_mcp.cli.renderers.Console", return_value=console):
             render_check_vote(json.dumps(data))
         text = output.getvalue()
         assert "Test MP" in text
         assert "Vote Check" in text
-        assert "Divisions" in text
+        assert "Climate Change Act" in text
+        assert "Aye" in text
 
     def test_renders_no_divisions(self) -> None:
         data = {
             "member_id": 1234,
             "member_info": {"nameDisplayAs": "Test MP"},
             "topic_searched": "obscure topic",
-            "divisions": {"items": []},
+            "votes": [],
+            "suggestions": ["Use a broader topic word"],
             "sources": {},
         }
         output = StringIO()
@@ -303,7 +305,8 @@ class TestRenderCheckVote:
             render_check_vote(json.dumps(data))
         text = output.getvalue()
         assert "Test MP" in text
-        assert "No divisions found" in text
+        assert "No matching divisions found" in text
+        assert "Use a broader topic word" in text
 
     def test_renders_error(self) -> None:
         data = {"error": "No member found matching 'Nobody'"}
@@ -584,3 +587,136 @@ class TestCliRunnerOutputsJson:
         assert result.exit_code == 0
         output = json.loads(result.stdout)
         assert "url" in output
+
+
+# ---------------------------------------------------------------------------
+# New composite renderers
+# ---------------------------------------------------------------------------
+
+
+def _render(renderer: Any, data: dict[str, Any]) -> str:
+    output = StringIO()
+    console = Console(file=output, force_terminal=True, width=160)
+    with patch("uk_parliament_mcp.cli.renderers.Console", return_value=console):
+        renderer(json.dumps(data))
+    return output.getvalue()
+
+
+class TestNewCompositeRenderers:
+    def test_compare_votes(self) -> None:
+        from uk_parliament_mcp.cli.renderers import render_compare_votes
+
+        text = _render(
+            render_compare_votes,
+            {
+                "members": {
+                    "a": {"name": "Alice MP", "party": "Labour", "house": "Commons"},
+                    "b": {"name": "Bob MP", "party": "Conservative", "house": "Commons"},
+                },
+                "summary": {
+                    "divisions_both_voted_in": 1,
+                    "agreed": 0,
+                    "disagreed": 1,
+                    "agreement_rate": 0.0,
+                    "note": "Based on each member's 50 most recent matching divisions.",
+                },
+                "divisions": [
+                    {
+                        "division_id": 1,
+                        "date": "2024-01-01",
+                        "title": "Some Bill",
+                        "a_vote": "Aye",
+                        "b_vote": "No",
+                        "agree": False,
+                    }
+                ],
+            },
+        )
+        assert "Alice MP" in text and "Bob MP" in text
+        assert "agreed 0, disagreed 1" in text
+        assert "Some Bill" in text
+
+    def test_compare_votes_error(self) -> None:
+        from uk_parliament_mcp.cli.renderers import render_compare_votes
+
+        text = _render(
+            render_compare_votes,
+            {"error": "different Houses", "suggestions": ["Compare two MPs"], "members": {}},
+        )
+        assert "different Houses" in text and "Compare two MPs" in text
+
+    def test_member_bills(self) -> None:
+        from uk_parliament_mcp.cli.renderers import render_member_bills
+
+        text = _render(
+            render_member_bills,
+            {
+                "member": {"name": "Alice MP", "party": "Labour"},
+                "total_bills": 1,
+                "bills": [
+                    {"bill_id": 9, "short_title": "Test Bill", "current_stage": "2nd reading"}
+                ],
+            },
+        )
+        assert "Bills sponsored by Alice MP" in text and "Test Bill" in text
+
+    def test_bill_committees(self) -> None:
+        from uk_parliament_mcp.cli.renderers import render_bill_committees
+
+        text = _render(
+            render_bill_committees,
+            {
+                "bill_id": 5,
+                "short_title": "Test Bill",
+                "committee_stages": [
+                    {"stage": "Committee stage", "house": "Commons", "sittings": ["2024-01-01"]}
+                ],
+                "committee_business": [
+                    {
+                        "title": "Test Bill scrutiny",
+                        "committee": {"name": "Constitution Committee"},
+                        "open_date": "2024-01-01",
+                        "linked_bill_ids": [5],
+                    }
+                ],
+            },
+        )
+        assert "Committee Stages" in text
+        assert "Constitution Committee" in text and "confirmed" in text
+
+    def test_committee_bills(self) -> None:
+        from uk_parliament_mcp.cli.renderers import render_committee_bills
+
+        text = _render(
+            render_committee_bills,
+            {
+                "committee": {"name": "Constitution Committee"},
+                "total_legislative_scrutiny": 1,
+                "bills_examined": [
+                    {
+                        "title": "Railways Bill",
+                        "open_date": "2026-06-24",
+                        "bill": {"bill_id": 4030, "short_title": "Railways Bill"},
+                        "match": "title",
+                    }
+                ],
+            },
+        )
+        assert "Bills examined by Constitution Committee" in text and "Railways Bill" in text
+
+    def test_search_parliament(self) -> None:
+        from uk_parliament_mcp.cli.renderers import render_search_parliament
+
+        text = _render(
+            render_search_parliament,
+            {
+                "query": "renters",
+                "totals": {"bills": 2, "members": 0},
+                "bills": [{"bill_id": 3764, "short_title": "Renters' Rights Bill"}],
+                "members": [],
+                "suggestions": [],
+            },
+        )
+        assert "Search: renters" in text
+        assert "Renters' Rights Bill" in text and "3764" in text
+        assert "Members" in text and "none" in text

@@ -34,6 +34,7 @@ def register_resources(mcp: FastMCP) -> None:
                     "Commons": "House of Commons",
                     "Lords": "House of Lords",
                 },
+                "houseParameter": "Every tool's house parameter accepts 1/2 or 'Commons'/'Lords'",
                 "dateFormat": "YYYY-MM-DD (e.g., 2024-03-15)",
                 "pagination": {
                     "skip": "Number of records to skip (default: 0)",

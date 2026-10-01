@@ -5,8 +5,13 @@ from __future__ import annotations
 import json
 from unittest.mock import patch
 
+import pytest
+import typer
+from rich.console import Console
 from typer.testing import CliRunner
 
+from uk_parliament_mcp.cli import try_it
+from uk_parliament_mcp.cli.api import _load_metadata
 from uk_parliament_mcp.cli.main import app
 from uk_parliament_mcp.cli.try_it import (
     _build_api_url,
@@ -241,3 +246,95 @@ class TestPromptForParams:
         path_params, query_params = _prompt_for_params(console, endpoint)
         assert path_params == {}
         assert query_params == {}
+
+
+# ---------------------------------------------------------------------------
+# Menus and the full interactive session
+# ---------------------------------------------------------------------------
+
+NOW_API = next(a for a in _load_metadata()["apis"] if a["name"] == "parliamentnow")
+CURRENT, BY_DATE = NOW_API["endpoints"]
+
+
+def _quiet() -> Console:
+    return Console(file=open("/dev/null", "w"), width=120)  # noqa: SIM115
+
+
+class TestSelectApi:
+    def test_picks_by_number(self) -> None:
+        metadata = _load_metadata()
+        with patch.object(try_it.IntPrompt, "ask", return_value=10):
+            assert try_it._select_api(_quiet(), metadata)["name"] == "parliamentnow"
+
+    @pytest.mark.parametrize("choice", [0, 99])
+    def test_out_of_range(self, choice: int) -> None:
+        with patch.object(try_it.IntPrompt, "ask", return_value=choice), pytest.raises(typer.Exit):
+            try_it._select_api(_quiet(), _load_metadata())
+
+
+class TestSelectEndpoint:
+    def test_picks_by_number(self) -> None:
+        with patch.object(try_it.Prompt, "ask", return_value="2"):
+            assert try_it._select_endpoint(_quiet(), NOW_API) is BY_DATE
+
+    def test_search_then_pick(self) -> None:
+        with patch.object(try_it.Prompt, "ask", side_effect=["s", "current", "1"]):
+            assert try_it._select_endpoint(_quiet(), NOW_API) is CURRENT
+
+    def test_search_with_no_match_shows_all(self) -> None:
+        with patch.object(try_it.Prompt, "ask", return_value="2"):
+            assert try_it._select_endpoint(_quiet(), NOW_API, "zzz") is BY_DATE
+
+    @pytest.mark.parametrize("answer", ["x", "0", "9"])
+    def test_invalid(self, answer: str) -> None:
+        with patch.object(try_it.Prompt, "ask", return_value=answer), pytest.raises(typer.Exit):
+            try_it._select_endpoint(_quiet(), NOW_API)
+
+
+class TestShowRelated:
+    def test_pick_related(self) -> None:
+        with patch.object(try_it.Prompt, "ask", return_value="1"):
+            assert try_it._show_related(_quiet(), NOW_API, CURRENT) is BY_DATE
+
+    @pytest.mark.parametrize("answer", ["", "x", "5"])
+    def test_go_back(self, answer: str) -> None:
+        with patch.object(try_it.Prompt, "ask", return_value=answer):
+            assert try_it._show_related(_quiet(), NOW_API, CURRENT) is None
+
+    def test_no_related(self) -> None:
+        api = {"name": "x", "endpoints": [CURRENT]}
+        assert try_it._show_related(_quiet(), api, CURRENT) is None
+
+
+class TestFullSession:
+    def test_menus_modify_related_new_and_quit(self, cli_runner: CliRunner) -> None:
+        urls: list[str] = []
+
+        async def fake_get_result(url: str) -> str:
+            urls.append(url)
+            return json.dumps({"url": url, "data": {"ok": True}})
+
+        inputs = [
+            "10",  # API: parliamentnow
+            "1",  # endpoint: .../{annunciator}/current
+            "CommonsMain",  # annunciator
+            "m",  # modify params (previous value is the default)
+            "LordsMain",
+            "r",  # related endpoints
+            "1",  # .../{annunciator}/{date}
+            "CommonsMain",
+            "2024-01-01",
+            "n",  # new endpoint
+            "1",
+            "CommonsMain",
+            "q",
+        ]
+        with patch.object(try_it, "get_result", fake_get_result):
+            result = cli_runner.invoke(app, ["api", "try"], input="\n".join(inputs) + "\n")
+        assert result.exit_code == 0, result.output
+        assert [u.rsplit("/api/", 1)[1] for u in urls] == [
+            "Message/message/CommonsMain/current",
+            "Message/message/LordsMain/current",
+            "Message/message/CommonsMain/2024-01-01",
+            "Message/message/CommonsMain/current",
+        ]

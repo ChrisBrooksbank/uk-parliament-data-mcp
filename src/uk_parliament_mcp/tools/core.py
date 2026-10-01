@@ -1,12 +1,15 @@
 """Core tools for Parliament data assistant session management and guidance."""
 
+from __future__ import annotations
+
 import json
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import click
 import typer.main
-from mcp.server.fastmcp import FastMCP
+
+if TYPE_CHECKING:  # the standalone CLI uses this module without the mcp package
+    from mcp.server.fastmcp import FastMCP
 
 
 # Data classes for CLI command metadata (used by get_cli_reference tool)
@@ -41,11 +44,16 @@ class GroupInfo:
     commands: list[CommandInfo] = field(default_factory=list)
 
 
-def _extract_cli_parameters(cmd: click.Command) -> list[ParameterInfo]:
-    """Extract parameter info from a Click command."""
+def _extract_cli_parameters(cmd: Any) -> list[ParameterInfo]:
+    """Extract parameter info from a Click command.
+
+    Uses duck typing rather than isinstance: newer Typer releases bundle their own
+    copy of Click, so its commands are not instances of the ``click`` package's classes.
+    """
     params = []
     for param in cmd.params:
-        if isinstance(param, click.Argument):
+        kind = getattr(param, "param_type_name", "")
+        if kind == "argument":
             params.append(
                 ParameterInfo(
                     name=param.name or "",
@@ -56,7 +64,7 @@ def _extract_cli_parameters(cmd: click.Command) -> list[ParameterInfo]:
                     help_text=getattr(param, "help", "") or "",
                 )
             )
-        elif isinstance(param, click.Option):
+        elif kind == "option":
             params.append(
                 ParameterInfo(
                     name=param.name or "",
@@ -70,40 +78,35 @@ def _extract_cli_parameters(cmd: click.Command) -> list[ParameterInfo]:
     return params
 
 
+def _subcommands(command: Any) -> dict[str, Any]:
+    """A Click group's subcommands, or {} for a plain command."""
+    commands = getattr(command, "commands", None)
+    return commands if isinstance(commands, dict) else {}
+
+
 def _get_cli_commands() -> list[GroupInfo]:
-    """Get all commands from the CLI app via introspection."""
+    """Get all command groups and their commands from the CLI app via introspection."""
     # Import inside function to avoid circular imports
     from uk_parliament_mcp.cli.main import app as main_app
 
-    click_app = typer.main.get_command(main_app)
     groups: list[GroupInfo] = []
+    for group_name, group_cmd in sorted(_subcommands(typer.main.get_command(main_app)).items()):
+        commands = _subcommands(group_cmd)
+        if not commands:
+            continue  # a top-level command such as my-mp, not a group
 
-    if not isinstance(click_app, click.Group):
-        return groups
-
-    for group_name, group_cmd in sorted(click_app.commands.items()):
-        if not isinstance(group_cmd, click.Group):
-            continue
-
-        group_help = group_cmd.help or ""
-        group_info = GroupInfo(name=group_name, description=group_help, commands=[])
-
-        for cmd_name, cmd in sorted(group_cmd.commands.items()):
-            if not isinstance(cmd, click.Command):
-                continue
-
+        group_info = GroupInfo(name=group_name, description=group_cmd.help or "", commands=[])
+        for cmd_name, cmd in sorted(commands.items()):
             cmd_help = cmd.help or ""
-            # Take first line of help as description
-            description = cmd_help.split("\n")[0].strip() if cmd_help else ""
-
-            cmd_info = CommandInfo(
-                name=cmd_name,
-                group=group_name,
-                description=description,
-                parameters=_extract_cli_parameters(cmd),
+            group_info.commands.append(
+                CommandInfo(
+                    name=cmd_name,
+                    group=group_name,
+                    # First line of help as description
+                    description=cmd_help.split("\n")[0].strip() if cmd_help else "",
+                    parameters=_extract_cli_parameters(cmd),
+                )
             )
-            group_info.commands.append(cmd_info)
-
         groups.append(group_info)
 
     return groups
@@ -120,22 +123,24 @@ If no relevant data is available via the MCP API, state that clearly and do not 
 Convert raw data into human-readable summaries while preserving accuracy, but always list the raw URLs used.
 Note: This tool is an unofficial, independent project — not created or supported by UK Parliament. Data is sourced from publicly available parliament.uk APIs."""
 
-GOODBYE_PROMPT = """You are now interacting as a normal assistant. There are no special restrictions or requirements for using UK Parliament MCP data. You may answer questions using any available data or knowledge, and you do not need to append MCP API URLs or limit yourself to MCP sources. Resume normal assistant behavior."""
-
-QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (205 tools)
+QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (210 tools)
 
 ### Composite Tools (Start Here for Common Queries!)
 These tools combine multiple API calls - use them first for efficiency:
 - get_mp_profile(member_id) - Complete MP profile in one call
-- check_mp_vote(member_id, topic) - Check how an MP voted on a topic
+- check_mp_vote(member_id, topic) - Check how an MP or Lord voted on a topic
 - get_bill_overview(search_term) - Full bill info with stages
 - get_committee_summary(topic) - Committee with evidence and publications
 - get_my_mp(postcode, topic) - Find MP by UK postcode with full profile
+- compare_member_votes(member_id_a, member_id_b, topic) - Do two members vote alike?
+- get_member_bills(member_id) - Bills a member has sponsored
+- get_bill_committees(bill_id) / get_committee_bills(committee_id) - Which committees examined which bills
+- search_parliament(query) - Search members, bills, committees, Hansard and written questions at once
 
 Note: Composite tools require member_id (int) — search first with get_member_by_name()
 
 ### Key Conventions
-- House IDs: 1 = Commons, 2 = Lords (for some tools: 'Commons' or 'Lords' as strings)
+- House IDs: 1 = Commons, 2 = Lords; every house parameter also accepts 'Commons' or 'Lords'
 - Dates: YYYY-MM-DD format
 - Pagination: skip/take parameters (typical defaults: 20-30)
 - IDs: Use search tools first to get member_id, bill_id, etc.
@@ -143,12 +148,11 @@ Note: Composite tools require member_id (int) — search first with get_member_b
 ### Tool Categories & Entry Points
 | Module | Tools | Start With |
 |--------|-------|------------|
-| composite | 5 | get_mp_profile(member_id) |
+| composite | 10 | search_parliament(query), get_mp_profile(member_id) |
 | members | 39 | get_member_by_name(name) |
 | bills | 21 | search_bills(search_term) |
 | committees | 30 | search_committees(search_term) |
-| commons_votes | 5 | search_commons_divisions(search_term) |
-| lords_votes | 5 | search_lords_divisions(search_term) |
+| votes | 10 | search_commons_divisions(search_term), search_lords_divisions(search_term) |
 | hansard | 30 | search_hansard(house, start_date, end_date, search_term) |
 | oral_questions | 5 | search_early_day_motions(search_term) |
 | written_questions | 7 | search_written_questions(search_term) |
@@ -158,6 +162,7 @@ Note: Composite tools require member_id (int) — search first with get_member_b
 | statutory_instruments | 9 | search_statutory_instruments() |
 | treaties | 6 | search_treaties(search_text) |
 | erskine_may | 11 | search_erskine_may(search_term) |
+| core | 4 | parliament_guide(topic) |
 
 ### Common Patterns
 1. Use composite tools first for common queries (saves multiple calls)
@@ -169,7 +174,7 @@ Use parliament_guide(topic) for detailed tool information.
 Use parliament_workflow(query) for step-by-step research planning."""
 
 GUIDANCE_CONTENT = {
-    "composite": """## Composite Tools (5 tools)
+    "composite": """## Composite Tools (10 tools)
 
 High-level tools that combine multiple API calls for common research tasks.
 Use these FIRST for common queries to reduce tool calls and improve efficiency.
@@ -184,9 +189,18 @@ Search first with get_member_by_name(name) to get the member_id.
   - Example: get_mp_profile(4514)  # Keir Starmer's member_id
 
 - check_mp_vote(member_id, topic) - Check voting stance on a topic
-  - Combines: member lookup + division search with member filter
-  - Returns: MP info and divisions on the topic where they voted
-  - Example: check_mp_vote(172, "climate")  # Boris Johnson's member_id
+  - Combines: member lookup + the member's division votes (Commons or Lords)
+  - Returns: Member info and each matching division with their vote (Aye/No, Content/Not Content)
+  - Example: check_mp_vote(172, "climate")  # Diane Abbott's member_id
+
+- compare_member_votes(member_id_a, member_id_b, topic) - Do two members vote alike?
+  - Combines: both members' details + both voting records, joined by division
+  - Returns: Agreement count and rate, each shared division with both votes
+  - Example: compare_member_votes(4514, 172, "welfare")
+
+- get_member_bills(member_id) - Bills a member has sponsored
+  - Combines: member details + bill search by sponsor
+  - Returns: Bills with current stage, most recently updated first
 
 - get_my_mp(postcode, topic) - Find MP by UK postcode
   - Combines: constituency lookup + member search + biography + interests + votes
@@ -199,11 +213,30 @@ Search first with get_member_by_name(name) to get the member_id.
   - Returns: Bill details, legislative stages, associated documents
   - Example: get_bill_overview("Online Safety")
 
+- get_bill_committees(bill_id) - Which committees examined a bill
+  - Combines: bill details + stages + committee business search + business details + publications
+  - Returns: Committee stages (with sittings) and select committee scrutiny with the committee
+  - Example: get_bill_committees(3764)  # Renters' Rights Bill
+
 ### Committee Research
 - get_committee_summary(topic) - Committee with evidence and reports
   - Combines: committee search + details + oral evidence + written evidence + publications
   - Returns: Committee info, witness testimonies, written submissions, reports
   - Example: get_committee_summary("Treasury")
+
+- get_committee_bills(committee_id) - Which bills a committee examined
+  - Combines: committee details + legislative scrutiny business + bill lookup
+  - Returns: Each scrutiny item with the bill it examined and its current stage
+  - Example: get_committee_bills(172)  # Lords Constitution Committee
+
+### Not Sure Where to Look?
+- search_parliament(query) - One search across Parliament
+  - Combines: member, bill, committee, Hansard and written question searches
+  - Returns: Top matches and totals for each, with the tool to call next
+  - Example: search_parliament("net zero")
+
+### When Nothing Is Found
+Composite tools add a "suggestions" list (e.g. try the surname only, widen the topic) when a lookup comes back empty.
 
 ### When to Use Individual Tools Instead
 Use the individual tools (in members, bills, etc.) when you need:
@@ -508,7 +541,7 @@ MPs and Lords must declare:
 
 ### Parameters
 - Dates: YYYY-MM-DD format
-- house: 'Commons' or 'Lords' (string)
+- house: 'Commons' or 'Lords' (1 or 2 also accepted)
 
 ### What "Now" Tools Return
 - Current business being debated
@@ -611,10 +644,10 @@ Or search directly:
 5. Third Reading: Final debate
 6. Lords/Commons stages: Mirror process in other House
 7. Royal Assent: Becomes law""",
-    "all": """## All UK Parliament MCP Tools (205 tools)
+    "all": """## All UK Parliament MCP Tools (210 tools)
 
-### Composite (5 tools) - Use These First!
-get_mp_profile(member_id), check_mp_vote(member_id, topic), get_bill_overview, get_committee_summary, get_my_mp(postcode, topic)
+### Composite (10 tools) - Use These First!
+get_mp_profile(member_id), check_mp_vote(member_id, topic), compare_member_votes(member_id_a, member_id_b, topic), get_member_bills(member_id), get_bill_overview, get_bill_committees(bill_id), get_committee_summary, get_committee_bills(committee_id), get_my_mp(postcode, topic), search_parliament(query)
 Note: get_mp_profile and check_mp_vote require member_id (int) — search first with get_member_by_name()
 
 ### Members (39 tools)
@@ -698,7 +731,7 @@ order_order, parliament_guide, parliament_workflow, get_cli_reference""",
 ### House Identification
 - House 1 = House of Commons (MPs)
 - House 2 = House of Lords (Lords/Peers)
-- Some tools accept house as integer, others as string ("Commons"/"Lords")
+- Every house parameter accepts either form: 1 or "Commons", 2 or "Lords" (case-insensitive)
 
 ### Date Format
 - Always use YYYY-MM-DD (e.g., "2024-03-15")
@@ -1087,7 +1120,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def order_order() -> str:
         """Start UK Parliament research session | order, begin, initialize, start session, parliament mode |
         Use at the START of any parliamentary research to get proper context and guidance.
-        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 205 tools.
+        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 210 tools.
         """
         return f"{SYSTEM_PROMPT}\n\n---\n\n{QUICK_REFERENCE}"
 
@@ -1186,7 +1219,7 @@ def register_prompts(mcp: FastMCP) -> None:
 
     @mcp.prompt()
     async def parliament(topic: str | None = None) -> str:
-        """Initialize UK Parliament research session with guidance on 205 available tools.
+        """Initialize UK Parliament research session with guidance on 210 available tools.
 
         Provides system instructions for parliamentary data queries, quick reference
         of tool categories, and guidance on common research workflows.

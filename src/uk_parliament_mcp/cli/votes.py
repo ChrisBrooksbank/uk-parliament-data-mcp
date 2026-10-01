@@ -71,7 +71,7 @@ def search_divisions(
             f"{COMMONS_VOTES_API_BASE}/divisions.json/search",
             {
                 "queryParameters.searchTerm": search_term,
-                "memberId": member_id,
+                "queryParameters.memberId": member_id,
                 "queryParameters.startDate": start_date,
                 "queryParameters.endDate": end_date,
                 "queryParameters.divisionNumber": division_number,

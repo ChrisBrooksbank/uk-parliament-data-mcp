@@ -464,3 +464,70 @@ class TestParseParliamentUrl:
         assert result is not None
         _, _, query = result
         assert query["tag"] == ["1", "2"]
+
+
+class TestApiRichOutput:
+    """The table output used in a terminal (tests otherwise see JSON, as stdout is not a TTY)."""
+
+    @pytest.fixture(autouse=True)
+    def _terminal(self):
+        from unittest.mock import patch
+
+        with patch("uk_parliament_mcp.cli.api._should_render_rich", return_value=True):
+            yield
+
+    @pytest.mark.parametrize(
+        ("args", "expected"),
+        [
+            (["list"], "Parliament APIs"),
+            (["endpoints", "members"], "members endpoints"),
+            (["endpoints", "members", "--tag", "Members"], "Members"),
+            (["detail", "bills", "/api/v1/Bills"], "GET"),
+            (["search", "division"], "division"),
+            (["schema", "bills"], "Schemas"),
+            (["schema", "bills", "BillSummary"], "BillSummary"),
+            (["params", "bills", "/api/v1/Bills"], "SearchTerm"),
+            (
+                ["explore", "https://members-api.parliament.uk/api/Members/4514?x=1"],
+                "Endpoint:",
+            ),
+            (
+                ["explore", "https://bills-api.parliament.uk/api/v1/Nope/Nothing"],
+                "No matching endpoint",
+            ),
+        ],
+    )
+    def test_renders(self, cli_runner: CliRunner, args: list[str], expected: str) -> None:
+        result = cli_runner.invoke(app, ["api", *args], terminal_width=200)
+        assert result.exit_code == 0, result.output
+        assert expected.lower() in result.output.lower()
+
+    def test_explore_call(self, cli_runner: CliRunner) -> None:
+        from unittest.mock import AsyncMock, patch
+
+        response = json.dumps({"url": "u", "data": {"value": {"id": 4514}}})
+        with patch(
+            "uk_parliament_mcp.http_client.get_result", new=AsyncMock(return_value=response)
+        ):
+            result = cli_runner.invoke(
+                app,
+                ["api", "explore", "https://members-api.parliament.uk/api/Members/4514", "--call"],
+                terminal_width=200,
+            )
+        assert result.exit_code == 0, result.output
+        assert "Response:" in result.output
+        assert "4514" in result.output
+
+    def test_explore_call_error(self, cli_runner: CliRunner) -> None:
+        from unittest.mock import AsyncMock, patch
+
+        with patch(
+            "uk_parliament_mcp.http_client.get_result",
+            new=AsyncMock(side_effect=RuntimeError("offline")),
+        ):
+            result = cli_runner.invoke(
+                app,
+                ["api", "explore", "https://members-api.parliament.uk/api/Members/4514", "--call"],
+                terminal_width=200,
+            )
+        assert "Call error" in result.output and "offline" in result.output

@@ -6,7 +6,7 @@ from datetime import date as date_type
 
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import WHATSON_API_BASE
+from uk_parliament_mcp.config import WHATSON_API_BASE, house_name
 from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
@@ -15,20 +15,21 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_calendar(
-        house: str,
+        house: int | str,
         start_date: str,
         end_date: str,
     ) -> str:
-        """Search parliamentary calendar for upcoming events and business in either chamber. Use when you want to know what's scheduled in Parliament, upcoming debates, or future parliamentary business. House: Commons/Lords.
+        """Search parliamentary calendar for upcoming events and business in either chamber. Use when you want to know what's scheduled in Parliament, upcoming debates, or future parliamentary business. House: Commons/Lords. See also: get_parliamentary_diary, get_sitting_dates, happening_now_in_commons.
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
             start_date: Start date in YYYY-MM-DD format.
             end_date: End date in YYYY-MM-DD format.
 
         Returns:
             Parliamentary calendar events in the date range.
         """
+        house = house_name(house)
         url = build_url(
             f"{WHATSON_API_BASE}/events/list.json",
             {
@@ -51,20 +52,21 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_non_sitting_days(
-        house: str,
+        house: int | str,
         start_date: str,
         end_date: str,
     ) -> str:
-        """Get periods when Parliament is not sitting (recesses, holidays). Use when you need to know when Parliament is on break, recess periods, or when no parliamentary business is scheduled.
+        """Get periods when Parliament is not sitting (recesses, holidays). Use when you need to know when Parliament is on break, recess periods, or when no parliamentary business is scheduled. See also: get_sitting_dates.
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
             start_date: Start date in YYYY-MM-DD format.
             end_date: End date in YYYY-MM-DD format.
 
         Returns:
             Non-sitting days in the date range.
         """
+        house = house_name(house)
         url = build_url(
             f"{WHATSON_API_BASE}/events/nonsitting.json",
             {
@@ -77,22 +79,23 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_sitting_dates(
-        house: str,
+        house: int | str,
         start_date: str,
         end_date: str,
     ) -> str:
         """Get sitting dates | recess, sitting days, parliamentary calendar, when sitting |
         Get sitting dates for a house within a date range |
-        Returns list of sitting dates
+        Returns list of sitting dates See also: get_non_sitting_days, get_next_sitting_date.
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
             start_date: Start date (YYYY-MM-DD).
             end_date: End date (YYYY-MM-DD).
 
         Returns:
             List of sitting dates for the specified house.
         """
+        house = house_name(house)
         url = build_url(
             f"{WHATSON_API_BASE}/proceduraldates/{house}/sittingdates.json",
             {"startDate": start_date, "endDate": end_date},
@@ -100,18 +103,19 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def get_next_sitting_date(house: str, date_to_check: str) -> str:
+    async def get_next_sitting_date(house: int | str, date_to_check: str) -> str:
         """Get next sitting | parliament returns, next sitting day, when back |
         Get the next sitting date after a specified date |
         Returns next sitting date
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
             date_to_check: Date to find next sitting after (YYYY-MM-DD). Use today's date to find when Parliament next sits.
 
         Returns:
             Next sitting date for the specified house.
         """
+        house = house_name(house)
         url = build_url(
             f"{WHATSON_API_BASE}/proceduraldates/{house}/nextsittingdate.json",
             {"dateToCheck": date_to_check},
@@ -119,18 +123,19 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def get_tabling_deadline(house: str, requested_date: str) -> str:
+    async def get_tabling_deadline(house: int | str, requested_date: str) -> str:
         """Get tabling deadline | table questions, submission deadline, EDM deadline |
         Get the valid tabling date for a specified date (Commons only) |
         Returns tabling deadline date
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
             requested_date: Date to find tabling deadline for (YYYY-MM-DD).
 
         Returns:
             Tabling deadline date for the specified house.
         """
+        house = house_name(house)
         url = build_url(
             f"{WHATSON_API_BASE}/proceduraldates/{house}/tablingdate.json",
             {"requestedDate": requested_date},
@@ -139,7 +144,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_answer_deadline(
-        house: str,
+        house: int | str,
         question_type: str,
         tabled_date: str,
     ) -> str:
@@ -148,13 +153,14 @@ def register_tools(mcp: FastMCP) -> None:
         Returns answer deadline date
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
             question_type: Type of written question: 'NamedDay' or 'Ordinary'.
             tabled_date: Date the question was tabled (YYYY-MM-DD).
 
         Returns:
             Answer deadline date for the question.
         """
+        house = house_name(house)
         url = build_url(
             f"{WHATSON_API_BASE}/proceduraldates/{house}/answerdate.json",
             {"questionType": question_type, "tabledDate": tabled_date},
@@ -186,7 +192,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_event_type_metadata(
-        house: str | None = None,
+        house: int | str | None = None,
         event_type_id: int | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
@@ -196,7 +202,7 @@ def register_tools(mcp: FastMCP) -> None:
         """Get event type metadata | event types, calendar metadata, event classification | Retrieve metadata about parliamentary event types with optional filtering | Returns event type metadata
 
         Args:
-            house: Optional house filter: 'Commons' or 'Lords'.
+            house: Optional house filter: 'Commons' or 'Lords' (1 or 2 also accepted).
             event_type_id: Optional event type ID to filter by.
             start_date: Optional start date filter (YYYY-MM-DD).
             end_date: Optional end date filter (YYYY-MM-DD).
@@ -206,6 +212,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Event type metadata matching the filter criteria.
         """
+        house = house_name(house)
         url = build_url(
             f"{WHATSON_API_BASE}/events/EventTypeMetaData.json",
             {
@@ -221,7 +228,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_parliamentary_diary(
-        house: str | None = None,
+        house: int | str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         date: str | None = None,
@@ -231,7 +238,7 @@ def register_tools(mcp: FastMCP) -> None:
         """Get parliamentary diary | diary, schedule, events, business programme | Retrieve the parliamentary diary with upcoming business and events | Returns diary events
 
         Args:
-            house: Optional house filter: 'Commons' or 'Lords'.
+            house: Optional house filter: 'Commons' or 'Lords' (1 or 2 also accepted).
             start_date: Optional start date filter (YYYY-MM-DD). Defaults to today when no date filter is given.
             end_date: Optional end date filter (YYYY-MM-DD).
             date: Optional specific date filter (YYYY-MM-DD).
@@ -241,6 +248,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Parliamentary diary events matching the filter criteria.
         """
+        house = house_name(house)
         # The diary endpoint returns HTTP 500 when no date filter is given
         if not (start_date or end_date or date):
             start_date = date_type.today().isoformat()
@@ -259,7 +267,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_speaker_events(
-        house: str | None = None,
+        house: int | str | None = None,
         start_date: str | None = None,
         end_date: str | None = None,
         date: str | None = None,
@@ -269,7 +277,7 @@ def register_tools(mcp: FastMCP) -> None:
         """Get speaker events | speakers, order paper, business items, speakers list | Retrieve parliamentary events with speaker information | Returns speaker event details
 
         Args:
-            house: Optional house filter: 'Commons' or 'Lords'.
+            house: Optional house filter: 'Commons' or 'Lords' (1 or 2 also accepted).
             start_date: Optional start date filter (YYYY-MM-DD).
             end_date: Optional end date filter (YYYY-MM-DD).
             date: Optional specific date filter (YYYY-MM-DD).
@@ -279,6 +287,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Parliamentary events with speaker information matching the filter criteria.
         """
+        house = house_name(house)
         url = build_url(
             f"{WHATSON_API_BASE}/events/speakers.json",
             {
@@ -330,20 +339,21 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_last_sitting_date(
-        house: str,
+        house: int | str,
         date_to_check: str,
         include_weekend_sittings: bool | None = None,
     ) -> str:
         """Get last sitting date | previous sitting, last sat, before recess | Get the last sitting date prior to a specified date | Returns last sitting date
 
         Args:
-            house: House name: 'Commons' or 'Lords'.
+            house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
             date_to_check: Find last sitting date before this date (YYYY-MM-DD).
             include_weekend_sittings: Whether to include weekend sittings (default: false).
 
         Returns:
             Last sitting date prior to the specified date.
         """
+        house = house_name(house)
         url = build_url(
             f"{WHATSON_API_BASE}/proceduraldates/{house}/lastsittingdate.json",
             {
