@@ -347,10 +347,10 @@ def register_tools(mcp: FastMCP) -> None:
         Args:
             member_id: Parliament member ID to get voting record for.
             house: House number (1=Commons, 2=Lords).
-            page: Optional: page number for pagination.
+            page: Optional page number, 20 votes per page. Page 1 (the default) is the most recent; the API's "skip" field reads 20 on page 1, which is a quirk, not an offset.
 
         Returns:
-            Voting records of the member.
+            Voting records of the member, newest first.
         """
         url = build_url(
             f"{MEMBERS_API_BASE}/Members/{member_id}/Voting",

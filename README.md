@@ -15,9 +15,18 @@ An MCP (Model Context Protocol) server that gives AI assistants access to UK Par
 
 Connect your AI assistant to 205 UK Parliament API tools for comprehensive parliamentary research.
 
+![An AI assistant using the MCP server: asked who the MP for SW1A 1AA is and how they voted on the assisted dying bill, it calls get_my_mp and answers with the vote and the Parliament API URLs it used](docs/media/mcp-demo.gif)
+
+*A real, unedited Claude Code session with only this MCP server attached ([`scripts/record-mcp-demo.sh`](scripts/record-mcp-demo.sh)). The answer ends with the Parliament API URLs it came from.*
+
+<details>
+<summary>Watch it in Claude Desktop</summary>
+
 https://github.com/user-attachments/assets/30f2df13-dff9-44e6-b1f6-5eebfb665d9e
 
-*Claude Desktop using the server to check the parliamentary calendar. Every answer ends with the Parliament API URLs it came from.*
+*Claude Desktop using the server to check the parliamentary calendar.*
+
+</details>
 
 Prefer the terminal? See the [CLI demo](#cli-usage).
 
