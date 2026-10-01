@@ -33,6 +33,19 @@ FieldsOpt = Annotated[
 ]
 
 
+# Set by the top-level callback (`parliament --raw --fields ... <command>`); a command's
+# own --raw/--fields work as well.
+_global_raw = False
+_global_fields: str | None = None
+
+
+def set_global_options(raw: bool, fields: str | None) -> None:
+    """Record the --raw/--fields flags given before the subcommand."""
+    global _global_raw, _global_fields  # noqa: PLW0603
+    _global_raw = raw
+    _global_fields = fields
+
+
 def should_render_rich(output_format: OutputFormat, raw: bool) -> bool:
     """Determine whether to use rich rendering instead of JSON output.
 
@@ -48,7 +61,7 @@ def should_render_rich(output_format: OutputFormat, raw: bool) -> bool:
     Returns:
         True if rich rendering should be used.
     """
-    if raw:
+    if raw or _global_raw:
         return False
     if output_format in (OutputFormat.AUTO, OutputFormat.TABLE):
         return sys.stdout.isatty()
@@ -121,6 +134,8 @@ def format_output(
     Returns:
         Formatted string ready for output
     """
+    raw = raw or _global_raw
+    fields = fields or _global_fields
     if raw:
         data_only = False
         output_format = OutputFormat.JSON

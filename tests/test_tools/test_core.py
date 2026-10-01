@@ -7,7 +7,6 @@ from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.tools import core
 from uk_parliament_mcp.tools.core import (
-    GOODBYE_PROMPT,
     GUIDANCE_CONTENT,
     QUICK_REFERENCE,
     SYSTEM_PROMPT,
@@ -78,10 +77,6 @@ class TestSystemPromptContent:
     def test_system_prompt_includes_url_requirement(self):
         """System prompt requires appending API URLs to responses."""
         assert "URL" in SYSTEM_PROMPT
-
-    def test_goodbye_prompt_removes_restrictions(self):
-        """Goodbye prompt removes MCP-specific restrictions."""
-        assert "no special restrictions" in GOODBYE_PROMPT
 
 
 class TestQuickReference:

@@ -522,15 +522,21 @@ class TestSearchParliament:
                     "TotalDebates": 1,
                     "Debates": [{"Title": "Debate", "SittingDate": "2024-01-01T00:00:00"}],
                 },
-                "writtenquestions": {"totalResults": 0, "results": []},
+                "writtenquestions": {
+                    "totalResults": 1,
+                    "results": [{"value": {"id": 5, "heading": "Housing"}}],
+                },
             }
         )
         with patch("uk_parliament_mcp.tools.composite.get_result", fake):
-            result = await composite.search_everything("z")
+            result = await composite.search_everything("z y")
         assert result["members"][0]["house"] == "Lords"
         assert result["bills"][0]["bill_id"] == 3
         assert result["hansard_debates"][0]["title"] == "Debate"
         assert result["totals"]["committees"] == 0
+        assert result["written_questions"][0]["heading"] == "Housing"
+        # Multi-word written question searches are quoted as a phrase
+        assert "searchTerm=%22z+y%22" in result["sources"]["written_questions"]
         assert "suggestions" not in result
 
     async def test_suggestions_when_nothing_found(self) -> None:

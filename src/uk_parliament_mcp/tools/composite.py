@@ -9,10 +9,8 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import quote
-
-from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.config import (
     BILLS_API_BASE,
@@ -27,6 +25,9 @@ from uk_parliament_mcp.config import (
     WRITTEN_QUESTIONS_API_BASE,
 )
 from uk_parliament_mcp.http_client import build_url, get_result
+
+if TYPE_CHECKING:  # the standalone CLI uses this module without the mcp package
+    from mcp.server.fastmcp import FastMCP
 
 # Committee business type for scrutiny of a bill (see get_committee_business_types)
 LEGISLATIVE_SCRUTINY_BUSINESS_TYPE = 3
@@ -89,7 +90,7 @@ def _parse_response(response: str) -> dict[str, Any]:
 
 def _items(parsed: dict[str, Any]) -> list[dict[str, Any]]:
     """Return the result list of a parsed response, whatever key it lives under."""
-    for key in ("items", "data", "_data"):
+    for key in ("items", "results", "data", "_data"):
         value = parsed.get(key)
         if isinstance(value, list):
             # Skip the {"_truncated": ...} marker that pruning appends
@@ -546,7 +547,11 @@ async def search_everything(query: str, take: int = 5) -> dict[str, Any]:
         ),
         "written_questions": build_url(
             f"{WRITTEN_QUESTIONS_API_BASE}/writtenquestions/questions",
-            {"searchTerm": query, "take": take},
+            # Unquoted words match any of them; quote a multi-word query as a phrase
+            {
+                "searchTerm": f'"{query}"' if " " in query and '"' not in query else query,
+                "take": take,
+            },
         ),
     }
     responses = dict(
@@ -575,7 +580,7 @@ async def search_everything(query: str, take: int = 5) -> dict[str, Any]:
         }
         for d in hansard.get("Debates") or []
         if isinstance(d, dict)
-    ]
+    ][:take]  # the Hansard search ignores take for debates
     questions = [
         {
             "id": q.get("id"),

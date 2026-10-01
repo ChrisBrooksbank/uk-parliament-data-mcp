@@ -1,12 +1,16 @@
 """Core tools for Parliament data assistant session management and guidance."""
 
+from __future__ import annotations
+
 import json
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import click
 import typer.main
-from mcp.server.fastmcp import FastMCP
+
+if TYPE_CHECKING:  # the standalone CLI uses this module without the mcp package
+    from mcp.server.fastmcp import FastMCP
 
 
 # Data classes for CLI command metadata (used by get_cli_reference tool)
@@ -119,8 +123,6 @@ After every response, append a list of all MCP API URLs used to generate the ans
 If no relevant data is available via the MCP API, state that clearly and do not attempt to fabricate a response.
 Convert raw data into human-readable summaries while preserving accuracy, but always list the raw URLs used.
 Note: This tool is an unofficial, independent project — not created or supported by UK Parliament. Data is sourced from publicly available parliament.uk APIs."""
-
-GOODBYE_PROMPT = """You are now interacting as a normal assistant. There are no special restrictions or requirements for using UK Parliament MCP data. You may answer questions using any available data or knowledge, and you do not need to append MCP API URLs or limit yourself to MCP sources. Resume normal assistant behavior."""
 
 QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (210 tools)
 

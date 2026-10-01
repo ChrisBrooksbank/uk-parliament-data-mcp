@@ -26,7 +26,13 @@ from uk_parliament_mcp.cli import (
     watch,
 )
 from uk_parliament_mcp.cli.formatters import OutputFormat
-from uk_parliament_mcp.cli.utils import echo_utf8, format_output, run_async, should_render_rich
+from uk_parliament_mcp.cli.utils import (
+    echo_utf8,
+    format_output,
+    run_async,
+    set_global_options,
+    should_render_rich,
+)
 
 app = typer.Typer(
     name="parliament",
@@ -174,16 +180,7 @@ def callback(
     This tool is not affiliated with or endorsed by UK Parliament.
     https://github.com/ChrisBrooksbank/uk-parliament-data-mcp
     """
-    # We use module-level variables since typer callbacks don't propagate context easily
-    import uk_parliament_mcp.cli.main as _self
-
-    _self._global_raw = raw or False
-    _self._global_fields = fields
-
-
-# Module-level globals for callback-set flags
-_global_raw: bool = False
-_global_fields: str | None = None
+    set_global_options(raw or False, fields)
 
 
 def main() -> None:

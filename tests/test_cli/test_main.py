@@ -109,3 +109,34 @@ class TestMissingArgShowsHelp:
         """Missing required argument reports error."""
         result = cli_runner.invoke(app, ["committees", "search"])
         assert result.exit_code == 2
+
+
+def test_global_raw_and_fields_apply_to_subcommand() -> None:
+    """`parliament --raw <cmd>` and `parliament --fields ... <cmd>` take effect."""
+    import json
+    from unittest.mock import AsyncMock, patch
+
+    response = json.dumps(
+        {"url": "https://test/BillTypes", "data": {"items": [{"id": 1, "name": "A", "x": 2}]}}
+    )
+    runner = CliRunner()
+    with patch("uk_parliament_mcp.cli.utils.get_result", new=AsyncMock(return_value=response)):
+        raw = runner.invoke(app, ["--raw", "bills", "types"])
+        fields = runner.invoke(app, ["--fields", "id,name", "bills", "types", "--format", "csv"])
+        plain = runner.invoke(app, ["bills", "types", "--format", "csv"])
+    assert json.loads(raw.stdout)["url"] == "https://test/BillTypes"
+    assert fields.stdout.splitlines()[0] == "Id,Name"
+    # The callback resets the globals on each invocation
+    assert plain.stdout.splitlines()[0] == "Id,Name,X"
+
+
+def test_cli_imports_without_mcp_package() -> None:
+    """The standalone executable (parliament.spec) bundles the CLI without mcp."""
+    import subprocess
+    import sys
+
+    code = (
+        "import sys; sys.modules['mcp'] = None\nimport uk_parliament_mcp.cli.main  # noqa: F401\n"
+    )
+    result = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
