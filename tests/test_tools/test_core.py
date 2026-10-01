@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 from mcp.server.fastmcp import FastMCP
 
@@ -375,3 +377,26 @@ class TestParliamentPrompt:
         result = await mcp.get_prompt("parliament", {"topic": "BILLS"})
         text = result.messages[0].content.text
         assert "Bills Tools" in text
+
+
+class TestGetCliReference:
+    """get_cli_reference introspects the Typer app (regression: it once returned nothing)."""
+
+    async def _call(self, **arguments: str) -> dict:
+        from mcp.server.fastmcp import FastMCP
+
+        mcp = FastMCP(name="test")
+        core.register_tools(mcp)
+        result = await mcp.call_tool("get_cli_reference", arguments)
+        content = result[0] if isinstance(result, tuple) else result
+        return json.loads(content[0].text)
+
+    async def test_lists_all_groups(self):
+        data = await self._call()
+        assert data["total_commands"] > 150
+        assert "composite" in {g["name"] for g in data["groups"]}
+
+    async def test_group_filter(self):
+        data = await self._call(group="votes")
+        assert [g["name"] for g in data["groups"]] == ["votes"]
+        assert data["groups"][0]["commands"]

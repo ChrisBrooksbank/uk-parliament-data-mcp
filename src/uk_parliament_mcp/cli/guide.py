@@ -4,10 +4,8 @@ from __future__ import annotations
 
 import json
 import sys
-from dataclasses import asdict, dataclass, field
-from typing import Any
+from dataclasses import asdict
 
-import click
 import typer
 import typer.main
 from rich.console import Console
@@ -20,109 +18,15 @@ from uk_parliament_mcp.tools.core import (
     QUICK_REFERENCE,
     SYSTEM_PROMPT,
     WORKFLOW_PATTERNS,
+    CommandInfo,
+    GroupInfo,
     _format_workflow,
+    _get_cli_commands,
     _suggest_general_approach,
 )
 
-
-# Data classes for command metadata
-@dataclass
-class ParameterInfo:
-    """Information about a command parameter."""
-
-    name: str
-    param_type: str
-    required: bool
-    default: Any
-    flags: list[str]
-    help_text: str
-
-
-@dataclass
-class CommandInfo:
-    """Information about a CLI command."""
-
-    name: str
-    group: str
-    description: str
-    parameters: list[ParameterInfo] = field(default_factory=list)
-
-
-@dataclass
-class GroupInfo:
-    """Information about a command group."""
-
-    name: str
-    description: str
-    commands: list[CommandInfo] = field(default_factory=list)
-
-
-def _extract_parameters(cmd: click.Command) -> list[ParameterInfo]:
-    """Extract parameter info from a Click command."""
-    params = []
-    for param in cmd.params:
-        if isinstance(param, click.Argument):
-            params.append(
-                ParameterInfo(
-                    name=param.name or "",
-                    param_type="argument",
-                    required=param.required,
-                    default=param.default,
-                    flags=[],
-                    help_text=getattr(param, "help", "") or "",
-                )
-            )
-        elif isinstance(param, click.Option):
-            params.append(
-                ParameterInfo(
-                    name=param.name or "",
-                    param_type="option",
-                    required=param.required,
-                    default=param.default if param.default != param.type else None,
-                    flags=list(param.opts),
-                    help_text=param.help or "",
-                )
-            )
-    return params
-
-
-def _get_all_commands() -> list[GroupInfo]:
-    """Get all commands from the main CLI app via introspection."""
-    # Import inside function to avoid circular imports
-    from uk_parliament_mcp.cli.main import app as main_app
-
-    click_app = typer.main.get_command(main_app)
-    groups: list[GroupInfo] = []
-
-    if not isinstance(click_app, click.Group):
-        return groups
-
-    for group_name, group_cmd in sorted(click_app.commands.items()):
-        if not isinstance(group_cmd, click.Group):
-            continue
-
-        group_help = group_cmd.help or ""
-        group_info = GroupInfo(name=group_name, description=group_help, commands=[])
-
-        for cmd_name, cmd in sorted(group_cmd.commands.items()):
-            if not isinstance(cmd, click.Command):
-                continue
-
-            cmd_help = cmd.help or ""
-            # Take first line of help as description
-            description = cmd_help.split("\n")[0].strip() if cmd_help else ""
-
-            cmd_info = CommandInfo(
-                name=cmd_name,
-                group=group_name,
-                description=description,
-                parameters=_extract_parameters(cmd),
-            )
-            group_info.commands.append(cmd_info)
-
-        groups.append(group_info)
-
-    return groups
+# Command introspection is shared with the MCP get_cli_reference tool
+_get_all_commands = _get_cli_commands
 
 
 def _format_overview(groups: list[GroupInfo], console: Console) -> None:
@@ -264,6 +168,38 @@ def _format_json_output(groups: list[GroupInfo]) -> str:
     return json.dumps(output, indent=2, default=str)
 
 
+def show_reference(group: str | None, search: str | None, output_format: OutputFormat) -> None:
+    """Print the command reference (shared by `parliament reference` and `guide reference`)."""
+    console = Console()
+    groups = _get_all_commands()
+
+    if output_format == OutputFormat.JSON or (
+        output_format == OutputFormat.AUTO and not sys.stdout.isatty()
+    ):
+        echo_utf8(_format_json_output(groups))
+        return
+
+    if search:
+        _format_search_results(groups, search, console)
+        return
+
+    if group:
+        # Find the specific group
+        group_lower = group.lower()
+        matching = [g for g in groups if g.name.lower() == group_lower]
+        if not matching:
+            available = ", ".join(g.name for g in groups)
+            console.print(
+                f"[red]Group '[bold]{group}[/bold]' not found.[/red]\n"
+                f"[dim]Available groups: {available}[/dim]"
+            )
+            raise typer.Exit(1)
+        _format_group_detail(matching[0], console)
+        return
+
+    _format_overview(groups, console)
+
+
 app = typer.Typer(help="Help and guidance for UK Parliament research", no_args_is_help=True)
 
 
@@ -372,31 +308,4 @@ def reference(
       parliament guide reference --search vote # Search for vote-related commands
       parliament guide reference --format json # Export as JSON
     """
-    console = Console()
-    groups = _get_all_commands()
-
-    if output_format == OutputFormat.JSON or (
-        output_format == OutputFormat.AUTO and not sys.stdout.isatty()
-    ):
-        echo_utf8(_format_json_output(groups))
-        return
-
-    if search:
-        _format_search_results(groups, search, console)
-        return
-
-    if group:
-        # Find the specific group
-        group_lower = group.lower()
-        matching = [g for g in groups if g.name.lower() == group_lower]
-        if not matching:
-            available = ", ".join(g.name for g in groups)
-            console.print(
-                f"[red]Group '[bold]{group}[/bold]' not found.[/red]\n"
-                f"[dim]Available groups: {available}[/dim]"
-            )
-            raise typer.Exit(1)
-        _format_group_detail(matching[0], console)
-        return
-
-    _format_overview(groups, console)
+    show_reference(group, search, output_format)

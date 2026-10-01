@@ -6,7 +6,6 @@ import json
 from dataclasses import asdict, dataclass, field
 from typing import TYPE_CHECKING, Any
 
-import click
 import typer.main
 
 if TYPE_CHECKING:  # the standalone CLI uses this module without the mcp package
@@ -45,11 +44,16 @@ class GroupInfo:
     commands: list[CommandInfo] = field(default_factory=list)
 
 
-def _extract_cli_parameters(cmd: click.Command) -> list[ParameterInfo]:
-    """Extract parameter info from a Click command."""
+def _extract_cli_parameters(cmd: Any) -> list[ParameterInfo]:
+    """Extract parameter info from a Click command.
+
+    Uses duck typing rather than isinstance: newer Typer releases bundle their own
+    copy of Click, so its commands are not instances of the ``click`` package's classes.
+    """
     params = []
     for param in cmd.params:
-        if isinstance(param, click.Argument):
+        kind = getattr(param, "param_type_name", "")
+        if kind == "argument":
             params.append(
                 ParameterInfo(
                     name=param.name or "",
@@ -60,7 +64,7 @@ def _extract_cli_parameters(cmd: click.Command) -> list[ParameterInfo]:
                     help_text=getattr(param, "help", "") or "",
                 )
             )
-        elif isinstance(param, click.Option):
+        elif kind == "option":
             params.append(
                 ParameterInfo(
                     name=param.name or "",
@@ -74,40 +78,35 @@ def _extract_cli_parameters(cmd: click.Command) -> list[ParameterInfo]:
     return params
 
 
+def _subcommands(command: Any) -> dict[str, Any]:
+    """A Click group's subcommands, or {} for a plain command."""
+    commands = getattr(command, "commands", None)
+    return commands if isinstance(commands, dict) else {}
+
+
 def _get_cli_commands() -> list[GroupInfo]:
-    """Get all commands from the CLI app via introspection."""
+    """Get all command groups and their commands from the CLI app via introspection."""
     # Import inside function to avoid circular imports
     from uk_parliament_mcp.cli.main import app as main_app
 
-    click_app = typer.main.get_command(main_app)
     groups: list[GroupInfo] = []
+    for group_name, group_cmd in sorted(_subcommands(typer.main.get_command(main_app)).items()):
+        commands = _subcommands(group_cmd)
+        if not commands:
+            continue  # a top-level command such as my-mp, not a group
 
-    if not isinstance(click_app, click.Group):
-        return groups
-
-    for group_name, group_cmd in sorted(click_app.commands.items()):
-        if not isinstance(group_cmd, click.Group):
-            continue
-
-        group_help = group_cmd.help or ""
-        group_info = GroupInfo(name=group_name, description=group_help, commands=[])
-
-        for cmd_name, cmd in sorted(group_cmd.commands.items()):
-            if not isinstance(cmd, click.Command):
-                continue
-
+        group_info = GroupInfo(name=group_name, description=group_cmd.help or "", commands=[])
+        for cmd_name, cmd in sorted(commands.items()):
             cmd_help = cmd.help or ""
-            # Take first line of help as description
-            description = cmd_help.split("\n")[0].strip() if cmd_help else ""
-
-            cmd_info = CommandInfo(
-                name=cmd_name,
-                group=group_name,
-                description=description,
-                parameters=_extract_cli_parameters(cmd),
+            group_info.commands.append(
+                CommandInfo(
+                    name=cmd_name,
+                    group=group_name,
+                    # First line of help as description
+                    description=cmd_help.split("\n")[0].strip() if cmd_help else "",
+                    parameters=_extract_cli_parameters(cmd),
+                )
             )
-            group_info.commands.append(cmd_info)
-
         groups.append(group_info)
 
     return groups

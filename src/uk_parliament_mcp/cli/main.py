@@ -6,7 +6,6 @@ import sys
 
 import click
 import typer
-from rich.console import Console
 
 from uk_parliament_mcp.cli import (
     api,
@@ -81,42 +80,9 @@ def reference(
       parliament reference --format json # Export as JSON
     """
     # Import here to avoid circular imports at module load time
-    from uk_parliament_mcp.cli.guide import (
-        _format_group_detail,
-        _format_json_output,
-        _format_overview,
-        _format_search_results,
-        _get_all_commands,
-    )
+    from uk_parliament_mcp.cli.guide import show_reference
 
-    console = Console()
-    groups = _get_all_commands()
-
-    if output_format == OutputFormat.JSON or (
-        output_format == OutputFormat.AUTO and not sys.stdout.isatty()
-    ):
-        echo_utf8(_format_json_output(groups))
-        return
-
-    if search:
-        _format_search_results(groups, search, console)
-        return
-
-    if group:
-        # Find the specific group
-        group_lower = group.lower()
-        matching = [g for g in groups if g.name.lower() == group_lower]
-        if not matching:
-            available = ", ".join(g.name for g in groups)
-            console.print(
-                f"[red]Group '[bold]{group}[/bold]' not found.[/red]\n"
-                f"[dim]Available groups: {available}[/dim]"
-            )
-            raise typer.Exit(1)
-        _format_group_detail(matching[0], console)
-        return
-
-    _format_overview(groups, console)
+    show_reference(group, search, output_format)
 
 
 @app.command("my-mp")
