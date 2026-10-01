@@ -2,6 +2,10 @@
 
 Open work, roughly in priority order. Finished plans and specs (the phase 1–5 improvement plan, the CLI build-out, the missing-endpoints gap analysis) are in [`docs/archive/`](docs/archive/).
 
+## Dependencies
+
+- **Migrate to mcp 2.x.** `pyproject.toml` pins `mcp<2` because 2.x renamed `FastMCP` to `MCPServer` (`mcp.server.mcpserver`) and changed other APIs. See the [migration guide](https://py.sdk.modelcontextprotocol.io/v2/migration/#fastmcp-renamed-to-mcpserver).
+
 ## Consistency
 
 - **One `house` parameter type.** About half the tools take `house: int` (1 = Commons, 2 = Lords) and half take `house: str` ("Commons"/"Lords"), following whichever form each upstream API uses. Accepting either form everywhere would remove a common source of wrong calls by LLMs.

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Pin `mcp<2`. mcp 2.x renamed `FastMCP` to `MCPServer` and removed `mcp.server.fastmcp`, so fresh installs pulled in 2.x and failed on import.
 - Statutory Instruments tools that called the retired v1 API (every request returned HTTP 400) now use v2: `get_laying_bodies`, `get_si_procedures`, `get_si_procedure`
 - `get_si_procedure` / `parliament legislation si-procedure` now take the alphanumeric procedure ID the API uses (was typed as an integer)
 - `get_my_mp` reported "No current MP found" for every postcode over MCP: it read the search result before MCP response pruning had flattened it. (The CLI, which doesn't prune, was unaffected.)
