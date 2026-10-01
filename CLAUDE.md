@@ -59,7 +59,7 @@ terminal ──> cli/main.py (Typer) ──> cli/*.py ────────�
 
 ## Conventions
 
-- House IDs: 1 = Commons, 2 = Lords (`validators.validate_house_id`). Dates are `YYYY-MM-DD`. Pagination is `skip`/`take`.
+- House IDs: 1 = Commons, 2 = Lords (`config.HOUSE_COMMONS`/`HOUSE_LORDS`). Dates are `YYYY-MM-DD`. Pagination is `skip`/`take`.
 - All tools are read-only and idempotent. Responses are API JSON passed through, not reshaped (apart from pruning).
 - Logging goes to stderr; stdout is reserved for the MCP stdio protocol.
 - `AGENTS.md` is a short operational guide used by the `loop.sh`/`PROMPT_*.md` autonomous build loop, alongside `IMPLEMENTATION_PLAN*.md` and `specs/`.

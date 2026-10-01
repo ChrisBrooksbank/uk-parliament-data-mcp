@@ -7,9 +7,11 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import STATUTORY_INSTRUMENTS_API_BASE
+from uk_parliament_mcp.config import (
+    STATUTORY_INSTRUMENTS_API_BASE,
+    STATUTORY_INSTRUMENTS_API_BASE_V1,
+)
 from uk_parliament_mcp.tools import statutory_instruments
-from uk_parliament_mcp.tools.statutory_instruments import STATUTORY_INSTRUMENTS_API_BASE_V1
 
 
 class TestStatutoryInstrumentsToolsRegistration:

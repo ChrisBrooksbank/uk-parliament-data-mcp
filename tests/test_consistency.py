@@ -31,7 +31,7 @@ TOOL_COUNT_FILES = [
 TOOL_COUNT_RE = re.compile(r"\b(\d{3})\b(?:[ \w-]{0,30}?)\btools?\b")
 
 # f"{MEMBERS_API_BASE}/Members/{member_id}/Biography" -> (MEMBERS_API_BASE, /Members/{}/Biography)
-ENDPOINT_RE = re.compile(r'f"\{([A-Z_]+_API_BASE)\}(/[^"?]*)')
+ENDPOINT_RE = re.compile(r'f"\{([A-Z0-9_]+_API_BASE\w*)\}(/[^"?]*)')
 
 # Endpoints deliberately exposed on only one side.
 MCP_ONLY_ENDPOINTS = {

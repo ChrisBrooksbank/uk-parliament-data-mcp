@@ -11,6 +11,8 @@ INTERESTS_API_BASE = "https://interests-api.parliament.uk/api/v1"
 NOW_API_BASE = "https://now-api.parliament.uk/api"
 WHATSON_API_BASE = "https://whatson-api.parliament.uk/calendar"
 STATUTORY_INSTRUMENTS_API_BASE = "https://statutoryinstruments-api.parliament.uk/api/v2"
+# Business items, laying bodies, procedures and PNSIs are only served by v1
+STATUTORY_INSTRUMENTS_API_BASE_V1 = "https://statutoryinstruments-api.parliament.uk/api/v1"
 TREATIES_API_BASE = "https://treaties-api.parliament.uk/api"
 ERSKINE_MAY_API_BASE = "https://erskinemay-api.parliament.uk/api"
 ORAL_QUESTIONS_API_BASE = "https://oralquestionsandmotions-api.parliament.uk"
