@@ -135,7 +135,7 @@ These tools combine multiple API calls - use them first for efficiency:
 Note: Composite tools require member_id (int) — search first with get_member_by_name()
 
 ### Key Conventions
-- House IDs: 1 = Commons, 2 = Lords (for some tools: 'Commons' or 'Lords' as strings)
+- House: every tool accepts 1 or 'Commons', 2 or 'Lords'
 - Dates: YYYY-MM-DD format
 - Pagination: skip/take parameters (typical defaults: 20-30)
 - IDs: Use search tools first to get member_id, bill_id, etc.
@@ -508,7 +508,7 @@ MPs and Lords must declare:
 
 ### Parameters
 - Dates: YYYY-MM-DD format
-- house: 'Commons' or 'Lords' (string)
+- house: 'Commons' or 'Lords' (1 or 2 also accepted)
 
 ### What "Now" Tools Return
 - Current business being debated
@@ -698,7 +698,7 @@ order_order, parliament_guide, parliament_workflow, get_cli_reference""",
 ### House Identification
 - House 1 = House of Commons (MPs)
 - House 2 = House of Lords (Lords/Peers)
-- Some tools accept house as integer, others as string ("Commons"/"Lords")
+- Every house parameter accepts either form: 1 or "Commons", 2 or "Lords" (case-insensitive)
 
 ### Date Format
 - Always use YYYY-MM-DD (e.g., "2024-03-15")

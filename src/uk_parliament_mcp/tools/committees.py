@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import COMMITTEES_API_BASE
+from uk_parliament_mcp.config import COMMITTEES_API_BASE, house_id
 from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
@@ -469,7 +469,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_committees_next_events(
-        house: int | None = None,
+        house: int | str | None = None,
         event_from_date: str | None = None,
         skip: int = 0,
         take: int = 30,
@@ -479,7 +479,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns list of committees with their next scheduled event.
 
         Args:
-            house: Optional: filter by house (1 = Commons, 2 = Lords).
+            house: Optional: filter by house - 1 or 'Commons', 2 or 'Lords'.
             event_from_date: Optional: start date in YYYY-MM-DD format (default today).
             skip: Number of records to skip (for pagination).
             take: Number of records to return (default 30).
@@ -487,6 +487,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Committees with their next scheduled events.
         """
+        house = house_id(house)
         url = build_url(
             f"{COMMITTEES_API_BASE}/Committees/NextEvent",
             {
@@ -754,7 +755,7 @@ def register_tools(mcp: FastMCP) -> None:
         search_term: str | None = None,
         start_date_from: str | None = None,
         start_date_to: str | None = None,
-        house: int | None = None,
+        house: int | str | None = None,
         location_id: int | None = None,
         event_type_id: int | None = None,
         include_activity_attendees: bool = False,
@@ -770,7 +771,7 @@ def register_tools(mcp: FastMCP) -> None:
             search_term: Optional: search term for activity titles or content (min 2 chars).
             start_date_from: Optional: start date from in YYYY-MM-DD format.
             start_date_to: Optional: start date to in YYYY-MM-DD format.
-            house: Optional: filter by house (1 = Commons, 2 = Lords).
+            house: Optional: filter by house - 1 or 'Commons', 2 or 'Lords'.
             location_id: Optional: location ID to filter events.
             event_type_id: Optional: filter by event type ID.
             include_activity_attendees: Include attendees with each activity. Default: false.
@@ -781,6 +782,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Event activities matching the specified criteria.
         """
+        house = house_id(house)
         url = build_url(
             f"{COMMITTEES_API_BASE}/Events/Activities",
             {

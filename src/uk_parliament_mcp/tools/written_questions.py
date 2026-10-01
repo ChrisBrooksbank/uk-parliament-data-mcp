@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import WRITTEN_QUESTIONS_API_BASE
+from uk_parliament_mcp.config import WRITTEN_QUESTIONS_API_BASE, house_name
 from uk_parliament_mcp.http_client import build_url, get_result
 
 
@@ -19,7 +19,7 @@ def register_tools(mcp: FastMCP) -> None:
         answered: str | None = None,
         tabled_from: str | None = None,
         tabled_to: str | None = None,
-        house: str | None = None,
+        house: int | str | None = None,
         skip: int = 0,
         take: int = 20,
     ) -> str:
@@ -32,13 +32,14 @@ def register_tools(mcp: FastMCP) -> None:
             answered: Filter by answer status: "Any", "Answered", or "Unanswered".
             tabled_from: Start date for when question was tabled (YYYY-MM-DD).
             tabled_to: End date for when question was tabled (YYYY-MM-DD).
-            house: Filter by house: "Commons", "Lords", or "Bicameral".
+            house: Filter by house: 'Commons', 'Lords' or 'Bicameral' (1 or 2 also accepted).
             skip: Number of records to skip for pagination. Default: 0.
             take: Number of records to return. Default: 20.
 
         Returns:
             Written questions matching the search criteria with member, department, and answer details.
         """
+        house = house_name(house)
         url = build_url(
             f"{WRITTEN_QUESTIONS_API_BASE}/writtenquestions/questions",
             {
@@ -104,7 +105,7 @@ def register_tools(mcp: FastMCP) -> None:
         answering_body_id: int | None = None,
         made_from: str | None = None,
         made_to: str | None = None,
-        house: str | None = None,
+        house: int | str | None = None,
         skip: int = 0,
         take: int = 20,
     ) -> str:
@@ -116,13 +117,14 @@ def register_tools(mcp: FastMCP) -> None:
             answering_body_id: Filter by government department.
             made_from: Start date for when statement was made (YYYY-MM-DD).
             made_to: End date for when statement was made (YYYY-MM-DD).
-            house: Filter by house: "Commons", "Lords", or "Bicameral".
+            house: Filter by house: 'Commons', 'Lords' or 'Bicameral' (1 or 2 also accepted).
             skip: Number of records to skip for pagination. Default: 0.
             take: Number of records to return. Default: 20.
 
         Returns:
             Written statements matching the search criteria with minister, department, and content.
         """
+        house = house_name(house)
         url = build_url(
             f"{WRITTEN_QUESTIONS_API_BASE}/writtenstatements/statements",
             {
@@ -184,7 +186,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_daily_reports(
         date_from: str | None = None,
         date_to: str | None = None,
-        house: str | None = None,
+        house: int | str | None = None,
         skip: int = 0,
         take: int = 20,
     ) -> str:
@@ -193,13 +195,14 @@ def register_tools(mcp: FastMCP) -> None:
         Args:
             date_from: Start date for reports (YYYY-MM-DD).
             date_to: End date for reports (YYYY-MM-DD).
-            house: Filter by house: "Commons", "Lords", or "Bicameral".
+            house: Filter by house: 'Commons', 'Lords' or 'Bicameral' (1 or 2 also accepted).
             skip: Number of records to skip for pagination. Default: 0.
             take: Number of records to return. Default: 20.
 
         Returns:
             Daily reports with question and answer activity summaries.
         """
+        house = house_name(house)
         url = build_url(
             f"{WRITTEN_QUESTIONS_API_BASE}/dailyreports/dailyreports",
             {

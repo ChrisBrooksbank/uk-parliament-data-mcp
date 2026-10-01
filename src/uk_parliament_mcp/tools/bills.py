@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import BILLS_API_BASE
+from uk_parliament_mcp.config import BILLS_API_BASE, house_name
 from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
@@ -354,7 +354,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_sittings(
-        house: str | None = None,
+        house: int | str | None = None,
         date_from: str | None = None,
         date_to: str | None = None,
         skip: int | None = None,
@@ -363,7 +363,7 @@ def register_tools(mcp: FastMCP) -> None:
         """Get parliamentary sittings with optional filtering by house and date range. Use when researching when Parliament was in session, finding specific sitting dates, or tracking parliamentary activity.
 
         Args:
-            house: Optional: house name ('Commons' or 'Lords').
+            house: Optional: 'Commons' or 'Lords' (1 or 2 also accepted).
             date_from: Optional: start date in YYYY-MM-DD format.
             date_to: Optional: end date in YYYY-MM-DD format.
             skip: Optional: number of records to skip (for pagination).
@@ -372,6 +372,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Parliamentary sittings matching the criteria.
         """
+        house = house_name(house)
         url = build_url(
             f"{BILLS_API_BASE}/Sittings",
             {

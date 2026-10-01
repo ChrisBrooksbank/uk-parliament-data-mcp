@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import STATUTORY_INSTRUMENTS_API_BASE
+from uk_parliament_mcp.config import STATUTORY_INSTRUMENTS_API_BASE, house_name
 from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
@@ -18,7 +18,7 @@ def register_tools(mcp: FastMCP) -> None:
         recommended_for_procedure_change: bool | None = None,
         laying_body_id: str | None = None,
         department_id: int | None = None,
-        house: str | None = None,
+        house: int | str | None = None,
         skip: int = 0,
         take: int = 20,
     ) -> str:
@@ -30,13 +30,14 @@ def register_tools(mcp: FastMCP) -> None:
             recommended_for_procedure_change: Optional. Only PNSIs a sifting committee recommended for the affirmative procedure.
             laying_body_id: Optional. Laying body ID from get_laying_bodies().
             department_id: Optional. Government department ID.
-            house: Optional. "Commons" or "Lords".
+            house: Optional: 'Commons' or 'Lords' (1 or 2 also accepted).
             skip: Number of records to skip (pagination, default 0).
             take: Number of records to return (default 20).
 
         Returns:
             Statutory Instruments matching the filters.
         """
+        house = house_name(house)
         url = build_url(
             f"{STATUTORY_INSTRUMENTS_API_BASE}/StatutoryInstrument",
             {

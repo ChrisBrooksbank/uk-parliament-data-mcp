@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 from mcp.server.fastmcp import FastMCP
 
-from uk_parliament_mcp.config import MEMBERS_API_BASE
+from uk_parliament_mcp.config import MEMBERS_API_BASE, house_id
 from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
@@ -71,15 +71,16 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def parties_list_by_house(house: int) -> str:
+    async def parties_list_by_house(house: int | str) -> str:
         """Get list of active political parties in either House of Commons (1) or House of Lords (2). Use when you need to know current party representation or party structures in Parliament.
 
         Args:
-            house: House number: 1 for Commons, 2 for Lords.
+            house: House: 1 or 'Commons', 2 or 'Lords'.
 
         Returns:
             List of active political parties in the specified house.
         """
+        house = house_id(house)
         url = f"{MEMBERS_API_BASE}/Parties/GetActive/{house}"
         return await get_result(url)
 
@@ -196,7 +197,7 @@ def register_tools(mcp: FastMCP) -> None:
         location: str | None = None,
         post_title: str | None = None,
         party_id: int | None = None,
-        house: int | None = None,
+        house: int | str | None = None,
         constituency_id: int | None = None,
         name_starts_with: str | None = None,
         gender: str | None = None,
@@ -204,7 +205,7 @@ def register_tools(mcp: FastMCP) -> None:
         membership_ended_since: str | None = None,
         was_member_on_or_after: str | None = None,
         was_member_on_or_before: str | None = None,
-        was_member_of_house: int | None = None,
+        was_member_of_house: int | str | None = None,
         is_eligible: bool | None = None,
         is_current_member: bool | None = None,
         policy_interest_id: int | None = None,
@@ -219,7 +220,7 @@ def register_tools(mcp: FastMCP) -> None:
             location: Optional: location or constituency name.
             post_title: Optional: post title (e.g. 'Minister', 'Secretary of State').
             party_id: Optional: party ID to filter by.
-            house: Optional: house number (1=Commons, 2=Lords).
+            house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
             constituency_id: Optional: constituency ID to filter by.
             name_starts_with: Optional: filter names starting with specific letter(s).
             gender: Optional: gender filter ('M' or 'F').
@@ -227,7 +228,7 @@ def register_tools(mcp: FastMCP) -> None:
             membership_ended_since: Optional: membership ended since date in YYYY-MM-DD format.
             was_member_on_or_after: Optional: was member on or after date in YYYY-MM-DD format.
             was_member_on_or_before: Optional: was member on or before date in YYYY-MM-DD format.
-            was_member_of_house: Optional: was member of house (1=Commons, 2=Lords).
+            was_member_of_house: Optional: was member of house - 1 or 'Commons', 2 or 'Lords'.
             is_eligible: Optional: filter by eligibility status.
             is_current_member: Optional: filter by current membership status.
             policy_interest_id: Optional: policy interest ID to filter by.
@@ -238,6 +239,8 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Matching member profiles with comprehensive details.
         """
+        house = house_id(house)
+        was_member_of_house = house_id(was_member_of_house)
         url = build_url(
             f"{MEMBERS_API_BASE}/Members/Search",
             {
@@ -293,17 +296,18 @@ def register_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     async def get_member_registered_interests(
         member_id: int,
-        house: int | None = None,
+        house: int | str | None = None,
     ) -> str:
         """Get registered interests of a member by ID and house. Use when investigating potential conflicts of interest, financial interests, or external roles. Shows declared interests like directorships, consultancies, and gifts.
 
         Args:
             member_id: Parliament member ID to get registered interests for.
-            house: Optional: house number (1=Commons, 2=Lords).
+            house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
 
         Returns:
             Registered interests of the member.
         """
+        house = house_id(house)
         url = build_url(
             f"{MEMBERS_API_BASE}/Members/{member_id}/RegisteredInterests",
             {"house": house},
@@ -339,19 +343,20 @@ def register_tools(mcp: FastMCP) -> None:
     @mcp.tool()
     async def get_member_voting(
         member_id: int,
-        house: int,
+        house: int | str,
         page: int | None = None,
     ) -> str:
         """Get voting records of a member by ID for a specific house. Use when analyzing how a member votes, their voting patterns, or their stance on particular issues through their voting history.
 
         Args:
             member_id: Parliament member ID to get voting record for.
-            house: House number (1=Commons, 2=Lords).
+            house: House: 1 or 'Commons', 2 or 'Lords'.
             page: Optional page number, 20 votes per page. Page 1 (the default) is the most recent; the API's "skip" field reads 20 on page 1, which is a quirk, not an offset.
 
         Returns:
             Voting records of the member, newest first.
         """
+        house = house_id(house)
         url = build_url(
             f"{MEMBERS_API_BASE}/Members/{member_id}/Voting",
             {"house": house, "page": page},
@@ -456,7 +461,7 @@ def register_tools(mcp: FastMCP) -> None:
         return await get_result(url)
 
     @mcp.tool()
-    async def get_state_of_parties(house: int, for_date: str) -> str:
+    async def get_state_of_parties(house: int | str, for_date: str) -> str:
         """Get party seat counts | party breakdown, seats, composition, majority |
         Get number of seats held by each party in a house |
         Returns party names with seat counts
@@ -468,6 +473,7 @@ def register_tools(mcp: FastMCP) -> None:
         Returns:
             Party names with seat counts for the specified house.
         """
+        house = house_id(house)
         url = f"{MEMBERS_API_BASE}/Parties/StateOfTheParties/{house}/{for_date}"
         return await get_result(url)
 
