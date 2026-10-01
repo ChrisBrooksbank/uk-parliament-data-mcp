@@ -11,7 +11,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def happening_now_in_commons() -> str:
-        """Get live information about what's currently happening in the House of Commons chamber. Use when you want real-time updates on parliamentary business, current debates, or voting activity.
+        """Get live information about what's currently happening in the House of Commons chamber. Use when you want real-time updates on parliamentary business, current debates, or voting activity. See also: happening_now_in_lords, search_calendar.
 
         Returns:
             Live information about current Commons chamber activity.
@@ -21,7 +21,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def happening_now_in_lords() -> str:
-        """Get live information about what's currently happening in the House of Lords chamber. Use when you want real-time updates on Lords business, current debates, or voting activity.
+        """Get live information about what's currently happening in the House of Lords chamber. Use when you want real-time updates on Lords business, current debates, or voting activity. See also: happening_now_in_commons, search_calendar.
 
         Returns:
             Live information about current Lords chamber activity.

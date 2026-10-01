@@ -628,7 +628,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_mp_profile(member_id: int) -> str:
-        """Get comprehensive MP/Lord profile in one call - combines member details, biography, interests, and voting summary | complete MP info, full member profile, MP background, politician details, comprehensive member data | Use when you need a complete picture of an MP or Lord without multiple tool calls | Returns combined data: basic info, biography, registered interests, and recent voting activity. Combines: get_member_by_id, get_members_biography, search_roi, get_member_voting. See also: get_my_mp (by postcode), get_member_by_name (to find member_id).
+        """Get comprehensive MP/Lord profile in one call - combines member details, biography, interests, and voting summary | complete MP info, full member profile, MP background, politician details, comprehensive member data | Use when you need a complete picture of an MP or Lord without multiple tool calls | Returns combined data: basic info, biography, registered interests, and recent voting activity. Combines: get_member_by_id, get_members_biography, search_roi, get_member_voting. See also: get_my_mp (by postcode), get_member_by_name (to find the member ID).
 
         Args:
             member_id: Parliament member ID. Get from member search first. Example: 4514

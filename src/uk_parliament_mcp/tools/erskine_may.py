@@ -13,7 +13,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_erskine_may(search_term: str) -> str:
-        """Search Erskine May parliamentary procedure manual. Use when you need to understand parliamentary rules, procedures, or precedents. Erskine May is the authoritative guide to parliamentary procedure.
+        """Search Erskine May parliamentary procedure manual. Use when you need to understand parliamentary rules, procedures, or precedents. Erskine May is the authoritative guide to parliamentary procedure. See also: search_erskine_may_sections, search_erskine_may_index, get_erskine_may_paragraph.
 
         Args:
             search_term: Search term for parliamentary procedure rules (e.g. 'Speaker', 'amendment', 'division').

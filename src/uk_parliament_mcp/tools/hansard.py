@@ -19,7 +19,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int = 0,
         take: int = 20,
     ) -> str:
-        """Search Hansard (official parliamentary record) for speeches and debates. Use when researching what was said in Parliament on specific topics, by specific members, or in specific time periods. House: 1 or "Commons", 2 or "Lords".
+        """Search Hansard (official parliamentary record) for speeches and debates. Use when researching what was said in Parliament on specific topics, by specific members, or in specific time periods. House: 1 or "Commons", 2 or "Lords". See also: search_hansard_full, search_hansard_contributions, search_parliament.
 
         Args:
             house: House: 1 or 'Commons', 2 or 'Lords'.
@@ -52,7 +52,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_debate_by_id(debate_section_id: str) -> str:
         """Get full debate transcript | Hansard, speeches, contributions |
         Use after search_hansard to get complete debate with all member speeches.
-        Returns debate title, date, house, and all contributions.
+        Returns debate title, date, house, and all contributions. See also: get_debate_speakers, get_debate_divisions, get_member_hansard_contributions.
 
         Args:
             debate_section_id: External ID from search_hansard results.
@@ -86,7 +86,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_debate_divisions(debate_section_id: str) -> str:
         """Get votes that occurred during a debate | Hansard, divisions, voting |
         Use to find divisions (votes) that took place in a specific debate.
-        Returns list of divisions with aye/noe counts.
+        Returns list of divisions with aye/noe counts. See also: get_division_details, get_commons_division_by_id.
 
         Args:
             debate_section_id: External ID of debate section (from search_hansard).
@@ -126,7 +126,7 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Get full agenda/sections for a sitting day | Hansard, daily business, agenda |
         Use to see all debates and business for a specific day.
-        Returns all debate sections for that day.
+        Returns all debate sections for that day. See also: get_hansard_section_trees, get_hansard_calendar.
 
         Args:
             sitting_date: Date in YYYY-MM-DD format.
@@ -186,7 +186,7 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Full search across all Hansard content types | Hansard, comprehensive search |
         Use for broad searches across debates, statements, questions, and petitions.
-        Returns mixed results from all Hansard content types.
+        Returns mixed results from all Hansard content types. See also: search_hansard, search_parliament.
 
         Args:
             house: Optional: house - 1 or 'Commons', 2 or 'Lords'.
@@ -228,7 +228,7 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Search Hansard by contribution type | Hansard, spoken, written, interventions |
         Use to find specific types of parliamentary contributions.
-        Returns contributions of the specified type.
+        Returns contributions of the specified type. See also: get_member_contribution_summary, get_debate_by_id.
 
         Args:
             contribution_type: Type of contribution: 'Spoken', 'Written', 'Intervention', 'Question', 'Answer'.
@@ -308,7 +308,7 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Search for divisions (votes) in Hansard | Hansard, divisions, votes |
         Use to find recorded votes in Parliament.
-        Returns divisions matching the search criteria.
+        Returns divisions matching the search criteria. See also: search_commons_divisions, search_lords_divisions.
 
         Args:
             house: Optional: house - 1 or 'Commons', 2 or 'Lords'.

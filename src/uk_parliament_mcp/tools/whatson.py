@@ -19,7 +19,7 @@ def register_tools(mcp: FastMCP) -> None:
         start_date: str,
         end_date: str,
     ) -> str:
-        """Search parliamentary calendar for upcoming events and business in either chamber. Use when you want to know what's scheduled in Parliament, upcoming debates, or future parliamentary business. House: Commons/Lords.
+        """Search parliamentary calendar for upcoming events and business in either chamber. Use when you want to know what's scheduled in Parliament, upcoming debates, or future parliamentary business. House: Commons/Lords. See also: get_parliamentary_diary, get_sitting_dates, happening_now_in_commons.
 
         Args:
             house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
@@ -56,7 +56,7 @@ def register_tools(mcp: FastMCP) -> None:
         start_date: str,
         end_date: str,
     ) -> str:
-        """Get periods when Parliament is not sitting (recesses, holidays). Use when you need to know when Parliament is on break, recess periods, or when no parliamentary business is scheduled.
+        """Get periods when Parliament is not sitting (recesses, holidays). Use when you need to know when Parliament is on break, recess periods, or when no parliamentary business is scheduled. See also: get_sitting_dates.
 
         Args:
             house: House: 'Commons' or 'Lords' (1 or 2 also accepted).
@@ -85,7 +85,7 @@ def register_tools(mcp: FastMCP) -> None:
     ) -> str:
         """Get sitting dates | recess, sitting days, parliamentary calendar, when sitting |
         Get sitting dates for a house within a date range |
-        Returns list of sitting dates
+        Returns list of sitting dates See also: get_non_sitting_days, get_next_sitting_date.
 
         Args:
             house: House: 'Commons' or 'Lords' (1 or 2 also accepted).

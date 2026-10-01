@@ -23,7 +23,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int = 0,
         take: int = 20,
     ) -> str:
-        """Search written parliamentary questions with comprehensive filtering | written questions, PQs, parliamentary questions, questions to ministers, government accountability | Use for researching MP activity, tracking government responses, analyzing ministerial accountability, or finding questions on specific topics | Returns questions with asking member, answering body, dates, and response status
+        """Search written parliamentary questions with comprehensive filtering | written questions, PQs, parliamentary questions, questions to ministers, government accountability | Use for researching MP activity, tracking government responses, analyzing ministerial accountability, or finding questions on specific topics | Returns questions with asking member, answering body, dates, and response status See also: get_written_question, search_written_statements, get_answering_bodies.
 
         Args:
             search_term: Text to search for in question content.
@@ -109,7 +109,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int = 0,
         take: int = 20,
     ) -> str:
-        """Search written ministerial statements | written statements, ministerial statements, government announcements, policy statements | Use for tracking government announcements, researching policy statements, or finding ministerial communications on specific topics | Returns statements with minister, department, dates, and statement content
+        """Search written ministerial statements | written statements, ministerial statements, government announcements, policy statements | Use for tracking government announcements, researching policy statements, or finding ministerial communications on specific topics | Returns statements with minister, department, dates, and statement content See also: get_written_statement, search_written_questions.
 
         Args:
             search_term: Text to search for in statement content.

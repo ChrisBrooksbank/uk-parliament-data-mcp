@@ -13,7 +13,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_member_by_name(name: str) -> str:
-        """Search for MPs and Lords by name with comprehensive member details | find MP, search politician, lookup member, who is, member search, parliamentary representative | Use for identifying members, checking spellings, finding member IDs, or getting basic member information | Returns member profiles with names, parties, constituencies, and current status
+        """Search for MPs and Lords by name with comprehensive member details | find MP, search politician, lookup member, who is, member search, parliamentary representative | Use for identifying members, checking spellings, finding member IDs, or getting basic member information | Returns member profiles with names, parties, constituencies, and current status See also: get_mp_profile, search_members, search_historical_members.
 
         Args:
             name: Full or partial name to search for. Examples: 'Boris Johnson', 'Keir Starmer', 'Smith'. Searches current and former members.
@@ -28,7 +28,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_answering_bodies(
         name_contains: str | None = None,
     ) -> str:
-        """Get government departments and their parliamentary responsibilities | government departments, ministries, answering bodies, policy areas, department structure, who answers questions | Use for understanding government structure, finding responsible departments, or determining who answers questions on specific topics | Returns department names, abbreviations, and policy responsibilities
+        """Get government departments and their parliamentary responsibilities | government departments, ministries, answering bodies, policy areas, department structure, who answers questions | Use for understanding government structure, finding responsible departments, or determining who answers questions on specific topics | Returns department names, abbreviations, and policy responsibilities See also: get_departments, search_written_questions.
 
         Args:
             name_contains: Filter by partial name match. Example: 'Treasury', 'Health'.
@@ -46,7 +46,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_member_by_id(member_id: int) -> str:
-        """Get comprehensive member profile by ID with full parliamentary details | member details, MP profile, member information, parliamentary roles, constituency data | Use when you have a member ID and need complete biographical, political, and contact information | Returns detailed member data including roles, constituency, party, and career information
+        """Get comprehensive member profile by ID with full parliamentary details | member details, MP profile, member information, parliamentary roles, constituency data | Use when you have a member ID and need complete biographical, political, and contact information | Returns detailed member data including roles, constituency, party, and career information See also: get_mp_profile, get_members_biography, get_member_synopsis.
 
         Args:
             member_id: Parliament member ID. Required: get from member search first. Example: 1423
@@ -59,7 +59,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def edms_for_member_id(member_id: int) -> str:
-        """Get all Early Day Motions signed by a specific MP. Use when you want to see what issues a particular member has supported or their political priorities through EDM signatures.
+        """Get all Early Day Motions signed by a specific MP. Use when you want to see what issues a particular member has supported or their political priorities through EDM signatures. See also: search_early_day_motions.
 
         Args:
             member_id: Parliament member ID to get EDMs for.
@@ -72,7 +72,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def parties_list_by_house(house: int | str) -> str:
-        """Get list of active political parties in either House of Commons (1) or House of Lords (2). Use when you need to know current party representation or party structures in Parliament.
+        """Get list of active political parties in either House of Commons (1) or House of Lords (2). Use when you need to know current party representation or party structures in Parliament. See also: get_state_of_parties.
 
         Args:
             house: House: 1 or 'Commons', 2 or 'Lords'.
@@ -88,7 +88,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_departments(
         name_contains: str | None = None,
     ) -> str:
-        """Get list of all government departments. Use when you need to know the structure of government or which department handles specific policy areas.
+        """Get list of all government departments. Use when you need to know the structure of government or which department handles specific policy areas. See also: get_answering_bodies, get_government_posts.
 
         Args:
             name_contains: Filter by partial name match. Example: 'Treasury', 'Health'.
@@ -106,7 +106,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_contributions(member_id: int) -> str:
-        """Get summary of parliamentary contributions (speeches, questions, interventions) made by a specific member. Use when analyzing an MP or Lord's parliamentary activity and participation levels.
+        """Get summary of parliamentary contributions (speeches, questions, interventions) made by a specific member. Use when analyzing an MP or Lord's parliamentary activity and participation levels. See also: get_member_contribution_summary, search_hansard_contributions.
 
         Args:
             member_id: Parliament member ID to get contribution summary for.
@@ -123,7 +123,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int | None = None,
         take: int | None = None,
     ) -> str:
-        """Search and list UK parliamentary constituencies | constituency search, find constituency, browse constituencies | Use when you need constituency information, want to search by name, or need constituency data for analysis | Returns list of UK parliamentary constituencies
+        """Search and list UK parliamentary constituencies | constituency search, find constituency, browse constituencies | Use when you need constituency information, want to search by name, or need constituency data for analysis | Returns list of UK parliamentary constituencies See also: get_my_mp, get_constituency_representations.
 
         Args:
             search_text: Optional filter by constituency name (partial match).
@@ -141,7 +141,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_election_results_for_constituency(constituency_id: int) -> str:
-        """Get historical election results for a specific constituency. Use when researching constituency voting patterns, election history, or past electoral outcomes for a particular area.
+        """Get historical election results for a specific constituency. Use when researching constituency voting patterns, election history, or past electoral outcomes for a particular area. See also: get_constituency_latest_election, get_member_latest_election_result.
 
         Args:
             constituency_id: Unique constituency ID number.
@@ -167,7 +167,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_members_biography(member_id: int) -> str:
-        """Get comprehensive member biography and personal history | MP background, life story, career details, education, personal info, political experience | Use for researching member backgrounds, writing profiles, understanding political journey | Returns detailed biographical data including education, career timeline, and political milestones
+        """Get comprehensive member biography and personal history | MP background, life story, career details, education, personal info, political experience | Use for researching member backgrounds, writing profiles, understanding political journey | Returns detailed biographical data including education, career timeline, and political milestones See also: get_mp_profile, get_member_experience.
 
         Args:
             member_id: Parliament member ID. Required: get from member search first. Returns comprehensive biographical information.
@@ -213,7 +213,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int = 0,
         take: int = 20,
     ) -> str:
-        """Search for current MPs and Lords with comprehensive filtering options. Use when you need to find members by name, location, party, constituency, gender, posts held, or policy interests. Supports advanced search criteria including membership dates and eligibility status.
+        """Search for current MPs and Lords with comprehensive filtering options. Use when you need to find members by name, location, party, constituency, gender, posts held, or policy interests. Supports advanced search criteria including membership dates and eligibility status. See also: get_member_by_name, search_historical_members, get_mp_profile.
 
         Args:
             name: Optional: full or partial name to search for.
@@ -298,7 +298,7 @@ def register_tools(mcp: FastMCP) -> None:
         member_id: int,
         house: int | str | None = None,
     ) -> str:
-        """Get registered interests of a member by ID and house. Use when investigating potential conflicts of interest, financial interests, or external roles. Shows declared interests like directorships, consultancies, and gifts.
+        """Get registered interests of a member by ID and house. Use when investigating potential conflicts of interest, financial interests, or external roles. Shows declared interests like directorships, consultancies, and gifts. See also: search_roi, get_lords_interests_register.
 
         Args:
             member_id: Parliament member ID to get registered interests for.
@@ -346,7 +346,7 @@ def register_tools(mcp: FastMCP) -> None:
         house: int | str,
         page: int | None = None,
     ) -> str:
-        """Get voting records of a member by ID for a specific house. Use when analyzing how a member votes, their voting patterns, or their stance on particular issues through their voting history.
+        """Get voting records of a member by ID for a specific house. Use when analyzing how a member votes, their voting patterns, or their stance on particular issues through their voting history. See also: check_mp_vote, get_commons_voting_record_for_member, get_lords_voting_record_for_member.
 
         Args:
             member_id: Parliament member ID to get voting record for.
@@ -368,7 +368,7 @@ def register_tools(mcp: FastMCP) -> None:
         member_id: int,
         page: int | None = None,
     ) -> str:
-        """Get written questions submitted by a member by ID. Use when researching what questions a member has asked of government departments or their areas of parliamentary inquiry.
+        """Get written questions submitted by a member by ID. Use when researching what questions a member has asked of government departments or their areas of parliamentary inquiry. See also: search_written_questions.
 
         Args:
             member_id: Parliament member ID to get written questions for.
@@ -399,7 +399,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_member_latest_election_result(member_id: int) -> str:
-        """Get the latest election result for a member by ID. Use when researching how a member was elected, their constituency performance, vote share, or election margin.
+        """Get the latest election result for a member by ID. Use when researching how a member was elected, their constituency performance, vote share, or election margin. See also: get_election_results_for_constituency.
 
         Args:
             member_id: Parliament member ID to get latest election result for.
@@ -440,7 +440,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_government_posts() -> str:
         """Get government posts | ministers, cabinet, government positions, Home Secretary, Chancellor |
         List all current government ministerial positions with their holders |
-        Returns list of posts with member details
+        Returns list of posts with member details See also: get_opposition_posts, get_spokespersons, get_departments.
 
         Returns:
             List of government ministerial positions with current holders.
@@ -452,7 +452,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_opposition_posts() -> str:
         """Get opposition posts | shadow cabinet, shadow ministers, opposition frontbench |
         List all current opposition frontbench positions with their holders |
-        Returns list of posts with member details
+        Returns list of posts with member details See also: get_government_posts, get_spokespersons.
 
         Returns:
             List of opposition frontbench positions with current holders.
@@ -464,7 +464,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def get_state_of_parties(house: int | str, for_date: str) -> str:
         """Get party seat counts | party breakdown, seats, composition, majority |
         Get number of seats held by each party in a house |
-        Returns party names with seat counts
+        Returns party names with seat counts See also: parties_list_by_house.
 
         Args:
             house: 1 for Commons, 2 for Lords.
@@ -560,7 +560,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def get_constituency_representations(constituency_id: int) -> str:
-        """Get all MP representations for a constituency over time | constituency history, who represented, past MPs | Use when researching which MPs have represented a constituency historically | Returns list of representations with dates and member details
+        """Get all MP representations for a constituency over time | constituency history, who represented, past MPs | Use when researching which MPs have represented a constituency historically | Returns list of representations with dates and member details See also: get_my_mp, get_constituency_by_id.
 
         Args:
             constituency_id: Unique constituency ID number.
@@ -591,7 +591,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int | None = None,
         take: int | None = None,
     ) -> str:
-        """Search historical members of the Commons or Lords | past MPs, historic members, former members, historical search | Use when researching members from historical periods or who were active on a specific date | Returns member profiles matching the historical search criteria
+        """Search historical members of the Commons or Lords | past MPs, historic members, former members, historical search | Use when researching members from historical periods or who were active on a specific date | Returns member profiles matching the historical search criteria See also: get_member_by_name, get_members_history.
 
         Args:
             name: Name search term (partial match). Required by the API.

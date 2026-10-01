@@ -22,7 +22,7 @@ def register_tools(mcp: FastMCP) -> None:
         skip: int = 0,
         take: int = 20,
     ) -> str:
-        """Search for Statutory Instruments (secondary legislation), including proposed negative SIs (PNSIs) under sifting. Use when researching government regulations, rules, or orders made under primary legislation. SIs are used to implement or modify laws.
+        """Search for Statutory Instruments (secondary legislation), including proposed negative SIs (PNSIs) under sifting. Use when researching government regulations, rules, or orders made under primary legislation. SIs are used to implement or modify laws. See also: get_statutory_instrument, get_si_business_items, get_annulment_date.
 
         Args:
             name: Optional. Name or title of the statutory instrument to search for.
@@ -55,7 +55,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_acts_of_parliament(name: str) -> str:
-        """Search for Acts of Parliament (primary legislation) by name or topic. Use when researching existing laws, finding legislation on specific subjects, or understanding the legal framework on particular issues.
+        """Search for Acts of Parliament (primary legislation) by name or topic. Use when researching existing laws, finding legislation on specific subjects, or understanding the legal framework on particular issues. See also: get_act_of_parliament, search_bills.
 
         Args:
             name: Name or title of the Act to search for (e.g. 'Climate Change Act', 'Human Rights Act').

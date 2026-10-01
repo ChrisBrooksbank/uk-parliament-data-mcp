@@ -11,7 +11,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_roi(member_id: int) -> str:
-        """Search member's Register of Interests for financial and business declarations | register of interests, ROI, financial interests, conflicts of interest, directorships, consultancies, gifts, external roles, transparency | Use for investigating potential conflicts, researching member finances, or checking declared interests | Returns declared interests including directorships, consultancies, gifts, and other financial interests
+        """Search member's Register of Interests for financial and business declarations | register of interests, ROI, financial interests, conflicts of interest, directorships, consultancies, gifts, external roles, transparency | Use for investigating potential conflicts, researching member finances, or checking declared interests | Returns declared interests including directorships, consultancies, gifts, and other financial interests See also: get_member_registered_interests, interests_categories, get_mp_profile.
 
         Args:
             member_id: Parliament member ID. Required: get from member search first. Returns all declared interests.
