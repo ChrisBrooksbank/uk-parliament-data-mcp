@@ -263,7 +263,8 @@ def _quiet() -> Console:
 class TestSelectApi:
     def test_picks_by_number(self) -> None:
         metadata = _load_metadata()
-        with patch.object(try_it.IntPrompt, "ask", return_value=10):
+        position = [a["name"] for a in metadata["apis"]].index("parliamentnow") + 1
+        with patch.object(try_it.IntPrompt, "ask", return_value=position):
             assert try_it._select_api(_quiet(), metadata)["name"] == "parliamentnow"
 
     @pytest.mark.parametrize("choice", [0, 99])
@@ -314,8 +315,9 @@ class TestFullSession:
             urls.append(url)
             return json.dumps({"url": url, "data": {"ok": True}})
 
+        api_position = [a["name"] for a in _load_metadata()["apis"]].index("parliamentnow") + 1
         inputs = [
-            "10",  # API: parliamentnow
+            str(api_position),  # API: parliamentnow
             "1",  # endpoint: .../{annunciator}/current
             "CommonsMain",  # annunciator
             "m",  # modify params (previous value is the default)

@@ -1,0 +1,2268 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Lords Business External Service API",
+    "description": "External service for Lords Business admin application",
+    "contact": {
+      "name": "UK Parliament",
+      "url": "https://www.parliament.uk/",
+      "email": "softwareengineering@parliament.uk"
+    },
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/DivisionsExistForDate.{format}": {
+      "get": {
+        "tags": [
+          "Divisions"
+        ],
+        "summary": "Confirm whether divisions exist for a given date",
+        "description": "Returns true if divisions exist for the given date, otherwise returns false",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "path",
+            "description": "the required output format\r\n(xml or json)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "The date to be checked for the presence of divisions\r\n(yyyy-mm-dd)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/DocumentForDay/{id}": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "summary": "Get a document for a given day",
+        "description": "Returns a document for a given DocumentDayID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the DocumentDayID (DocumentDayId’s for a given date can be obtained from operation Day/DocumentForDay/dayDate )",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/Day/DocumentForDay.{format}/{dayDate}": {
+      "get": {
+        "tags": [
+          "Documents"
+        ],
+        "summary": "Get a list of documents for a given date",
+        "description": "Returns a list of all the documents for the given date",
+        "parameters": [
+          {
+            "name": "dayDate",
+            "in": "path",
+            "description": "The date for which to return a list of documents (yyyy-mm-dd)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "format",
+            "in": "path",
+            "description": "the required output format\r\n(xml or json)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentForDayListItem"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentForDayListItem"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentForDayListItem"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentForDayListItem"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentForDayListItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/ItemOfBusinessSummary.{format}": {
+      "get": {
+        "tags": [
+          "ItemOfBusiness"
+        ],
+        "summary": "Get a summary of an item of business",
+        "description": "Returns a summary of an item of business",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "path",
+            "description": "the required output format\r\n(xml or json)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "itemOfBusinessId",
+            "in": "query",
+            "description": "the id of the required item of business",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "businessPaperDate",
+            "in": "query",
+            "description": "The date the required item of business was published (yyyy-mm-dd)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultItemOfBusinessSummaryItemOfBusinessSummaryContainer"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultItemOfBusinessSummaryItemOfBusinessSummaryContainer"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultItemOfBusinessSummaryItemOfBusinessSummaryContainer"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultItemOfBusinessSummaryItemOfBusinessSummaryContainer"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultItemOfBusinessSummaryItemOfBusinessSummaryContainer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/journal-attachments/{id}": {
+      "get": {
+        "tags": [
+          "Journal"
+        ],
+        "summary": "Get a JournalAttachment by id",
+        "description": "Returns the JournalAttachment based off the id provided",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the JournalAttachment",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAttachmentModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAttachmentModel"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAttachmentModel"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAttachmentModel"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalAttachmentModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sittings/{sittingDate}/{contentType}": {
+      "get": {
+        "tags": [
+          "Journal"
+        ],
+        "summary": "Get a list of Sittings for a given date and ContentType",
+        "description": "Returns the list of Sittings",
+        "parameters": [
+          {
+            "name": "sittingDate",
+            "in": "path",
+            "description": "The date for which the Sitting details will be returned",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "contentType",
+            "in": "path",
+            "description": "The ContentType to fetch : Attendance / MinutesOfProceedings / Papers / Appendix / Divisions",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalContentModel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalContentModel"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalContentModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sittings/journalContentDates": {
+      "get": {
+        "tags": [
+          "Journal"
+        ],
+        "summary": "Get a list of Dates for which Journal Data exists",
+        "description": "Returns a list of Dates for which Journal Data exists within the given range",
+        "parameters": [
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "The startDate for the range search",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "The endDate for the range search",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/index-items/{indexItemGuid}": {
+      "get": {
+        "tags": [
+          "Journal"
+        ],
+        "summary": "Get general indexitems by journal volume id",
+        "description": "Returns the general indexitems based off the journal volume id provided",
+        "parameters": [
+          {
+            "name": "indexItemGuid",
+            "in": "path",
+            "description": "The guid of the journal index item",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "journalVolumeId",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalIndexItemModel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalIndexItemModel"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalIndexItemModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/journal-volumes/{id}": {
+      "get": {
+        "tags": [
+          "Journal"
+        ],
+        "summary": "Get a JournalVolume by id",
+        "description": "Returns the JournalVolume based off the id provided",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the JournalVolume",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalVolumeModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalVolumeModel"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalVolumeModel"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalVolumeModel"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/JournalVolumeModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/journal-volumes": {
+      "get": {
+        "tags": [
+          "Journal"
+        ],
+        "summary": "Get a list of JournalVolumes",
+        "description": "Returns the list of JournalVolumes",
+        "parameters": [
+          {
+            "name": "Take",
+            "in": "query",
+            "schema": {
+              "maximum": 30,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Skip",
+            "in": "query",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalVolumeModel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalVolumeModel"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalVolumeModel"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalVolumeModel"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalVolumeModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/journal-volumes/{id}/general-index": {
+      "get": {
+        "tags": [
+          "Journal"
+        ],
+        "summary": "Get general indexitems by journal volume id.\r\n'Try it now' may not work for this endpoint due to size of response; please use the browser or other API explorer to call the endpoint.",
+        "description": "Returns the general indexitems based off the journal volume id provided",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the JournalVolume",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "StartingWith",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalIndexItemModel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalIndexItemModel"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalIndexItemModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/journal-volumes/{id}/membership-index": {
+      "get": {
+        "tags": [
+          "Journal"
+        ],
+        "summary": "Get membership indexitems by journal volume id",
+        "description": "Returns the membership indexitems based off the journal volume id provided",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the JournalVolume",
+            "required": true,
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "StartingWith",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalIndexItemModel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalIndexItemModel"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JournalIndexItemModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/legacybusiness/{dayDate}": {
+      "get": {
+        "tags": [
+          "Journal"
+        ],
+        "summary": "Get a list of legacy business documents for a given date",
+        "description": "Returns a list of all the legacy business documents for the given date",
+        "parameters": [
+          {
+            "name": "dayDate",
+            "in": "path",
+            "description": "The date for which to return a list of documents (yyyy-mm-dd)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LegacyDocumentListItem"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LegacyDocumentListItem"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LegacyDocumentListItem"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LegacyDocumentListItem"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LegacyDocumentListItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/GetSections.{format}": {
+      "get": {
+        "tags": [
+          "Section"
+        ],
+        "summary": "Get a list of all business sections",
+        "description": "Returns a list of all business sections",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "path",
+            "description": "the required output format\r\n(xml or json)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SectionModel"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SectionModel"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SectionModel"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SectionModel"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SectionModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/GetSectionsForDate.{format}": {
+      "get": {
+        "tags": [
+          "Section"
+        ],
+        "summary": "Get a list of business section id’s for a given date",
+        "description": "Returns a list of business section id’s for a given date",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "path",
+            "description": "the required output format\r\n(xml or json)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "businessPaperDate",
+            "in": "query",
+            "description": "The date for which a list of business sections id’s are required\r\n(yyyy-mm-dd)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/GetData.{format}": {
+      "get": {
+        "tags": [
+          "Section"
+        ],
+        "summary": "Get details for a given section",
+        "description": "Returns details for a given section given it’s section id and date",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "path",
+            "description": "the required output format\r\n(xml or json)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "BusinessPaperDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "SectionId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/v1/NonSittingDays.{format}/{month}/{year}": {
+      "get": {
+        "tags": [
+          "SittingDays"
+        ],
+        "summary": "Get a list of non-sitting days",
+        "description": "Returns a list of non-sitting days for a given month and year. If a non-sitting period spans more than the given month, and data source is Calendar, non-sitting days for\r\n            the entire period encompassing the given month will be returned.",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "path",
+            "description": "The number of the month for which to return non-sitting days e.g. enter 12 for month of December",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "year",
+            "in": "path",
+            "description": "The year for which to return non-sitting days",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "format",
+            "in": "path",
+            "description": "the required output format\r\n(xml or json)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dataSource",
+            "in": "query",
+            "description": "Source of non sitting days. Default is Calendar. select \"PublishedBusiness\" to instead return days with no published business.",
+            "schema": {
+              "$ref": "#/components/schemas/NonSittingDaySource"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/GetNextPrevDaysWithItemsOfBusiness.{format}": {
+      "get": {
+        "tags": [
+          "SittingDays"
+        ],
+        "summary": "Get next and previous sitting days with items of business",
+        "description": "Get next and previous sitting days which have items of business. If the next or previous sitting date does not have an item of business, null is returned",
+        "parameters": [
+          {
+            "name": "format",
+            "in": "path",
+            "description": "the required output format\r\n(xml or json)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "initialDate",
+            "in": "query",
+            "description": "The date from which to return the previous and next days with items of business\r\n(yyyy-mm-dd)",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FutureAndPreviousBusinessDays"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FutureAndPreviousBusinessDays"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/FutureAndPreviousBusinessDays"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/FutureAndPreviousBusinessDays"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/FutureAndPreviousBusinessDays"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/WrittenQuestions/list.{format}": {
+      "get": {
+        "tags": [
+          "WrittenQuestions"
+        ],
+        "summary": "Get a list of Written Questions",
+        "description": "Get a list of Written Questions which meet the specified criteria. Only returns questions which have been published.",
+        "parameters": [
+          {
+            "name": "MemberId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Ids",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "Uin",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Statuses",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/WrittenQuestionStatus"
+              }
+            }
+          },
+          {
+            "name": "TabledStartDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "TabledEndDate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "OrderBy",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WrittenQuestionOrderBy"
+            }
+          },
+          {
+            "name": "Skip",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Take",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "format",
+            "in": "path",
+            "description": "The required output format (xml or json)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrittenQuestionListApiResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrittenQuestionListApiResponse"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrittenQuestionListApiResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrittenQuestionListApiResponse"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrittenQuestionListApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/WrittenQuestions/{id}.{format}": {
+      "get": {
+        "tags": [
+          "WrittenQuestions"
+        ],
+        "summary": "Get a single Written Question by ID",
+        "description": "Get a single Written Question which has the ID specified. Only returns a question if it has been published.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The ID of the question to get.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "format",
+            "in": "path",
+            "description": "The required output format (xml or json)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrittenQuestionApiResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrittenQuestionApiResponse"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrittenQuestionApiResponse"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrittenQuestionApiResponse"
+                }
+              },
+              "text/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/WrittenQuestionApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnsweringBody": {
+        "type": "object",
+        "properties": {
+          "answeringBodyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "answeringBodyName": {
+            "type": "string",
+            "nullable": true
+          },
+          "abbreviation": {
+            "type": "string",
+            "nullable": true
+          },
+          "answersTopical": {
+            "type": "boolean"
+          },
+          "answersSubstantive": {
+            "type": "boolean"
+          },
+          "answersOrdinary": {
+            "type": "boolean"
+          },
+          "namedDay": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssociatedDocumentListItem": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DefaultItemOfBusinessSummary": {
+        "type": "object",
+        "properties": {
+          "businessType": {
+            "type": "string",
+            "nullable": true
+          },
+          "businessCategoryPath": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "orderPaperEntry": {
+            "type": "string",
+            "nullable": true
+          },
+          "minuteEntry": {
+            "type": "string",
+            "nullable": true
+          },
+          "subjectHeading": {
+            "type": "string",
+            "nullable": true
+          },
+          "associatedDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssociatedDocumentListItem"
+            },
+            "nullable": true
+          },
+          "timeMetadata": {
+            "$ref": "#/components/schemas/TimingMetadata"
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinksListItem"
+            },
+            "nullable": true
+          },
+          "speakersByParty": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartyMembersListItem"
+            },
+            "nullable": true
+          },
+          "divisions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DivisionListItem"
+            },
+            "nullable": true
+          },
+          "mainMember": {
+            "$ref": "#/components/schemas/MainMemberSummary"
+          },
+          "subtype": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DefaultItemOfBusinessSummaryItemOfBusinessSummaryContainer": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "$ref": "#/components/schemas/DefaultItemOfBusinessSummary"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ItemOfBusinessSummaryType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DivisionListItem": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "string",
+            "nullable": true
+          },
+          "ayesCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "noesCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "number": {
+            "type": "string",
+            "nullable": true
+          },
+          "textBeforeVote": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DocumentForDayListItem": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "nullable": true
+          },
+          "documentTypeId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "documentForDayId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FutureAndPreviousBusinessDays": {
+        "type": "object",
+        "properties": {
+          "futureBusinessDay": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "previousBusinessDay": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HttpStatusCode": {
+        "enum": [
+          "Continue",
+          "SwitchingProtocols",
+          "Processing",
+          "EarlyHints",
+          "OK",
+          "Created",
+          "Accepted",
+          "NonAuthoritativeInformation",
+          "NoContent",
+          "ResetContent",
+          "PartialContent",
+          "MultiStatus",
+          "AlreadyReported",
+          "IMUsed",
+          "MultipleChoices",
+          "MovedPermanently",
+          "Found",
+          "SeeOther",
+          "NotModified",
+          "UseProxy",
+          "Unused",
+          "TemporaryRedirect",
+          "PermanentRedirect",
+          "BadRequest",
+          "Unauthorized",
+          "PaymentRequired",
+          "Forbidden",
+          "NotFound",
+          "MethodNotAllowed",
+          "NotAcceptable",
+          "ProxyAuthenticationRequired",
+          "RequestTimeout",
+          "Conflict",
+          "Gone",
+          "LengthRequired",
+          "PreconditionFailed",
+          "RequestEntityTooLarge",
+          "RequestUriTooLong",
+          "UnsupportedMediaType",
+          "RequestedRangeNotSatisfiable",
+          "ExpectationFailed",
+          "MisdirectedRequest",
+          "UnprocessableEntity",
+          "Locked",
+          "FailedDependency",
+          "UpgradeRequired",
+          "PreconditionRequired",
+          "TooManyRequests",
+          "RequestHeaderFieldsTooLarge",
+          "UnavailableForLegalReasons",
+          "InternalServerError",
+          "NotImplemented",
+          "BadGateway",
+          "ServiceUnavailable",
+          "GatewayTimeout",
+          "HttpVersionNotSupported",
+          "VariantAlsoNegotiates",
+          "InsufficientStorage",
+          "LoopDetected",
+          "NotExtended",
+          "NetworkAuthenticationRequired"
+        ],
+        "type": "string"
+      },
+      "ItemOfBusinessSummaryType": {
+        "enum": [
+          "Default",
+          "WrittenQuestion",
+          "StatutoryInstrument"
+        ],
+        "type": "string"
+      },
+      "JournalAttachmentModel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "journalContentId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "htmlContent": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "JournalContentModel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "journalContentTypeId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "journalVolumeId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "journalDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "journalData": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JournalHtmlElement"
+            },
+            "nullable": true
+          },
+          "journalAttachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JournalAttachmentModel"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "JournalHtmlAttribute": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "text": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "JournalHtmlElement": {
+        "type": "object",
+        "properties": {
+          "attributes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JournalHtmlAttribute"
+            },
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JournalHtmlText"
+            },
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/JournalHtmlElementType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "JournalHtmlElementType": {
+        "enum": [
+          "HeadingTwo",
+          "HeadingThree",
+          "HeadingFour",
+          "Link",
+          "ListItem",
+          "Paragraph"
+        ],
+        "type": "string"
+      },
+      "JournalHtmlText": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "type": {
+            "$ref": "#/components/schemas/JournalHtmlTextType"
+          }
+        },
+        "additionalProperties": false
+      },
+      "JournalHtmlTextType": {
+        "enum": [
+          "Bold",
+          "Italic",
+          "Normal"
+        ],
+        "type": "string"
+      },
+      "JournalIndexItemModel": {
+        "type": "object",
+        "properties": {
+          "journalIndexItemId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "journalIndexItemGuid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "parentIndexItemGuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "indexType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "journalVolumeId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "journalDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "journalContentTypeId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "itemName": {
+            "type": "string",
+            "nullable": true
+          },
+          "contentGuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "preamble": {
+            "type": "string",
+            "nullable": true
+          },
+          "parentJournalIndexItemId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "indexStyle": {
+            "type": "string",
+            "nullable": true
+          },
+          "childJournalIndexItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JournalIndexItemModel"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "JournalVolumeModel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "fullyPublished": {
+            "type": "boolean"
+          },
+          "pdfLink": {
+            "type": "string",
+            "nullable": true
+          },
+          "pdfFileSize": {
+            "type": "string",
+            "nullable": true
+          },
+          "htmlLink": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LegacyDocumentListItem": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string",
+            "nullable": true
+          },
+          "htmlUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "pdfUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "docucumentDate": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "LinksListItem": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MainMemberSummary": {
+        "type": "object",
+        "properties": {
+          "member": {
+            "$ref": "#/components/schemas/MemberListItem"
+          },
+          "memberOnBehalfOf": {
+            "$ref": "#/components/schemas/MemberListItem"
+          },
+          "memberRegisteredInterests": {
+            "$ref": "#/components/schemas/RegisteredInterestsSummary"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MemberListItem": {
+        "type": "object",
+        "properties": {
+          "mnisId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dodsId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "partyId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "party": {
+            "type": "string",
+            "nullable": true
+          },
+          "partyColour": {
+            "type": "string",
+            "nullable": true
+          },
+          "memberFrom": {
+            "type": "string",
+            "nullable": true
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "NonSittingDaySource": {
+        "enum": [
+          "Calendar",
+          "PublishedBusiness"
+        ],
+        "type": "string"
+      },
+      "PagingInfo": {
+        "type": "object",
+        "properties": {
+          "skip": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "take": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PartyMembersListItem": {
+        "type": "object",
+        "properties": {
+          "partyId": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "partyName": {
+            "type": "string",
+            "nullable": true
+          },
+          "partyColour": {
+            "type": "string",
+            "nullable": true
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberListItem"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisteredInterestsCategorySummary": {
+        "type": "object",
+        "properties": {
+          "categoryName": {
+            "type": "string",
+            "nullable": true
+          },
+          "interests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RegisteredInterestsItemSummary"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisteredInterestsItemSummary": {
+        "type": "object",
+        "properties": {
+          "interestDetail": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RegisteredInterestsSummary": {
+        "type": "object",
+        "properties": {
+          "interestCategories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RegisteredInterestsCategorySummary"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SectionModel": {
+        "type": "object",
+        "properties": {
+          "sectionId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sectionType": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "showMinuteEntry": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TimingMetadata": {
+        "type": "object",
+        "properties": {
+          "hansardExternalId": {
+            "type": "string",
+            "nullable": true
+          },
+          "startDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "endDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "duration": {
+            "type": "string",
+            "format": "date-span",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WrittenQuestion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "uin": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "questionText": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateTabled": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dateForAnswer": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dateAnswered": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "status": {
+            "$ref": "#/components/schemas/WrittenQuestionStatus"
+          },
+          "memberId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "answeringBodyId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "askee": {
+            "type": "string",
+            "nullable": true
+          },
+          "isOverdue": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "uinWithPrefix": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "answeringBody": {
+            "$ref": "#/components/schemas/AnsweringBody"
+          },
+          "member": {
+            "$ref": "#/components/schemas/WrittenQuestionMember"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WrittenQuestionApiResponse": {
+        "type": "object",
+        "properties": {
+          "pagingInfo": {
+            "$ref": "#/components/schemas/PagingInfo"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "success": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "response": {
+            "$ref": "#/components/schemas/WrittenQuestion"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WrittenQuestionListApiResponse": {
+        "type": "object",
+        "properties": {
+          "pagingInfo": {
+            "$ref": "#/components/schemas/PagingInfo"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/HttpStatusCode"
+          },
+          "success": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "response": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WrittenQuestion"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WrittenQuestionMember": {
+        "type": "object",
+        "properties": {
+          "mnisId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "listAs": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WrittenQuestionOrderBy": {
+        "enum": [
+          "DateTabledAsc",
+          "DateTabledDesc"
+        ],
+        "type": "string"
+      },
+      "WrittenQuestionStatus": {
+        "enum": [
+          "Tabled",
+          "Answered",
+          "Withdrawn"
+        ],
+        "type": "string"
+      }
+    }
+  }
+}

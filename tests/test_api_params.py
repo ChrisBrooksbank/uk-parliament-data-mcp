@@ -30,6 +30,7 @@ SPEC_FOR_HOST = {
     "erskinemay-api.parliament.uk": "erskinemay",
     "hansard-api.parliament.uk": "hansard",
     "interests-api.parliament.uk": "interests",
+    "services.lordsbusiness.parliament.uk": "lordsbusiness",
     "lordsvotes-api.parliament.uk": "lordsvotes",
     "members-api.parliament.uk": "members",
     "oralquestionsandmotions-api.parliament.uk": "oralquestions",
