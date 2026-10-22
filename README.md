@@ -437,6 +437,12 @@ The package includes a `parliament` CLI for terminal access to all 233 UK Parlia
 
 *Recorded against the live Parliament APIs ([`scripts/record-cli-demo.sh`](scripts/record-cli-demo.sh)).*
 
+**What's on the Lords order paper?** List the day's business documents, then read the Order Paper PDF itself:
+
+![parliament CLI demo: listing the Lords business documents for 15 January 2025, fetching the Order Paper PDF and reading its oral questions, bills and regulations](https://raw.githubusercontent.com/ChrisBrooksbank/uk-parliament-data-mcp/main/docs/media/lords-demo.gif)
+
+*Run against the live Lords business API ([`scripts/record-lords-demo.sh`](scripts/record-lords-demo.sh)). The PDF is fetched by its `DocumentForDayId` URL and read with `pdftotext`.*
+
 ### Install — Standalone Executable (Recommended)
 
 **No Python required.** Download a single file, and you're ready to go:
