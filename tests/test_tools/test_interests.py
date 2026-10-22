@@ -76,7 +76,35 @@ class TestSearchROI:
 
             mock.assert_called_once()
             call_url = mock.call_args[0][0]
-            assert call_url == f"{INTERESTS_API_BASE}/Interests/?MemberId=172"
+            # v2 also matches the member's staff and hides expired interests by default,
+            # so the tool asks for the member's own register
+            assert call_url == f"{INTERESTS_API_BASE}/Interests/?MemberId=172&Type=Commons"
+
+    @pytest.mark.asyncio
+    async def test_register_type_and_expired_options(self):
+        """search_roi can include staff interests and expired interests."""
+        with patch("uk_parliament_mcp.tools.interests.get_result", new_callable=AsyncMock) as mock:
+            mock.return_value = '{"url": "test", "data": "{}"}'
+
+            mcp = FastMCP(name="test")
+            interests.register_tools(mcp)
+
+            await mcp.call_tool(
+                "search_roi",
+                {"member_id": 172, "register_type": "CommonsStaff", "include_expired": True},
+            )
+            staff_url = mock.call_args[0][0]
+            await mcp.call_tool("search_roi", {"member_id": 172, "register_type": ""})
+            both_url = mock.call_args[0][0]
+
+        assert "Type=CommonsStaff" in staff_url
+        assert "ExcludeExpired=false" in staff_url
+        assert "Type" not in both_url
+        assert "ExcludeExpired" not in both_url
+
+    def test_uses_v2_api(self):
+        """The interests base URL is the v2 API."""
+        assert INTERESTS_API_BASE.endswith("/api/v2")
 
     @pytest.mark.asyncio
     async def test_handles_different_member_ids(self):

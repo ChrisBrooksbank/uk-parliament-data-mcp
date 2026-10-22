@@ -53,7 +53,9 @@ async def _get_mp_profile_async(member_id: int) -> str:
 
     # Step 2: Parallel requests for details
     biography_url = f"{MEMBERS_API_BASE}/Members/{member_id}/Biography"
-    interests_url = f"{INTERESTS_API_BASE}/Interests/?MemberId={member_id}"
+    interests_url = build_url(
+        f"{INTERESTS_API_BASE}/Interests/", {"MemberId": member_id, "Type": "Commons"}
+    )
     voting_url = build_url(
         f"{MEMBERS_API_BASE}/Members/{member_id}/Voting", {"house": house, "page": 1}
     )
@@ -343,7 +345,9 @@ async def _get_my_mp_async(postcode: str, topic: str | None = None) -> str:
 
     # Step 2: Parallel detail fetches
     biography_url = f"{MEMBERS_API_BASE}/Members/{member_id}/Biography"
-    interests_url = f"{INTERESTS_API_BASE}/Interests/?MemberId={member_id}"
+    interests_url = build_url(
+        f"{INTERESTS_API_BASE}/Interests/", {"MemberId": member_id, "Type": "Commons"}
+    )
     election_url = f"{MEMBERS_API_BASE}/Members/{member_id}/LatestElectionResult"
     voting_url = build_url(
         f"{MEMBERS_API_BASE}/Members/{member_id}/Voting",

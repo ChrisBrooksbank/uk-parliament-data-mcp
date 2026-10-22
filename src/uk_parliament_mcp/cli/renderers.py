@@ -713,8 +713,8 @@ def render_mp_profile(result_json: str) -> None:
                     )
 
     # Registered interests
-    # Interests API returns flat items: each item has .category (object with .name)
-    # and .summary (the interest description).
+    # Interests API returns items: each has .category (object with .name)
+    # and the interest description (.versions[0].summary; .summary in the v1 API).
     interests = data.get("registered_interests", {})
     if isinstance(interests, dict):
         interest_items = interests.get("items", [])
@@ -731,8 +731,8 @@ def render_mp_profile(result_json: str) -> None:
                         cat = cat_info.get("name", "")
                     else:
                         cat = str(cat_info) if cat_info else ""
-                    summary = item.get("summary", "")
-                    table.add_row(cat, str(summary) if summary else "")
+                    summary = _interest_summary(item)
+                    table.add_row(cat, summary)
             if table.row_count > 0:
                 console.print(
                     Panel(table, title="[bold]Registered Interests[/bold]", border_style="dim")
@@ -1141,8 +1141,8 @@ def render_my_mp(result_json: str) -> None:
                     )
 
     # --- Registered interests ---
-    # Interests API returns flat items: each item has .category (object with .name)
-    # and .summary (the interest description), plus optional .fields for detail.
+    # Interests API returns items: each has .category (object with .name)
+    # and the interest description (.versions[0].summary; .summary in the v1 API).
     interests = data.get("registered_interests", {})
     if isinstance(interests, dict):
         interest_items = interests.get("items", [])
@@ -1159,8 +1159,8 @@ def render_my_mp(result_json: str) -> None:
                         cat = cat_info.get("name", "")
                     else:
                         cat = str(cat_info) if cat_info else ""
-                    summary = item.get("summary", "")
-                    table.add_row(cat, str(summary) if summary else "")
+                    summary = _interest_summary(item)
+                    table.add_row(cat, summary)
             if table.row_count > 0:
                 console.print(
                     Panel(table, title="[bold]Registered Interests[/bold]", border_style="dim")
@@ -1969,6 +1969,14 @@ def _member_votes_panel(votes: list[dict[str, Any]], house: Any, title: str) -> 
             str(v.get("noes", "")),
         )
     return Panel(table, title=f"[bold]{title}[/bold]", border_style="dim")
+
+
+def _interest_summary(item: dict[str, Any]) -> str:
+    """Description of a Register of Interests entry (v2: latest version; v1: top level)."""
+    versions = item.get("versions")
+    latest = versions[0] if isinstance(versions, list) and versions else {}
+    summary = (latest.get("summary") if isinstance(latest, dict) else None) or item.get("summary")
+    return str(summary) if summary else ""
 
 
 def _print_error_and_suggestions(console: Console, data: dict[str, Any]) -> bool:

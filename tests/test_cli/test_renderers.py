@@ -7,6 +7,7 @@ from io import StringIO
 from typing import Any
 from unittest.mock import patch
 
+import pytest
 from rich.console import Console
 
 from uk_parliament_mcp.cli.formatters import OutputFormat
@@ -217,6 +218,29 @@ class TestRenderMpProfile:
         text = output.getvalue()
         assert "Test MP" in text
         assert "Registered Interests" in text
+
+    @pytest.mark.parametrize(
+        "item",
+        [
+            {"category": {"name": "Visits"}, "versions": [{"summary": "Trip to Gibraltar"}]},
+            {"category": {"name": "Visits"}, "summary": "Trip to Gibraltar"},
+        ],
+        ids=["v2-versions", "v1-flat"],
+    )
+    def test_renders_interest_summary(self, item: dict) -> None:
+        data = {
+            "member_id": 100,
+            "basic_info": {"nameDisplayAs": "Test MP"},
+            "biography": {},
+            "registered_interests": {"items": [item]},
+            "recent_voting": {"items": []},
+            "sources": {},
+        }
+        output = StringIO()
+        console = Console(file=output, force_terminal=True, width=200)
+        with patch("uk_parliament_mcp.cli.renderers.Console", return_value=console):
+            render_mp_profile(json.dumps(data))
+        assert "Trip to Gibraltar" in output.getvalue()
 
     def test_renders_with_votes(self) -> None:
         data = {
