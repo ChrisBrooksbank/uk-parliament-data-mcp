@@ -3,23 +3,35 @@
 from mcp.server.fastmcp import FastMCP
 
 from uk_parliament_mcp.config import INTERESTS_API_BASE
-from uk_parliament_mcp.http_client import get_result, get_result_cached
+from uk_parliament_mcp.http_client import build_url, get_result, get_result_cached
 
 
 def register_tools(mcp: FastMCP) -> None:
     """Register interests tools with the MCP server."""
 
     @mcp.tool()
-    async def search_roi(member_id: int) -> str:
-        """Search member's Register of Interests for financial and business declarations | register of interests, ROI, financial interests, conflicts of interest, directorships, consultancies, gifts, external roles, transparency | Use for investigating potential conflicts, researching member finances, or checking declared interests | Returns declared interests including directorships, consultancies, gifts, and other financial interests See also: get_member_registered_interests, interests_categories, get_mp_profile.
+    async def search_roi(
+        member_id: int, register_type: str | None = "Commons", include_expired: bool = False
+    ) -> str:
+        """Search member's Register of Interests for financial and business declarations | register of interests, ROI, financial interests, conflicts of interest, directorships, consultancies, gifts, external roles, transparency | Use for investigating potential conflicts, researching member finances, or checking declared interests | Returns a member's current declared interests (set include_expired for lapsed ones, register_type='CommonsStaff' for their staff's) including directorships, consultancies, gifts, and other financial interests. See also: get_member_registered_interests, interests_categories, get_mp_profile.
 
         Args:
-            member_id: Parliament member ID. Required: get from member search first. Returns all declared interests.
+            member_id: Parliament member ID. Required: get from member search first.
+            register_type: Register to search: 'Commons' (the member's own interests, default) or 'CommonsStaff' (interests declared by the member's staff). Pass an empty string for both.
+            include_expired: Also return interests that have expired (default False, current interests only).
 
         Returns:
             Declared interests including directorships, consultancies, gifts, and other financial interests.
         """
-        url = f"{INTERESTS_API_BASE}/Interests/?MemberId={member_id}"
+        url = build_url(
+            f"{INTERESTS_API_BASE}/Interests/",
+            {
+                "MemberId": member_id,
+                "Type": register_type,
+                # The v2 API hides expired interests unless told otherwise
+                "ExcludeExpired": False if include_expired else None,
+            },
+        )
         return await get_result(url)
 
     @mcp.tool()

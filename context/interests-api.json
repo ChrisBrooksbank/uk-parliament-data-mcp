@@ -8,16 +8,27 @@
       "url": "https://www.parliament.uk/",
       "email": "softwareengineering@parliament.uk"
     },
-    "version": "v1"
+    "version": "v2"
   },
   "paths": {
-    "/api/v1/Categories": {
+    "/api/v2/Categories": {
       "get": {
         "tags": [
           "Categories"
         ],
         "summary": "Return a list of categories interests should be registered under, sorted by category number.",
         "parameters": [
+          {
+            "name": "Type",
+            "in": "query",
+            "description": "Type of categories (commons members, commons staff list etc.) to filter by.\r\nIf not provided, all categories will be returned. Please note: this **will** include other types as they are added in the future.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RegisterType"
+              }
+            }
+          },
           {
             "name": "Skip",
             "in": "query",
@@ -63,7 +74,7 @@
         }
       }
     },
-    "/api/v1/Categories/{id}": {
+    "/api/v2/Categories/{id}": {
       "get": {
         "tags": [
           "Categories"
@@ -105,13 +116,64 @@
         }
       }
     },
-    "/api/v1/Interests": {
+    "/api/v2/Interests": {
       "get": {
         "tags": [
           "Interests"
         ],
-        "summary": "Return a list of interests that have been published on a register.",
+        "summary": "Return a list of interests that have been published.",
         "parameters": [
+          {
+            "name": "RegisterId",
+            "in": "query",
+            "description": "Search for an interest published in a register with this ID. If not provided, returns interests in all registers.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "InterestIds",
+            "in": "query",
+            "description": "List of interest ids to filter by.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "Type",
+            "in": "query",
+            "description": "Type of categories (commons members, commons staff list etc.) to filter by.\r\nIf not provided, all categories will be returned. Please note: this **will** include other types as they are added in the future.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RegisterType"
+              }
+            }
+          },
+          {
+            "name": "ExcludeExpired",
+            "in": "query",
+            "description": "Whether to include or exclude interests that have expired (will also apply to child interests if ExpandChildInterests is true).",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "Take",
+            "in": "query",
+            "description": "The number of records to return, default is 20.",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          },
           {
             "name": "MemberId",
             "in": "query",
@@ -185,30 +247,11 @@
             }
           },
           {
-            "name": "RegisterId",
-            "in": "query",
-            "description": "Search for an interest published in a register with this ID. If not provided, default value is latest register ID.",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
             "name": "ExpandChildInterests",
             "in": "query",
             "description": "If true returns related interests in a nested format, rather than as individual items.",
             "schema": {
               "type": "boolean"
-            }
-          },
-          {
-            "name": "Take",
-            "in": "query",
-            "description": "The number of records to return, default is 20. Maximum is 20.",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 20
             }
           },
           {
@@ -254,14 +297,104 @@
         }
       }
     },
-    "/api/v1/Interests/csv": {
+    "/api/v2/Interests/{id}": {
       "get": {
         "tags": [
           "Interests"
         ],
-        "summary": "Return interests that have been published on a register as a collection of CSVs packaged in a ZIP file.",
-        "description": "If the result set is an empty, an empty ZIP will be returned.",
+        "summary": "Return the latest version of an interest which has been published.",
         "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the interest.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishedInterest"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectApiResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/Interests/csv": {
+      "get": {
+        "tags": [
+          "Interests"
+        ],
+        "summary": "Return interests that have been published on a register as a collection of CSVs packaged in a ZIP file",
+        "parameters": [
+          {
+            "name": "InterestIds",
+            "in": "query",
+            "description": "List of interest ids to filter by.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "ExpandChildInterests",
+            "in": "query",
+            "description": "If true returns related interests together (in subsequent rows from parent interest), rather than in a separate file",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "RegisterId",
+            "in": "query",
+            "description": "Search for an interest published in a register with this ID. If not provided, returns interests in all registers.",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Type",
+            "in": "query",
+            "description": "Type of categories (commons members, commons staff list etc.) to filter by.\r\nIf not provided, all categories will be returned. Please note: this **will** include other types as they are added in the future.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RegisterType"
+              }
+            }
+          },
+          {
+            "name": "ExcludeExpired",
+            "in": "query",
+            "description": "Whether to include or exclude interests that have expired (will also apply to child interests if ExpandChildInterests is true).",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
           {
             "name": "MemberId",
             "in": "query",
@@ -335,15 +468,6 @@
             }
           },
           {
-            "name": "RegisterId",
-            "in": "query",
-            "description": "Search for an interest published in a register with this ID. If not provided, default value is latest register ID.",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
             "name": "IncludeFieldDescriptions",
             "in": "query",
             "description": "Returns a metadata file for each category, containing a list of fields which are available for a member to add further information about the interest.",
@@ -354,46 +478,18 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/Interests/{id}": {
-      "get": {
-        "tags": [
-          "Interests"
-        ],
-        "summary": "Return the latest version of an interest which has been published.",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of the interest.",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
             "description": "OK",
             "content": {
-              "application/json": {
+              "application/zip": {
                 "schema": {
-                  "$ref": "#/components/schemas/PublishedInterest"
+                  "type": "string",
+                  "format": "binary"
                 }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
+              },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ObjectApiResponse"
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }
@@ -401,13 +497,24 @@
         }
       }
     },
-    "/api/v1/Registers": {
+    "/api/v2/Registers": {
       "get": {
         "tags": [
           "Registers"
         ],
         "summary": "Return a list of published versions of registers of interests.",
         "parameters": [
+          {
+            "name": "Type",
+            "in": "query",
+            "description": "Type of register (commons members, commons staff list etc.) to filter by.\r\nIf not provided, all register will be returned. Please note: this **will** include other types as they are added in the future.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/RegisterType"
+              }
+            }
+          },
           {
             "name": "SessionId",
             "in": "query",
@@ -452,7 +559,7 @@
         }
       }
     },
-    "/api/v1/Registers/{id}": {
+    "/api/v2/Registers/{id}": {
       "get": {
         "tags": [
           "Registers"
@@ -484,7 +591,7 @@
         }
       }
     },
-    "/api/v1/Registers/{id}/document": {
+    "/api/v2/Registers/{id}/document": {
       "get": {
         "tags": [
           "Registers"
@@ -554,6 +661,31 @@
           "GenericError"
         ],
         "type": "string"
+      },
+      "DisplayInformation": {
+        "type": "object",
+        "properties": {
+          "displayLabel": {
+            "type": "string",
+            "nullable": true
+          },
+          "displayValue": {
+            "type": "string",
+            "nullable": true
+          },
+          "hideIfNullOrEmpty": {
+            "type": "boolean"
+          },
+          "accordionTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "groupTitle": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
       "Field": {
         "type": "object",
@@ -654,7 +786,7 @@
           },
           "memberFrom": {
             "type": "string",
-            "description": "Constituency of Commons Members.",
+            "description": "How they are a Member of Parliament (for MP, this is their constituency)",
             "nullable": true
           },
           "party": {
@@ -673,6 +805,47 @@
         },
         "additionalProperties": false,
         "description": "Member of Parliament who has registered the interest."
+      },
+      "MemberStaffEmployment": {
+        "required": [
+          "member"
+        ],
+        "type": "object",
+        "properties": {
+          "jobTitle": {
+            "type": "string",
+            "description": "Job title the staff member holds for the member.",
+            "nullable": true
+          },
+          "member": {
+            "$ref": "#/components/schemas/Member"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Information about the member a staff member works for, and their job title for that member."
+      },
+      "MemberStaffInfo": {
+        "required": [
+          "employment"
+        ],
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "description": "Unique identifier for the staff on a per-request basis to enable correlation of interest within same request where member has multiple staff with same job title.",
+            "nullable": true
+          },
+          "employment": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberStaffEmployment"
+            },
+            "description": "List of members the staff works for, and their job title per member.\r\nPlease note: not all interests declared by the staff will be relevant for all of their members. Refer to relevant field for that information.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Information for the staff member who has registered the interest"
       },
       "ObjectApiResponse": {
         "type": "object",
@@ -801,58 +974,32 @@
             "description": "ID of the interest.",
             "format": "int32"
           },
-          "summary": {
-            "type": "string",
-            "description": "Title Summary for the interest.",
-            "nullable": true
-          },
           "parentInterestId": {
             "type": "integer",
             "description": "The unique ID for the payer (parent interest) to which this payment (child interest) is associated.",
             "format": "int32",
             "nullable": true
           },
-          "registrationDate": {
-            "type": "string",
-            "description": "Registration Date on the published interest.",
-            "format": "date",
-            "nullable": true
-          },
-          "publishedDate": {
-            "type": "string",
-            "description": "Date when the interest was first published.",
-            "format": "date",
-            "nullable": true
-          },
-          "updatedDates": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "date"
-            },
-            "description": "A list of dates on which the interest has been updated since it has been published.",
-            "nullable": true
-          },
           "category": {
             "$ref": "#/components/schemas/PublishedCategory"
           },
-          "member": {
-            "$ref": "#/components/schemas/Member"
-          },
-          "fields": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Field"
-            },
-            "description": "List of fields which are available for a member to add further information about the interest.",
-            "nullable": true
+          "registrant": {
+            "$ref": "#/components/schemas/Registrant"
           },
           "childInterests": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/PublishedInterest"
             },
-            "description": "List of Interests which are sub interests of this interest. This property is only present if `ExpandChildInterests` is true, and is not defined by default.",
+            "description": "List of Interests which are sub interests of this interest. Only populated when `ExpandChildInterests` is true or when retrieving a single interest by ID; otherwise this is an empty list.",
+            "nullable": true
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublishedInterestVersion"
+            },
+            "description": "List of versions the interest has appeared in a register under",
             "nullable": true
           },
           "links": {
@@ -862,19 +1009,10 @@
             },
             "description": "A list of HATEOAS Links for retrieving related information about this interest.",
             "nullable": true
-          },
-          "rectified": {
-            "type": "boolean",
-            "description": "Whether the interest has been rectified (e.g. when the interest was submitted late)."
-          },
-          "rectifiedDetails": {
-            "type": "string",
-            "description": "The reason that the interest was rectified, or `null` if the interest was not rectified.",
-            "nullable": true
           }
         },
         "additionalProperties": false,
-        "description": "Version of an interest which has been published."
+        "description": "Representation of a interest that has been published"
       },
       "PublishedInterestApiLinkedSearchResult": {
         "type": "object",
@@ -913,6 +1051,75 @@
         },
         "additionalProperties": false,
         "description": "Paginated search result with HATEOAS Links."
+      },
+      "PublishedInterestVersion": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string",
+            "description": "Title Summary for the interest as at this publication.",
+            "nullable": true
+          },
+          "registrationDate": {
+            "type": "string",
+            "description": "Registration Date on the published interest as at this publication.",
+            "format": "date",
+            "nullable": true
+          },
+          "publishedDate": {
+            "type": "string",
+            "description": "Date when this version of interest was first published.",
+            "format": "date",
+            "nullable": true
+          },
+          "updatedDates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "A list of dates on which this version of interest was updated since it has been published.",
+            "nullable": true
+          },
+          "rectified": {
+            "type": "boolean",
+            "description": "Whether the version has been rectified (e.g. when the interest was submitted late)."
+          },
+          "rectifiedDetails": {
+            "type": "string",
+            "description": "The reason that the version was rectified, or `null` if this version was not rectified.",
+            "nullable": true
+          },
+          "register": {
+            "$ref": "#/components/schemas/PublishedRegister"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Field"
+            },
+            "description": "List of fields which are available for a member to add further information about this version.",
+            "nullable": true
+          },
+          "displayInformation": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DisplayInformation"
+            },
+            "description": "Display information for rendering this version in members web.",
+            "nullable": true
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            },
+            "description": "A list of HATEOAS Links for retrieving related information about this version.",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "Published version of the interest"
       },
       "PublishedRegister": {
         "type": "object",
@@ -990,10 +1197,38 @@
       },
       "RegisterType": {
         "enum": [
-          "Commons"
+          "Commons",
+          "CommonsStaff"
         ],
         "type": "string",
         "description": "The type of register of interests"
+      },
+      "Registrant": {
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/RegistrantType"
+          },
+          "memberStaffDetail": {
+            "$ref": "#/components/schemas/MemberStaffInfo"
+          },
+          "memberDetail": {
+            "$ref": "#/components/schemas/Member"
+          }
+        },
+        "additionalProperties": false,
+        "description": "Person who has registered the interest"
+      },
+      "RegistrantType": {
+        "enum": [
+          "Member",
+          "MemberStaff"
+        ],
+        "type": "string",
+        "description": "Type of the person who has registered the interest\r\nMore options may be added in the future."
       }
     }
   }

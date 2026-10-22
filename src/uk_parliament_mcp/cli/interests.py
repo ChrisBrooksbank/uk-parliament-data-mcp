@@ -46,6 +46,15 @@ def search_roi(
         None, "--updated-to", help="Updated to date (YYYY-MM-DD)"
     ),
     register_id: int | None = typer.Option(None, "--register-id", help="Filter by register ID"),
+    register_type: str = typer.Option(
+        "Commons",
+        "--type",
+        help="Register type: Commons (the member's own interests) or CommonsStaff (their staff's); "
+        "'' for both",
+    ),
+    include_expired: bool = typer.Option(
+        False, "--include-expired", help="Also return interests that have expired"
+    ),
     expand_child_interests: bool | None = typer.Option(
         None, "--expand-children", help="Expand child interests in results"
     ),
@@ -79,6 +88,8 @@ def search_roi(
             "UpdatedFrom": updated_from,
             "UpdatedTo": updated_to,
             "RegisterId": register_id,
+            "Type": register_type,
+            "ExcludeExpired": False if include_expired else None,
             "ExpandChildInterests": expand_child_interests,
             "SortOrder": sort_order,
             "Skip": skip,
