@@ -69,6 +69,8 @@ TOPIC_MODULES: dict[str, tuple[list[str], int]] = {
     "legislation": (["statutory_instruments", "treaties"], 0),
     # Erskine May plus bill_types and bill_stages from the bills module
     "procedures": (["erskine_may"], 2),
+    "lords_business": (["lords_business"], 0),
+    "documents": (["deposited_papers", "websearch"], 0),
 }
 
 # "### <section> (N tools)" in the "all" guide and the legislation guide

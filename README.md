@@ -160,7 +160,9 @@ You can ask questions about virtually all aspects of UK Parliament data. Here ar
 *   **Committees & Inquiries:** "Which committees are investigating economic issues?", "Show me evidence submitted to the Treasury Committee" or "Which committees scrutinised the Renters' Rights Bill?"
 *   **Parliamentary Procedures:** "Search Erskine May for references to Speaker's rulings" or "What are the oral question times this week?"
 *   **Constituencies & Elections:** "Show me election results for Birmingham constituencies" or "List all constituencies in Scotland"
-*   **Official Documents:** "Are there any statutory instruments about housing?" or "What treaties involve trade agreements?"
+*   **Official Documents:** "Are there any statutory instruments about housing?", "What treaties involve trade agreements?" or "What papers has the Department for Transport deposited this month?"
+*   **House of Lords Business:** "What is on the Lords order paper on 15 January?", "Did the Lords sit on 2 December?" or "Show Lords written questions answered in January"
+*   **Briefings & Explainers:** "Find Commons Library briefings on net zero" or "Search the Parliament website for sitting hours"
 *   **Transparency Data:** "Show register of interests for Treasury ministers" or "What are the declared interests categories?"
 *   **Not sure where to look?** "Search Parliament for net zero" searches members, bills, committees, Hansard and written questions at once.
 
@@ -388,6 +390,29 @@ Show me the JSON returned from the last MCP call.
 - What treaties involve Spain?
 - What publication types are available for bills?
 - Show me document 123 from publication 456
+
+</details>
+
+<details>
+<summary><strong>Lords Business</strong> (6 examples)</summary>
+
+- What is on the Lords order paper on 15 January 2025?
+- Which sections of the Lords business paper are published for 15 January 2025?
+- Did the House of Lords hold any divisions on 15 January 2025?
+- Which days in December 2024 did the Lords not sit?
+- Show the Lords Journal minutes of proceedings for 15 January 2020
+- Show Lords written questions tabled in January 2025 that have been answered
+
+</details>
+
+<details>
+<summary><strong>Deposited Papers and Briefings</strong> (5 examples)</summary>
+
+- Search deposited papers about defence procurement
+- What papers did the Department for Transport deposit in the Commons this year?
+- Show me deposited paper 2288285
+- Find Commons Library briefings on climate change
+- Search the Parliament website for sitting hours
 
 </details>
 

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `parliament_guide` has new `lords_business` and `documents` (deposited papers and website search) topics, `parliament_workflow` has matching workflows, and the README lists example questions for the Lords Business, Deposited Papers and Web Search APIs
+
 ### Added
 - Deposited Papers API (`depositedpapers-api.parliament.uk`): `search_deposited_papers` and `get_deposited_paper` MCP tools (233 tools) and a `parliament deposited-papers` CLI group. Its OpenAPI spec is in `context/depositedpapers-api.json`, so `parliament api` now covers 17 APIs.
 - Lords Business API (`services.lordsbusiness.parliament.uk`): 20 MCP tools (231 tools) and a `parliament lords-business` CLI group covering Lords business paper sections and documents, sitting and non-sitting days, Lords Journal volumes, indexes and sittings, legacy business and Lords written questions. Its OpenAPI spec is in `context/lordsbusiness-api.json`, so `parliament api` now covers 16 APIs.

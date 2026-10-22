@@ -593,6 +593,59 @@ International agreements requiring parliamentary scrutiny:
 ### Typical Workflow
 1. Search: search_statutory_instruments("environment")
 2. Details: get_si_business_items(instrument_id) -> parliamentary progress""",
+    "lords_business": """## Lords Business Tools (20 tools)
+
+House of Lords business papers, sitting days, the Lords Journal and Lords written questions.
+Dates are YYYY-MM-DD. Use get_lords_business_sections() once to learn the section_id values.
+
+### Business Papers (what the Lords is scheduled to consider)
+- get_lords_business_sections() - All section types (Order Paper, Future Business, ...)
+- get_lords_business_sections_for_date(business_paper_date) - Section ids published that day
+- get_lords_business_section_data(business_paper_date, section_id) - Items of business in a section
+- get_lords_item_of_business_summary(item_of_business_id, business_paper_date) - One item in detail
+- get_lords_business_documents_for_date(day_date) - Order paper and other documents for a day
+- get_lords_business_document(document_day_id) - One document (id from the list above)
+
+### Sitting Days
+- check_lords_divisions_exist(date) - Did the Lords vote that day? (true/false)
+- get_lords_non_sitting_days(month, year, data_source) - Recess and non-sitting dates (MM-DD-YYYY)
+- get_lords_next_prev_business_days(initial_date) - Neighbouring days with published business
+
+### Lords Journal (the formal record of proceedings)
+- get_lords_journal_volumes(skip, take) / get_lords_journal_volume(volume_id) - Volumes by session
+- get_lords_journal_general_index(volume_id, starting_with) - Subject index (large; filter it)
+- get_lords_journal_membership_index(volume_id, starting_with) - Index of Lords by name
+- get_lords_journal_index_items(index_item_guid, journal_volume_id) - Expand one index entry
+- get_lords_journal_content_dates(start_date, end_date) - Dates that have Journal data
+- get_lords_journal_sittings(sitting_date, content_type) - Attendance, MinutesOfProceedings, Papers, Appendix or Divisions
+- get_lords_journal_attachment(attachment_id) - Attachment referenced from the Journal
+- get_lords_legacy_business(day_date) - Older business papers
+
+### Lords Written Questions
+- search_lords_written_questions(member_id, uin, status, tabled_start_date, tabled_end_date, order_by, skip, take) - Always give a date range (unfiltered requests are slow)
+- get_lords_written_question(question_id) - One question and answer
+- For questions across both Houses use search_written_questions()
+
+### Typical Workflows
+1. What is the Lords doing on a day: get_lords_business_sections_for_date(date) -> get_lords_business_section_data(date, section_id)
+2. Did the Lords sit or vote: get_lords_non_sitting_days(month, year) / check_lords_divisions_exist(date)
+3. What happened in a sitting: get_lords_journal_sittings(date, "MinutesOfProceedings")""",
+    "documents": """## Documents and Website Search Tools (3 tools)
+
+### Deposited Papers (2 tools)
+Documents ministers deposit in the Libraries of both Houses: departmental reports, command papers, government responses.
+- search_deposited_papers(terms, house, deposited_from, deposited_to, department_ses_id, order_by, skip, take) - Filter by topic, house, date or department
+- get_deposited_paper(paper_id) - Full details with notes and attached document names
+- Department ids come from get_departments(). order_by is Relevance, CommitmentDateAsc or CommitmentDateDesc.
+
+### Website Search (1 tool)
+- search_parliament_website(search_terms, start, take) - Free-text search of parliament.uk, including Commons Library and POST research briefings, explainers and guides. Returns title, description, url and tags; take is capped at 20 (page with start).
+
+### When to Use Which
+- Looking for a briefing, explainer or guide on a topic: search_parliament_website()
+- Looking for a document a department formally deposited: search_deposited_papers()
+- Looking for what was said or voted on: search_hansard() / search_commons_divisions()
+- Not sure which source: search_parliament(query) searches members, bills, committees, Hansard and written questions at once""",
     "procedures": """## Procedure Tools (13 tools)
 
 ### Erskine May Navigation
@@ -838,6 +891,84 @@ Goal: Find regulations and treaties
 }
 
 WORKFLOW_PATTERNS: list[dict[str, Any]] = [
+    {
+        "keywords": [
+            "order paper",
+            "lords business",
+            "business paper",
+            "lords journal",
+            "lords agenda",
+            "lords written question",
+        ],
+        "name": "Lords Business Research",
+        "description": "Find what the House of Lords is scheduled to consider, or what it recorded",
+        "steps": [
+            {
+                "step": 1,
+                "tool": "get_lords_business_sections_for_date(business_paper_date)",
+                "purpose": "See which business paper sections exist for the day",
+                "output": "List of section_id values",
+            },
+            {
+                "step": 2,
+                "tool": "get_lords_business_section_data(business_paper_date, section_id)",
+                "purpose": "Read the items of business in a section",
+                "output": "Items of business with ids and descriptions",
+            },
+            {
+                "step": 3,
+                "tool": "get_lords_item_of_business_summary(item_of_business_id, business_paper_date)",
+                "purpose": "Drill into a single item",
+                "output": "Item summary",
+            },
+        ],
+        "alternative": "For the formal record use get_lords_journal_sittings(sitting_date, 'MinutesOfProceedings'); for Lords questions use search_lords_written_questions() with a date range",
+        "note": "Check get_lords_non_sitting_days(month, year) first if a date returns nothing",
+    },
+    {
+        "keywords": ["deposited", "command paper", "departmental report", "government report"],
+        "name": "Deposited Papers Research",
+        "description": "Find documents ministers have deposited in the Libraries of Parliament",
+        "steps": [
+            {
+                "step": 1,
+                "tool": "search_deposited_papers(terms, house, deposited_from, deposited_to)",
+                "purpose": "Find papers by topic, house, department or deposit date",
+                "output": "Papers with paperId, paper number, title, dates and departments",
+            },
+            {
+                "step": 2,
+                "tool": "get_deposited_paper(paper_id)",
+                "purpose": "Read one paper's notes and attached documents",
+                "output": "Full paper details",
+            },
+        ],
+        "alternative": "Use get_departments() to find a department_ses_id to filter by department",
+    },
+    {
+        "keywords": [
+            "research briefing",
+            "commons library",
+            "briefing",
+            "explainer",
+            "search the website",
+            "parliament website",
+        ],
+        "name": "Website and Briefing Search",
+        "description": "Find Commons Library briefings, explainers and other parliament.uk pages",
+        "steps": [
+            {
+                "step": 1,
+                "tool": "search_parliament_website(search_terms, start, take)",
+                "purpose": "Search parliament.uk content by free text",
+                "output": "Total results and a page of titles, descriptions, urls and tags",
+            },
+        ],
+        "tips": [
+            "take is capped at 20; page through results by increasing start",
+            "Matches are highlighted with <strong> tags in the description",
+        ],
+    },
     {
         "keywords": ["vote", "voted", "voting", "division", "aye", "noes"],
         "name": "MP Voting Research",
@@ -1114,6 +1245,9 @@ No specific workflow pattern matched. Here's a general approach:
 - **Votes**: Use search_commons_divisions() or search_lords_divisions()
 - **Committees**: Use search_committees()
 - **Debates**: Use search_hansard()
+- **Lords business papers and the Journal**: Use get_lords_business_sections_for_date()
+- **Deposited papers**: Use search_deposited_papers()
+- **Briefings and explainers**: Use search_parliament_website()
 
 ### Step 2: Get IDs from Search Results
 Most detail tools require an ID (member_id, bill_id, etc.) from search results.
@@ -1125,6 +1259,7 @@ Use specific tools like get_member_by_id(), get_bill_stages(), etc.
 Use parliament_guide(topic) with one of:
 - members, bills, votes, committees, hansard
 - questions, interests, live, legislation, procedures
+- lords_business, documents
 - all, conventions, workflows"""
 
 
@@ -1144,7 +1279,7 @@ def register_tools(mcp: FastMCP) -> None:
         """Get detailed guidance for a specific Parliament data domain | tool help, API reference, how to use tools, available tools | Use when you need detailed information about tools in a specific area | Returns comprehensive guidance including tool names, parameters, and typical workflows
 
         Args:
-            topic: Domain to get guidance for. Options: members, bills, votes, committees, hansard, questions, interests, live, legislation, procedures, all, conventions, workflows
+            topic: Domain to get guidance for. Options: members, bills, votes, committees, hansard, questions, interests, live, legislation, procedures, lords_business, documents, all, conventions, workflows
         """
         topic_lower = topic.lower().strip()
 
@@ -1245,7 +1380,7 @@ def register_prompts(mcp: FastMCP) -> None:
         Args:
             topic: Optional topic for detailed guidance (members, bills, votes,
                    committees, hansard, questions, interests, live, legislation,
-                   procedures, all, conventions, workflows)
+                   procedures, lords_business, documents, all, conventions, workflows)
         """
         base_content = f"{SYSTEM_PROMPT}\n\n---\n\n{QUICK_REFERENCE}"
 
