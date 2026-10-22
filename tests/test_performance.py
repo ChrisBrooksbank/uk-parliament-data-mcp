@@ -23,6 +23,7 @@ from uk_parliament_mcp.tools import (
     erskine_may,
     hansard,
     interests,
+    lords_business,
     members,
     now,
     oral_questions,
@@ -130,6 +131,7 @@ SINGLE_REQUEST_MODULES = [
     (treaties, "uk_parliament_mcp.tools.treaties.get_result", 6),
     (erskine_may, "uk_parliament_mcp.tools.erskine_may.get_result", 11),
     (websearch, "uk_parliament_mcp.tools.websearch.get_result", 1),
+    (lords_business, "uk_parliament_mcp.tools.lords_business.get_result", 20),
 ]
 
 

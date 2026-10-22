@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Lords Business API (`services.lordsbusiness.parliament.uk`): 20 MCP tools (231 tools) and a `parliament lords-business` CLI group covering Lords business paper sections and documents, sitting and non-sitting days, Lords Journal volumes, indexes and sittings, legacy business and Lords written questions. Its OpenAPI spec is in `context/lordsbusiness-api.json`, so `parliament api` now covers 16 APIs.
 - Web Search API (`websearch-api.parliament.uk`): `search_parliament_website` MCP tool (211 tools) and `parliament search website` CLI command for free-text search across the parliament.uk website, including Commons Library and POST research briefings. Its OpenAPI spec is in `context/websearch-api.json`, so `parliament api` now covers 15 APIs.
 
 ## [1.18.0] - 2026-10-01

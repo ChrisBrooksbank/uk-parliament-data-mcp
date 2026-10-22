@@ -30,7 +30,7 @@ An MCP (Model Context Protocol) server that gives AI assistants access to UK Par
 
 ## MCP Server for AI Assistants
 
-Connect your AI assistant to 211 UK Parliament API tools for comprehensive parliamentary research.
+Connect your AI assistant to 231 UK Parliament API tools for comprehensive parliamentary research.
 
 Prefer the terminal? See the [CLI demo](#cli-usage).
 
@@ -67,7 +67,7 @@ Prefer the terminal? See the [CLI demo](#cli-usage).
 - Use the `/parliament` slash command (in Claude Desktop or compatible MCP clients)
 - Or say **"Order Order"** (like the Speaker) to initialize the session
 
-This gives your AI assistant the context it needs to effectively use the 211 available tools. To end the session, start a new chat.
+This gives your AI assistant the context it needs to effectively use the 231 available tools. To end the session, start a new chat.
 
 <details>
 <summary>If neither works, paste this system prompt instead</summary>
@@ -406,7 +406,7 @@ Show me the JSON returned from the last MCP call.
 
 ## CLI Usage
 
-The package includes a `parliament` CLI for terminal access to all 211 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
+The package includes a `parliament` CLI for terminal access to all 231 UK Parliament API tools. Perfect for developers, researchers, and automation scripts.
 
 ![parliament CLI demo: Commons votes on the Terminally Ill Adults Bill, the MP for SW1A 1AA with their election result and recent votes, and a member search](https://raw.githubusercontent.com/ChrisBrooksbank/uk-parliament-data-mcp/main/docs/media/cli-demo.gif)
 
@@ -469,7 +469,7 @@ parliament live commons-now --pretty
 
 ### Common Commands
 
-The CLI organizes 211 tools into 14 command groups, plus the top-level `my-mp`, `digest`, `watch` and `reference` commands:
+The CLI organizes 231 tools into 15 command groups, plus the top-level `my-mp`, `digest`, `watch` and `reference` commands:
 
 ```bash
 # MP and Lords research
@@ -508,6 +508,10 @@ parliament legislation search-treaties "trade"
 
 # Erskine May procedure rules
 parliament procedures search "closure"
+
+# Lords business papers, Journal and Lords written questions
+parliament lords-business sections-for-date 2025-01-15
+parliament lords-business search-written-questions --tabled-from 2025-01-01 --tabled-to 2025-01-31 --take 5
 
 # Search the parliament.uk website (Commons Library briefings, guides, ...)
 parliament search website "climate change" --take 5
@@ -746,6 +750,7 @@ parliament guide workflow "How did my MP vote on X?"
 - `live` - Current activity and calendar
 - `legislation` - SIs and treaties
 - `procedures` - Erskine May procedure rules
+- `lords-business` - Lords business papers, Journal, sittings and Lords written questions
 - `search` - Free-text search of the parliament.uk website
 
 ---
