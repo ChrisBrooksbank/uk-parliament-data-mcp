@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.19.0] - 2026-10-22
+
 ### Changed
 - Register of Interests API moved from v1 to v2 (`INTERESTS_API_BASE`, `context/interests-api.json`). v2 nests per-version fields (`summary`, dates, `fields`) under `versions[]`, replaces `member` with `registrant`, adds Commons staff interests, and hides expired interests by default. `search_roi`, `get_mp_profile`, `get_my_mp` and `parliament interests search` keep returning a member's own current interests (`Type=Commons`), with new `register_type` (`Commons`/`CommonsStaff`) and `include_expired` options (`--type`/`--include-expired` on the CLI). The profile renderers read the summary from `versions[0]`, falling back to the v1 top-level field.
 - `search_parliament` now also searches the parliament.uk website (a `website` category, fetched in parallel), and the quick reference and tool descriptions steer general, topic and briefing queries to the faster single-call `search_parliament_website`
