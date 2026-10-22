@@ -27,6 +27,7 @@ SPEC_FOR_HOST = {
     "bills-api.parliament.uk": "bills",
     "committees-api.parliament.uk": "committees",
     "commonsvotes-api.parliament.uk": "commonsvotes",
+    "depositedpapers-api.parliament.uk": "depositedpapers",
     "erskinemay-api.parliament.uk": "erskinemay",
     "hansard-api.parliament.uk": "hansard",
     "interests-api.parliament.uk": "interests",

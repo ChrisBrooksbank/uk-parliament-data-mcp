@@ -1,0 +1,536 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Deposited papers API",
+    "description": "Find and Retrieve Deposited Papers.",
+    "contact": {
+      "name": "UK Parliament",
+      "url": "https://www.parliament.uk",
+      "email": "softwareengineering@parliament.uk"
+    },
+    "version": "v1"
+  },
+  "paths": {
+    "/api/DepositedPapers": {
+      "get": {
+        "tags": [
+          "DepositedPapers"
+        ],
+        "summary": "Returns a list of deposited papers.",
+        "operationId": "SearchDepositedPapers",
+        "parameters": [
+          {
+            "name": "DepositedFrom",
+            "in": "query",
+            "description": "Deposited papers with deposited date after date specified. Expected format is yyyy-MM-dd",
+            "schema": {
+              "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+              "type": "string",
+              "example": "2019-01-01"
+            }
+          },
+          {
+            "name": "DepositedTo",
+            "in": "query",
+            "description": "Deposited papers with deposited date before date specified. Expected format is yyyy-MM-dd",
+            "schema": {
+              "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+              "type": "string",
+              "example": "2019-01-01"
+            }
+          },
+          {
+            "name": "House",
+            "in": "query",
+            "description": "Deposited papers relating to the House specified",
+            "schema": {
+              "$ref": "#/components/schemas/House"
+            }
+          },
+          {
+            "name": "OrderBy",
+            "in": "query",
+            "description": "Search result ordering option",
+            "schema": {
+              "$ref": "#/components/schemas/SortOrder"
+            }
+          },
+          {
+            "name": "Terms",
+            "in": "query",
+            "description": "Deposited papers containing term specified, which can relate to depositing department, paper number and summary.",
+            "schema": {
+              "maxLength": 500,
+              "minLength": 2,
+              "type": "string"
+            }
+          },
+          {
+            "name": "DepartmentSesId",
+            "in": "query",
+            "description": "Deposited papers with specified depositing department\r\nGet department list from http://data.parliament.uk/membersdataplatform/services/mnis/ReferenceData/Departments",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Skip",
+            "in": "query",
+            "description": "Number of records to skip, default is 0",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "Take",
+            "in": "query",
+            "description": "Number of records to take, default is 20",
+            "schema": {
+              "maximum": 2147483647,
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositedPaperSummaryResourceCollection"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositedPaperSummaryResourceCollection"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositedPaperSummaryResourceCollection"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/DepositedPapers/{paperId}": {
+      "get": {
+        "tags": [
+          "DepositedPapers"
+        ],
+        "summary": "Returns a deposited paper by ID.",
+        "operationId": "GetDepositedPaper",
+        "parameters": [
+          {
+            "name": "paperId",
+            "in": "path",
+            "description": "Deposited paper by ID specified",
+            "required": true,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositedPaperDetailResource"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositedPaperDetailResource"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositedPaperDetailResource"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DepositedPaperDetail": {
+        "type": "object",
+        "properties": {
+          "paperId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "paperNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateReceived": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "dateOfOrigin": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "dateOfCommitmentToDeposit": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "dateCreated": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "dateUpdated": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "datePublished": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "corporateAuthors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "houses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HouseWithOther"
+            },
+            "nullable": true
+          },
+          "depositingDepartments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "indexerNotes": {
+            "type": "string",
+            "nullable": true
+          },
+          "notes": {
+            "type": "string",
+            "nullable": true
+          },
+          "attachedDocuments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DepositedPaperDetailResource": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "$ref": "#/components/schemas/DepositedPaperDetail"
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            },
+            "description": "Related query links to the result",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DepositedPaperSummary": {
+        "type": "object",
+        "properties": {
+          "paperId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "paperNumber": {
+            "type": "string",
+            "nullable": true
+          },
+          "dateReceived": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "dateOfOrigin": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "dateOfCommitmentToDeposit": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "dateCreated": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "dateUpdated": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "datePublished": {
+            "pattern": "\\d{4}(-|/)\\d{2}(-|/)\\d{2}((T|t)\\d{2}:\\d{2}:\\d{2})?",
+            "type": "string",
+            "nullable": true,
+            "example": "2019-01-01"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "corporateAuthors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "houses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HouseWithOther"
+            },
+            "nullable": true
+          },
+          "depositingDepartments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "indexerNotes": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DepositedPaperSummaryResource": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "$ref": "#/components/schemas/DepositedPaperSummary"
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            },
+            "description": "Related query links to the result",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "DepositedPaperSummaryResourceCollection": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepositedPaperSummaryResource"
+            },
+            "description": "List of results from the query",
+            "nullable": true
+          },
+          "totalResults": {
+            "type": "integer",
+            "description": "Total results",
+            "format": "int32"
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Link"
+            },
+            "description": "Useful links for related queries",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "House": {
+        "enum": [
+          "All",
+          "Commons",
+          "Lords"
+        ],
+        "type": "string"
+      },
+      "HouseWithOther": {
+        "enum": [
+          "All",
+          "Commons",
+          "Lords",
+          "Other"
+        ],
+        "type": "string"
+      },
+      "Link": {
+        "type": "object",
+        "properties": {
+          "rel": {
+            "type": "string",
+            "description": "Relationship between link and current query",
+            "nullable": true
+          },
+          "href": {
+            "type": "string",
+            "description": "Link to the query",
+            "nullable": true
+          },
+          "method": {
+            "type": "string",
+            "description": "Http method used",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "SortOrder": {
+        "enum": [
+          "Relevance",
+          "CommitmentDateAsc",
+          "CommitmentDateDesc"
+        ],
+        "type": "string"
+      }
+    }
+  }
+}

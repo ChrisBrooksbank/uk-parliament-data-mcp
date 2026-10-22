@@ -8,6 +8,7 @@ from uk_parliament_mcp.tools import (
     committees,
     composite,
     core,
+    deposited_papers,
     erskine_may,
     hansard,
     interests,
@@ -47,6 +48,7 @@ def create_server() -> FastMCP:
     written_questions.register_tools(mcp)
     websearch.register_tools(mcp)
     lords_business.register_tools(mcp)
+    deposited_papers.register_tools(mcp)
 
     # Register prompts (agent skills)
     core.register_prompts(mcp)
