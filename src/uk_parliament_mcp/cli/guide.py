@@ -257,7 +257,8 @@ def topic(
     Get detailed guidance for a specific Parliament data domain.
 
     Available topics: members, bills, votes, committees, hansard, questions,
-    interests, live, legislation, procedures, all, conventions, workflows.
+    interests, live, legislation, procedures, lords_business, documents, all,
+    conventions, workflows.
 
     Returns comprehensive guidance including tool names, parameters, and
     typical workflows for the selected domain.

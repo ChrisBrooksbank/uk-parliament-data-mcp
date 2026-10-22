@@ -223,6 +223,25 @@ class TestParliamentWorkflow:
         assert "get_bill_stages" in text
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("query", "expected_tool"),
+        [
+            ("What is on the Lords order paper on 15 January?", "get_lords_business_section_data"),
+            ("Show the Lords Journal for last week", "get_lords_business_sections_for_date"),
+            ("Find papers deposited by the Department for Transport", "search_deposited_papers"),
+            ("Is there a command paper on defence?", "get_deposited_paper"),
+            ("Find a Commons Library briefing on net zero", "search_parliament_website"),
+            ("Is there an explainer about sitting hours?", "search_parliament_website"),
+        ],
+    )
+    async def test_workflow_new_apis(self, mcp: FastMCP, query: str, expected_tool: str):
+        """parliament_workflow routes Lords business, deposited papers and website queries."""
+        content_list, _ = await mcp.call_tool("parliament_workflow", {"query": query})
+        text = content_list[0].text
+        assert "Workflow" in text
+        assert expected_tool in text
+
+    @pytest.mark.asyncio
     async def test_workflow_committee_research(self, mcp: FastMCP):
         """parliament_workflow returns committee workflow for inquiry queries."""
         content_list, _ = await mcp.call_tool(
@@ -289,6 +308,8 @@ class TestGuidanceContent:
             "live",
             "legislation",
             "procedures",
+            "lords_business",
+            "documents",
             "all",
             "conventions",
             "workflows",
