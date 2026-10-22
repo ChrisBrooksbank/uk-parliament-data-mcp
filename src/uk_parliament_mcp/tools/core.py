@@ -123,7 +123,7 @@ If no relevant data is available via the MCP API, state that clearly and do not 
 Convert raw data into human-readable summaries while preserving accuracy, but always list the raw URLs used.
 Note: This tool is an unofficial, independent project — not created or supported by UK Parliament. Data is sourced from publicly available parliament.uk APIs."""
 
-QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (231 tools)
+QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (233 tools)
 
 ### Composite Tools (Start Here for Common Queries!)
 These tools combine multiple API calls - use them first for efficiency:
@@ -164,6 +164,7 @@ Note: Composite tools require member_id (int) — search first with get_member_b
 | erskine_may | 11 | search_erskine_may(search_term) |
 | websearch | 1 | search_parliament_website(search_terms) |
 | lords_business | 20 | get_lords_business_section_data(business_paper_date, section_id) |
+| deposited_papers | 2 | search_deposited_papers(terms) |
 | core | 4 | parliament_guide(topic) |
 
 ### Common Patterns
@@ -646,7 +647,7 @@ Or search directly:
 5. Third Reading: Final debate
 6. Lords/Commons stages: Mirror process in other House
 7. Royal Assent: Becomes law""",
-    "all": """## All UK Parliament MCP Tools (231 tools)
+    "all": """## All UK Parliament MCP Tools (233 tools)
 
 ### Composite (10 tools) - Use These First!
 get_mp_profile(member_id), check_mp_vote(member_id, topic), compare_member_votes(member_id_a, member_id_b, topic), get_member_bills(member_id), get_bill_overview, get_bill_committees(bill_id), get_committee_summary, get_committee_bills(committee_id), get_my_mp(postcode, topic), search_parliament(query)
@@ -703,6 +704,9 @@ Index: browse_erskine_may_index, search_erskine_may_index, get_erskine_may_index
 
 ### Website Search (1 tool)
 search_parliament_website
+
+### Deposited Papers (2 tools)
+search_deposited_papers, get_deposited_paper
 
 ### Lords Business (20 tools)
 Business papers: get_lords_business_sections, get_lords_business_sections_for_date, get_lords_business_section_data, get_lords_item_of_business_summary, get_lords_business_documents_for_date, get_lords_business_document
@@ -1131,7 +1135,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def order_order() -> str:
         """Start UK Parliament research session | order, begin, initialize, start session, parliament mode |
         Use at the START of any parliamentary research to get proper context and guidance.
-        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 231 tools.
+        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 233 tools.
         """
         return f"{SYSTEM_PROMPT}\n\n---\n\n{QUICK_REFERENCE}"
 
@@ -1230,7 +1234,7 @@ def register_prompts(mcp: FastMCP) -> None:
 
     @mcp.prompt()
     async def parliament(topic: str | None = None) -> str:
-        """Initialize UK Parliament research session with guidance on 231 available tools.
+        """Initialize UK Parliament research session with guidance on 233 available tools.
 
         Provides system instructions for parliamentary data queries, quick reference
         of tool categories, and guidance on common research workflows.

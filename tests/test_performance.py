@@ -20,6 +20,7 @@ from uk_parliament_mcp.tools import (
     bills,
     committees,
     composite,
+    deposited_papers,
     erskine_may,
     hansard,
     interests,
@@ -132,6 +133,7 @@ SINGLE_REQUEST_MODULES = [
     (erskine_may, "uk_parliament_mcp.tools.erskine_may.get_result", 11),
     (websearch, "uk_parliament_mcp.tools.websearch.get_result", 1),
     (lords_business, "uk_parliament_mcp.tools.lords_business.get_result", 20),
+    (deposited_papers, "uk_parliament_mcp.tools.deposited_papers.get_result", 2),
 ]
 
 
