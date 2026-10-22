@@ -1,6 +1,6 @@
 """API spec explorer CLI commands.
 
-Lets users query the 14 Parliament OpenAPI specs directly:
+Lets users query the 15 Parliament OpenAPI specs directly:
 discover endpoints, parameters, schemas, and search across all APIs.
 """
 
@@ -86,7 +86,7 @@ def list_apis(
     ),
     pretty: bool = typer.Option(False, "--pretty", "-p", help="Pretty-print JSON output"),
 ) -> None:
-    """List all 14 Parliament APIs with endpoint and schema counts.
+    """List all 15 Parliament APIs with endpoint and schema counts.
 
     Examples:
       parliament api list
@@ -278,7 +278,7 @@ def search(
 ) -> None:
     """Search all APIs for endpoints matching a term.
 
-    Searches path, summary, description, and operationId across all 14 specs.
+    Searches path, summary, description, and operationId across all 15 specs.
 
     Examples:
       parliament api search "division"
@@ -551,6 +551,7 @@ _API_CLI_GROUP: dict[str, str] = {
     "statutoryinstruments": "legislation",
     "treaties": "legislation",
     "erskinemay": "procedures",
+    "websearch": "search",
     "oralquestions": "questions",
     "writtenquestions": "questions",
 }

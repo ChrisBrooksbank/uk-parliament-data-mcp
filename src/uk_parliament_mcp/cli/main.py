@@ -23,6 +23,7 @@ from uk_parliament_mcp.cli import (
     questions,
     votes,
     watch,
+    websearch,
 )
 from uk_parliament_mcp.cli.formatters import OutputFormat
 from uk_parliament_mcp.cli.utils import (
@@ -35,7 +36,7 @@ from uk_parliament_mcp.cli.utils import (
 
 app = typer.Typer(
     name="parliament",
-    help="UK Parliament CLI (Unofficial) - not affiliated with UK Parliament.\n\nAccess 210 Parliament API tools from the terminal.\nData sourced from publicly available parliament.uk APIs.\nhttps://github.com/ChrisBrooksbank/uk-parliament-data-mcp",
+    help="UK Parliament CLI (Unofficial) - not affiliated with UK Parliament.\n\nAccess 211 Parliament API tools from the terminal.\nData sourced from publicly available parliament.uk APIs.\nhttps://github.com/ChrisBrooksbank/uk-parliament-data-mcp",
     no_args_is_help=True,
 )
 
@@ -52,6 +53,7 @@ app.add_typer(interests.app, name="interests")
 app.add_typer(live.app, name="live")
 app.add_typer(legislation.app, name="legislation")
 app.add_typer(procedures.app, name="procedures")
+app.add_typer(websearch.app, name="search")
 app.add_typer(guide.app, name="guide")
 app.command("watch")(watch.watch)
 app.command("digest")(digest.digest)

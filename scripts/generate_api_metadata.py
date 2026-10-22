@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate compact API metadata JSON from OpenAPI/Swagger spec files.
 
-Reads all 14 spec files from context/ and produces a single api_metadata.json
+Reads all 15 spec files from context/ and produces a single api_metadata.json
 in src/uk_parliament_mcp/cli/ for distribution with the package.
 
 Usage:
@@ -28,6 +28,7 @@ API_NAMES: dict[str, str] = {
     "parliamentnow-api": "parliamentnow",
     "statutoryinstruments-api": "statutoryinstruments",
     "treaties-api": "treaties",
+    "websearch-api": "websearch",
     "whatson-api": "whatson",
     "writtenquestions-api": "writtenquestions",
 }
@@ -46,6 +47,7 @@ BASE_URLS: dict[str, str] = {
     "parliamentnow": "https://now-api.parliament.uk",
     "statutoryinstruments": "https://statutoryinstruments-api.parliament.uk",
     "treaties": "https://treaties-api.parliament.uk",
+    "websearch": "https://websearch-api.parliament.uk",
     "whatson": "https://whatson-api.parliament.uk",
     "writtenquestions": "https://writtenquestions-api.parliament.uk",
 }

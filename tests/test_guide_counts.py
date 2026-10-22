@@ -27,6 +27,7 @@ from uk_parliament_mcp.tools import (
     statutory_instruments,
     treaties,
     votes,
+    websearch,
     whatson,
     written_questions,
 )
@@ -45,6 +46,7 @@ MODULES: dict[str, ModuleType] = {
     "statutory_instruments": statutory_instruments,
     "treaties": treaties,
     "votes": votes,
+    "websearch": websearch,
     "whatson": whatson,
     "written_questions": written_questions,
 }
@@ -74,6 +76,7 @@ SECTION_MODULES: dict[str, list[str]] = {
     "Committees": ["committees"],
     "Hansard": ["hansard"],
     "Erskine May": ["erskine_may"],
+    "Website Search": ["websearch"],
     "Questions & Motions": ["oral_questions"],
     "Written Questions & Statements": ["written_questions"],
     "Interests": ["interests"],
@@ -84,7 +87,7 @@ SECTION_MODULES: dict[str, list[str]] = {
     "Treaties": ["treaties"],
 }
 
-HEADING_COUNT_RE = re.compile(r"^#+ (.+?) \((\d+) tools", re.MULTILINE)
+HEADING_COUNT_RE = re.compile(r"^#+ (.+?) \((\d+) tools?", re.MULTILINE)
 
 
 @pytest.fixture(scope="module")

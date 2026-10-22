@@ -29,6 +29,7 @@ from uk_parliament_mcp.tools import (
     statutory_instruments,
     treaties,
     votes,
+    websearch,
     whatson,
     written_questions,
 )
@@ -128,6 +129,7 @@ SINGLE_REQUEST_MODULES = [
     (statutory_instruments, "uk_parliament_mcp.tools.statutory_instruments.get_result", 9),
     (treaties, "uk_parliament_mcp.tools.treaties.get_result", 6),
     (erskine_may, "uk_parliament_mcp.tools.erskine_may.get_result", 11),
+    (websearch, "uk_parliament_mcp.tools.websearch.get_result", 1),
 ]
 
 

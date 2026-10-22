@@ -17,7 +17,7 @@ class TestApiList:
         result = cli_runner.invoke(app, ["api", "list"])
         assert result.exit_code == 0
         apis = json.loads(result.stdout)
-        assert len(apis) == 14
+        assert len(apis) == 15
 
     def test_list_has_expected_fields(self, cli_runner: CliRunner):
         result = cli_runner.invoke(app, ["api", "list"])
@@ -36,7 +36,7 @@ class TestApiList:
         # Pretty output has newlines/indentation
         assert "\n" in result.stdout
         apis = json.loads(result.stdout)
-        assert len(apis) == 14
+        assert len(apis) == 15
 
     def test_list_contains_known_apis(self, cli_runner: CliRunner):
         result = cli_runner.invoke(app, ["api", "list"])
@@ -322,6 +322,7 @@ class TestApiExplore:
             ("statutoryinstruments", "legislation"),
             ("treaties", "legislation"),
             ("erskinemay", "procedures"),
+            ("websearch", "search"),
             ("oralquestions", "questions"),
             ("writtenquestions", "questions"),
         ],

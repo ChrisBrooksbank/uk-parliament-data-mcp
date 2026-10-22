@@ -123,7 +123,7 @@ If no relevant data is available via the MCP API, state that clearly and do not 
 Convert raw data into human-readable summaries while preserving accuracy, but always list the raw URLs used.
 Note: This tool is an unofficial, independent project — not created or supported by UK Parliament. Data is sourced from publicly available parliament.uk APIs."""
 
-QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (210 tools)
+QUICK_REFERENCE = """## Quick Reference: UK Parliament MCP Tools (211 tools)
 
 ### Composite Tools (Start Here for Common Queries!)
 These tools combine multiple API calls - use them first for efficiency:
@@ -162,6 +162,7 @@ Note: Composite tools require member_id (int) — search first with get_member_b
 | statutory_instruments | 9 | search_statutory_instruments() |
 | treaties | 6 | search_treaties(search_text) |
 | erskine_may | 11 | search_erskine_may(search_term) |
+| websearch | 1 | search_parliament_website(search_terms) |
 | core | 4 | parliament_guide(topic) |
 
 ### Common Patterns
@@ -644,7 +645,7 @@ Or search directly:
 5. Third Reading: Final debate
 6. Lords/Commons stages: Mirror process in other House
 7. Royal Assent: Becomes law""",
-    "all": """## All UK Parliament MCP Tools (210 tools)
+    "all": """## All UK Parliament MCP Tools (211 tools)
 
 ### Composite (10 tools) - Use These First!
 get_mp_profile(member_id), check_mp_vote(member_id, topic), compare_member_votes(member_id_a, member_id_b, topic), get_member_bills(member_id), get_bill_overview, get_bill_committees(bill_id), get_committee_summary, get_committee_bills(committee_id), get_my_mp(postcode, topic), search_parliament(query)
@@ -698,6 +699,9 @@ Overview: get_hansard_currently_processing, get_hansard_first_year, get_hansard_
 Structure: get_erskine_may_parts, get_erskine_may_part, get_erskine_may_chapter, get_erskine_may_section, get_erskine_may_section_relative
 Search: search_erskine_may, search_erskine_may_sections, get_erskine_may_paragraph
 Index: browse_erskine_may_index, search_erskine_may_index, get_erskine_may_index_term
+
+### Website Search (1 tool)
+search_parliament_website
 
 ### Questions & Motions (5 tools)
 EDMs: get_recently_tabled_edms, search_early_day_motions, get_early_day_motion, edms_for_member_id
@@ -1120,7 +1124,7 @@ def register_tools(mcp: FastMCP) -> None:
     async def order_order() -> str:
         """Start UK Parliament research session | order, begin, initialize, start session, parliament mode |
         Use at the START of any parliamentary research to get proper context and guidance.
-        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 210 tools.
+        Say 'Order Order' (like the Speaker) to activate. Returns system prompt and quick reference for all 211 tools.
         """
         return f"{SYSTEM_PROMPT}\n\n---\n\n{QUICK_REFERENCE}"
 
@@ -1219,7 +1223,7 @@ def register_prompts(mcp: FastMCP) -> None:
 
     @mcp.prompt()
     async def parliament(topic: str | None = None) -> str:
-        """Initialize UK Parliament research session with guidance on 210 available tools.
+        """Initialize UK Parliament research session with guidance on 211 available tools.
 
         Provides system instructions for parliamentary data queries, quick reference
         of tool categories, and guidance on common research workflows.

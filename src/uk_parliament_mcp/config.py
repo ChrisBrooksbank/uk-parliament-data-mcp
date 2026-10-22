@@ -17,6 +17,7 @@ TREATIES_API_BASE = "https://treaties-api.parliament.uk/api"
 ERSKINE_MAY_API_BASE = "https://erskinemay-api.parliament.uk/api"
 ORAL_QUESTIONS_API_BASE = "https://oralquestionsandmotions-api.parliament.uk"
 WRITTEN_QUESTIONS_API_BASE = "https://questions-statements-api.parliament.uk/api"
+WEBSEARCH_API_BASE = "https://websearch-api.parliament.uk"
 
 # Common constants
 HOUSE_COMMONS = 1
