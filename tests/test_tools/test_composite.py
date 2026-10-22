@@ -526,6 +526,12 @@ class TestSearchParliament:
                     "totalResults": 1,
                     "results": [{"value": {"id": 5, "heading": "Housing"}}],
                 },
+                "WebSearch": {
+                    "totalResults": 40,
+                    "results": [
+                        {"title": "Z Briefing", "url": "https://example/z", "tags": ["Library"]}
+                    ],
+                },
             }
         )
         with patch("uk_parliament_mcp.tools.composite.get_result", fake):
@@ -535,6 +541,10 @@ class TestSearchParliament:
         assert result["hansard_debates"][0]["title"] == "Debate"
         assert result["totals"]["committees"] == 0
         assert result["written_questions"][0]["heading"] == "Housing"
+        assert result["website"] == [
+            {"title": "Z Briefing", "url": "https://example/z", "tags": ["Library"]}
+        ]
+        assert result["totals"]["website"] == 40
         # Multi-word written question searches are quoted as a phrase
         assert "searchTerm=%22z+y%22" in result["sources"]["written_questions"]
         assert "suggestions" not in result

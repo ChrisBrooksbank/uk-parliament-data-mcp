@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- `search_parliament` now also searches the parliament.uk website (a `website` category, fetched in parallel), and the quick reference and tool descriptions steer general, topic and briefing queries to the faster single-call `search_parliament_website`
 - `parliament_guide` has new `lords_business` and `documents` (deposited papers and website search) topics, `parliament_workflow` has matching workflows, and the README lists example questions for the Lords Business, Deposited Papers and Web Search APIs
 
 ### Added

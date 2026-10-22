@@ -22,6 +22,7 @@ from uk_parliament_mcp.config import (
     INTERESTS_API_BASE,
     LORDS_VOTES_API_BASE,
     MEMBERS_API_BASE,
+    WEBSEARCH_API_BASE,
     WRITTEN_QUESTIONS_API_BASE,
 )
 from uk_parliament_mcp.http_client import build_url, get_result
@@ -534,7 +535,7 @@ async def committee_bills(committee_id: int, take: int = 10) -> dict[str, Any]:
 
 
 async def search_everything(query: str, take: int = 5) -> dict[str, Any]:
-    """Search members, bills, committees, Hansard and written questions at once."""
+    """Search members, bills, committees, Hansard, written questions and the website at once."""
     urls = {
         "members": build_url(f"{MEMBERS_API_BASE}/Members/Search", {"Name": query, "take": take}),
         "bills": build_url(f"{BILLS_API_BASE}/Bills", {"SearchTerm": query, "Take": take}),
@@ -552,6 +553,9 @@ async def search_everything(query: str, take: int = 5) -> dict[str, Any]:
                 "searchTerm": f'"{query}"' if " " in query and '"' not in query else query,
                 "take": take,
             },
+        ),
+        "website": build_url(
+            f"{WEBSEARCH_API_BASE}/WebSearch", {"searchTerms": query, "start": 1, "take": take}
         ),
     }
     responses = dict(
@@ -592,6 +596,11 @@ async def search_everything(query: str, take: int = 5) -> dict[str, Any]:
         for q in _items(parsed["written_questions"])
     ]
 
+    website = [
+        {"title": w.get("title"), "url": w.get("url"), "tags": w.get("tags")}
+        for w in _items(parsed["website"])
+    ]
+
     totals = {
         "members": parsed["members"].get("totalResults", len(members)),
         "bills": parsed["bills"].get("totalResults", len(bills)),
@@ -599,6 +608,7 @@ async def search_everything(query: str, take: int = 5) -> dict[str, Any]:
         "hansard_debates": hansard.get("TotalDebates", len(debates)),
         "hansard_contributions": hansard.get("TotalContributions"),
         "written_questions": parsed["written_questions"].get("totalResults", len(questions)),
+        "website": parsed["website"].get("totalResults", len(website)),
     }
     result: dict[str, Any] = {
         "query": query,
@@ -608,17 +618,19 @@ async def search_everything(query: str, take: int = 5) -> dict[str, Any]:
         "committees": committees,
         "hansard_debates": debates,
         "written_questions": questions,
+        "website": website,
         "next_steps": {
             "members": "get_mp_profile(member_id)",
             "bills": "get_bill_overview(search_term) or get_bill_by_id(bill_id)",
             "committees": "get_committee_summary(topic) or get_committee_by_id(committee_id)",
             "hansard_debates": "get_debate_by_id(debate_section_ext_id) or search_hansard_contributions",
             "written_questions": "get_written_question(question_id)",
+            "website": "search_parliament_website(search_terms) for more pages, briefings and explainers",
         },
         "errors": {k: v["error"] for k, v in parsed.items() if "error" in v} or None,
         "sources": urls,
     }
-    if not any((members, bills, committees, debates, questions)):
+    if not any((members, bills, committees, debates, questions, website)):
         result["suggestions"] = SUGGESTIONS["search"]
     return result
 
@@ -887,7 +899,7 @@ def register_tools(mcp: FastMCP) -> None:
 
     @mcp.tool()
     async def search_parliament(query: str, take: int = 5) -> str:
-        """Search across Parliament in one call - members, bills, committees, Hansard debates and written questions | search everything, find anything, cross-search, where is this mentioned, general search | Use as a starting point when you don't know which kind of record holds the answer | Returns the top matches and total counts for each kind of record, with the tool to call next for each. Combines: search_members, search_bills, search_committees, search_hansard_full, search_written_questions. See also: parliament_workflow (to plan a research approach).
+        """Search across Parliament in one call - members, bills, committees, Hansard debates, written questions and parliament.uk web pages | search everything, find anything, cross-search, where is this mentioned, general search | Use as a starting point when you don't know which kind of record holds the answer | Returns the top matches and total counts for each kind of record, with the tool to call next for each. Combines: search_members, search_bills, search_committees, search_hansard_full, search_written_questions, search_parliament_website. See also: search_parliament_website (faster, single call, for briefings, explainers and other free-text web content), parliament_workflow (to plan a research approach).
 
         Args:
             query: Search text (e.g. 'Renters Rights', 'Starmer', 'Treasury', 'net zero').
