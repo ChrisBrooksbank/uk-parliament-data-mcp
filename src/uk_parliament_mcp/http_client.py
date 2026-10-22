@@ -102,6 +102,29 @@ def _is_retryable_status(status_code: int) -> bool:
     return status_code in TRANSIENT_STATUS_CODES
 
 
+def _parse_body(response: httpx.Response) -> Any:
+    """Turn a successful response into something safe to wrap in a JSON result.
+
+    JSON is parsed to avoid double-encoding, other text is returned as-is, and a binary
+    body (for example the Lords business PDFs) becomes a small descriptor instead of
+    failing to decode. The bytes themselves are never embedded in the result.
+    """
+    try:
+        return response.json()
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        pass
+    try:
+        return response.content.decode("utf-8")
+    except UnicodeDecodeError:
+        return {
+            "binary": True,
+            "contentType": response.headers.get("content-type", "application/octet-stream"),
+            "sizeBytes": len(response.content),
+            "downloadUrl": str(response.url),
+            "note": "Binary document, not shown. Download it from downloadUrl.",
+        }
+
+
 class ParliamentHTTPClient:
     """Async HTTP client with retry logic for Parliament APIs."""
 
@@ -148,12 +171,7 @@ class ParliamentHTTPClient:
                 response = await client.get(url)
 
                 if response.is_success:
-                    # Parse JSON to avoid double-encoding when wrapping
-                    try:
-                        data = response.json()
-                    except json.JSONDecodeError:
-                        # Fall back to text if not valid JSON
-                        data = response.text
+                    data = _parse_body(response)
                     logger.info("Successfully retrieved data from %s", url)
                     response_str = json.dumps({"url": url, "data": data})
                     from uk_parliament_mcp.pruning import is_pruning_enabled, prune_response
