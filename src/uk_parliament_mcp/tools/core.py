@@ -135,7 +135,8 @@ These tools combine multiple API calls - use them first for efficiency:
 - compare_member_votes(member_id_a, member_id_b, topic) - Do two members vote alike?
 - get_member_bills(member_id) - Bills a member has sponsored
 - get_bill_committees(bill_id) / get_committee_bills(committee_id) - Which committees examined which bills
-- search_parliament(query) - Search members, bills, committees, Hansard and written questions at once
+- search_parliament(query) - Search members, bills, committees, Hansard, written questions and the parliament.uk website at once
+- search_parliament_website(search_terms) - Fast single-call free-text search of parliament.uk: Commons Library briefings, explainers, guides, member and constituency pages. Try it first for general or topic queries
 
 Note: Composite tools require member_id (int) — search first with get_member_by_name()
 
@@ -169,9 +170,10 @@ Note: Composite tools require member_id (int) — search first with get_member_b
 
 ### Common Patterns
 1. Use composite tools first for common queries (saves multiple calls)
-2. For detailed data: Search by name/term -> Get by ID -> Get related data
-3. For MP voting: check_mp_vote(member_id, topic) OR get_member_by_name() -> get_commons_voting_record_for_member()
-4. For bill progress: get_bill_overview() OR search_bills() -> get_bill_stages()
+2. For a general topic, briefing or explainer, or when unsure what exists: search_parliament_website(search_terms) first (one fast call)
+3. For detailed data: Search by name/term -> Get by ID -> Get related data
+4. For MP voting: check_mp_vote(member_id, topic) OR get_member_by_name() -> get_commons_voting_record_for_member()
+5. For bill progress: get_bill_overview() OR search_bills() -> get_bill_stages()
 
 Use parliament_guide(topic) for detailed tool information.
 Use parliament_workflow(query) for step-by-step research planning."""

@@ -2209,6 +2209,11 @@ def render_search_parliament(result_json: str) -> None:
                 for q in data.get("written_questions") or []
             ],
         ),
+        (
+            "Website",
+            "website",
+            [f"{w.get('title')} - {w.get('url')}" for w in data.get("website") or []],
+        ),
     ]
     for label, key, lines in sections:
         total = totals.get(key)
