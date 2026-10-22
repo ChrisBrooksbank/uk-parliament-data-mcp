@@ -36,6 +36,7 @@ SPEC_FOR_HOST = {
     "now-api.parliament.uk": "parliamentnow",
     "statutoryinstruments-api.parliament.uk": "statutoryinstruments",
     "treaties-api.parliament.uk": "treaties",
+    "websearch-api.parliament.uk": "websearch",
     "whatson-api.parliament.uk": "whatson",
     "questions-statements-api.parliament.uk": "writtenquestions",
 }

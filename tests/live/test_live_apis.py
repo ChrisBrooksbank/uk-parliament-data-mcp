@@ -52,6 +52,7 @@ WITH_ARGS: list[tuple[str, dict[str, Any]]] = [
     ("search_acts_of_parliament", {"name": "Climate Change"}),
     ("search_treaties", {"search_text": "trade"}),
     ("search_erskine_may", {"search_term": "quorum"}),
+    ("search_parliament_website", {"search_terms": "climate", "take": 2}),
     ("search_historical_members", {"name": "Churchill", "date_to_search_for": "1950-01-01"}),
     ("get_si_procedure", {"procedure_id": "H5YJQsK2"}),
     ("get_mp_profile", {"member_id": 4514}),
