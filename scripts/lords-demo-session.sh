@@ -23,7 +23,9 @@ base=https://services.lordsbusiness.parliament.uk/api/v1/DocumentForDay
 clear
 comment "What is on the Lords order paper on 15 January 2025?"
 run 'parliament lords-business documents 2025-01-15 --format table' 4
-comment "The order paper is a PDF. Fetch it (DocumentForDayId 5947)..."
+comment "The order paper is a PDF (DocumentForDayId 5947). The CLI describes it..."
+run 'parliament lords-business document 5947 --fields "contentType,sizeBytes" --format table' 3
+comment "...and the file itself is one download away."
 run "curl -s -o $paper $base/5947 && file -b $paper" 3
 comment "...and read the oral questions."
 run "pdftotext -layout $paper - | sed -n '/^Oral questions/,/^Data (Use/p' | head -n -1" 6

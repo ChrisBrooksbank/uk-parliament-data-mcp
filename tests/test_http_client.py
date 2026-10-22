@@ -106,6 +106,44 @@ class TestParliamentHTTPClient:
             await client.close()
 
     @pytest.mark.asyncio
+    async def test_binary_body_returns_descriptor(self, httpx_mock: HTTPXMock):
+        """A PDF body is described, not decoded (it used to fail with a UTF-8 error)."""
+        pdf = b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n1 0 obj\n<<>>\nendobj\n"
+        httpx_mock.add_response(
+            url="https://api.example.com/doc",
+            content=pdf,
+            headers={"content-type": "application/octet-stream"},
+        )
+
+        client = ParliamentHTTPClient()
+        try:
+            parsed = json.loads(await client.get_result("https://api.example.com/doc"))
+
+            assert "error" not in parsed
+            assert parsed["data"] == {
+                "binary": True,
+                "contentType": "application/octet-stream",
+                "sizeBytes": len(pdf),
+                "downloadUrl": "https://api.example.com/doc",
+                "note": "Binary document, not shown. Download it from downloadUrl.",
+            }
+        finally:
+            await client.close()
+
+    @pytest.mark.asyncio
+    async def test_plain_text_body_still_returned_as_text(self, httpx_mock: HTTPXMock):
+        """Non-JSON text keeps its existing behaviour."""
+        httpx_mock.add_response(url="https://api.example.com/text", text="hello, Lords")
+
+        client = ParliamentHTTPClient()
+        try:
+            parsed = json.loads(await client.get_result("https://api.example.com/text"))
+
+            assert parsed["data"] == "hello, Lords"
+        finally:
+            await client.close()
+
+    @pytest.mark.asyncio
     async def test_returns_error_on_404(self, httpx_mock: HTTPXMock):
         """404 response returns error with status code."""
         httpx_mock.add_response(

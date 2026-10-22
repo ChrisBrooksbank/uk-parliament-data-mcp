@@ -98,7 +98,7 @@ def register_tools(mcp: FastMCP) -> None:
             document_day_id: DocumentForDayId from get_lords_business_documents_for_date.
 
         Returns:
-            The document record.
+            The document record. For a PDF this is a descriptor (binary, contentType, sizeBytes, downloadUrl); fetch downloadUrl to get the file.
         """
         url = f"{LORDS_BUSINESS_API_BASE}/DocumentForDay/{document_day_id}"
         return await get_result(url)

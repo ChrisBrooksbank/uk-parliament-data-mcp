@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Binary responses (such as the Lords business PDFs behind `get_lords_business_document` / `parliament lords-business document`) no longer fail with a UTF-8 decode error. The result is now a descriptor (`binary`, `contentType`, `sizeBytes`, `downloadUrl`) instead of the bytes.
+
+### Changed
+- The Lords order paper demo (`docs/media/lords-demo.gif`) now shows `lords-business document` returning the PDF descriptor before fetching the file.
+
 ## [1.19.0] - 2026-10-22
 
 ### Changed
