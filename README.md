@@ -480,6 +480,8 @@ pip install uk-parliament-mcp
 
 ```bash
 # Search for an MP
+
+**On PyPI:** [pypi.org/project/uk-parliament-mcp](https://pypi.org/project/uk-parliament-mcp/)
 parliament members search "Keir Starmer"
 
 # Get comprehensive MP profile (use member_id)
